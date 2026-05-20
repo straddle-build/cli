@@ -1,0 +1,231 @@
+{
+  "timestamp": "2026-05-20T07:42:09.152762Z",
+  "cli_dir": "\u003ccli-dir\u003e/straddle-pp-cli",
+  "findings": [
+    {
+      "kind": "thin-short",
+      "command": "onboard",
+      "file": "accounts_onboard.go",
+      "line": 11,
+      "evidence": "Manage onboard",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'onboard' (accounts_onboard.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): AccountsOnboardAccount. The thin 'Manage onboard' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "simulate",
+      "file": "accounts_simulate.go",
+      "line": 11,
+      "evidence": "Manage simulate",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'simulate' (accounts_simulate.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): AccountsSimulateCreate. The thin 'Manage simulate' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "cancel",
+      "file": "charges_cancel.go",
+      "line": 11,
+      "evidence": "Manage cancel",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'cancel' (charges_cancel.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): ChargesCancelCharge. The thin 'Manage cancel' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "hold",
+      "file": "charges_hold.go",
+      "line": 11,
+      "evidence": "Manage hold",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'hold' (charges_hold.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): ChargesHoldCharge. The thin 'Manage hold' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "release",
+      "file": "charges_release.go",
+      "line": 11,
+      "evidence": "Manage release",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'release' (charges_release.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): ChargesReleaseCharge. The thin 'Manage release' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "resubmit",
+      "file": "charges_resubmit.go",
+      "line": 11,
+      "evidence": "Manage resubmit",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'resubmit' (charges_resubmit.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): ChargesResubmitCreate. The thin 'Manage resubmit' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmask",
+      "file": "charges_unmask.go",
+      "line": 11,
+      "evidence": "Manage unmask",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmask' (charges_unmask.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): ChargesUnmaskChargesV1Get. The thin 'Manage unmask' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "refresh-review",
+      "file": "customers_refresh-review.go",
+      "line": 11,
+      "evidence": "Manage refresh review",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'refresh-review' (customers_refresh-review.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): CustomersRefreshReviewUpdate. The thin 'Manage refresh-review' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "review",
+      "file": "customers_review.go",
+      "line": 11,
+      "evidence": "Manage review",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'review' (customers_review.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): CustomersReviewGetCustomer, CustomersReviewUpdateCustomer. The thin 'Manage review' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmasked",
+      "file": "customers_unmasked.go",
+      "line": 11,
+      "evidence": "Manage unmasked",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmasked' (customers_unmasked.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): CustomersUnmaskedGetCustomer. The thin 'Manage unmasked' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "cancel",
+      "file": "linked-bank-accounts_cancel.go",
+      "line": 11,
+      "evidence": "Manage cancel",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'cancel' (linked-bank-accounts_cancel.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): LinkedBankAccountsCancelUpdate. The thin 'Manage cancel' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmask",
+      "file": "linked-bank-accounts_unmask.go",
+      "line": 11,
+      "evidence": "Manage unmask",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmask' (linked-bank-accounts_unmask.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): LinkedBankAccountsUnmaskGetLinkedBankAccountUnmasked. The thin 'Manage unmask' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "cancel",
+      "file": "paykeys_cancel.go",
+      "line": 11,
+      "evidence": "Manage cancel",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'cancel' (paykeys_cancel.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysCancelUpdate. The thin 'Manage cancel' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "refresh-balance",
+      "file": "paykeys_refresh-balance.go",
+      "line": 11,
+      "evidence": "Manage refresh balance",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'refresh-balance' (paykeys_refresh-balance.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysRefreshBalanceUpdate. The thin 'Manage refresh-balance' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "refresh-review",
+      "file": "paykeys_refresh-review.go",
+      "line": 11,
+      "evidence": "Manage refresh review",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'refresh-review' (paykeys_refresh-review.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysRefreshReviewUpdate. The thin 'Manage refresh-review' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "reveal",
+      "file": "paykeys_reveal.go",
+      "line": 11,
+      "evidence": "Manage reveal",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'reveal' (paykeys_reveal.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysRevealGet. The thin 'Manage reveal' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "review",
+      "file": "paykeys_review.go",
+      "line": 11,
+      "evidence": "Manage review",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'review' (paykeys_review.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysReviewGet, PaykeysReviewUpdate. The thin 'Manage review' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unblock",
+      "file": "paykeys_unblock.go",
+      "line": 11,
+      "evidence": "Manage unblock",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unblock' (paykeys_unblock.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysUnblockUpdate. The thin 'Manage unblock' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmasked",
+      "file": "paykeys_unmasked.go",
+      "line": 11,
+      "evidence": "Manage unmasked",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmasked' (paykeys_unmasked.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PaykeysUnmaskedGetPaykey. The thin 'Manage unmasked' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "cancel",
+      "file": "payouts_cancel.go",
+      "line": 11,
+      "evidence": "Manage cancel",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'cancel' (payouts_cancel.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PayoutsCancelPayout. The thin 'Manage cancel' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "hold",
+      "file": "payouts_hold.go",
+      "line": 11,
+      "evidence": "Manage hold",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'hold' (payouts_hold.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PayoutsHoldPayout. The thin 'Manage hold' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "release",
+      "file": "payouts_release.go",
+      "line": 11,
+      "evidence": "Manage release",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'release' (payouts_release.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PayoutsReleasePayout. The thin 'Manage release' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "resubmit",
+      "file": "payouts_resubmit.go",
+      "line": 11,
+      "evidence": "Manage resubmit",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'resubmit' (payouts_resubmit.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PayoutsResubmitCreate. The thin 'Manage resubmit' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmask",
+      "file": "payouts_unmask.go",
+      "line": 11,
+      "evidence": "Manage unmask",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmask' (payouts_unmask.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): PayoutsUnmaskPayoutsV1Get. The thin 'Manage unmask' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    },
+    {
+      "kind": "thin-short",
+      "command": "unmask",
+      "file": "representatives_unmask.go",
+      "line": 11,
+      "evidence": "Manage unmask",
+      "status": "accepted",
+      "note": "Generated DO-NOT-EDIT parent grouper 'unmask' (representatives_unmask.go); it has no real RunE (parentNoSubcommandRunE prints help) and is not itself an MCP-invokable tool — the typed endpoint tool(s) live in its subcommand(s): RepresentativesUnmaskGet. The thin 'Manage unmask' Short is emitted by the generator's grouper template, not hand-written; editing it here would be wiped on regen. Generator-template fix is the right path."
+    }
+  ]
+}
