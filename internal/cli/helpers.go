@@ -884,7 +884,7 @@ func printOutputWithFlags(w io.Writer, data json.RawMessage, flags *rootFlags) e
 	if flags.csv {
 		return printCSV(w, data)
 	}
-	return printOutput(w, data, flags.asJSON)
+	return finishHumanOrOutput(w, data, flags)
 }
 
 // extractResponseData unwraps common API response envelopes for display.

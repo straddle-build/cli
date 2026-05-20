@@ -253,6 +253,10 @@ See README.md or the bundled SKILL.md for recipes.`,
 		if err := resolveStraddleAccount(cmd, flags); err != nil {
 			return err
 		}
+		// Record the resource name for human detail-card titling (cosmetic;
+		// read only on the --human-friendly TTY path). Empty for commands
+		// without a pp:endpoint annotation.
+		currentResource = resourceFromEndpoint(cmd.Annotations["pp:endpoint"])
 		return nil
 	}
 	rootCmd.AddCommand(newAccountsCmd(flags))
