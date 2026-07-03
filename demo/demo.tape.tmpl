@@ -1,0 +1,58 @@
+# VHS tape template for the marketing demo.
+# Do not run this file directly — demo/make-demo.sh substitutes {{CUSTOMER_ID}}
+# and {{REPO_DIR}}, writes demo/out/demo.tape, and runs vhs on that.
+
+Output demo/out/demo.gif
+Output demo/out/demo.mp4
+
+Set Shell bash
+Set FontSize 22
+Set Width 1600
+Set Height 1000
+Set Padding 24
+Set Theme "Catppuccin Mocha"
+Set WindowBar Colorful
+Set TypingSpeed 60ms
+
+# Off-camera setup: rich human output + local-mirror reads, clean command lines.
+Hide
+Type "alias straddle-pp-cli='{{REPO_DIR}}/straddle-pp-cli --human-friendly --data-source local' && clear"
+Enter
+Sleep 500ms
+Show
+
+# Beat 1 — health check
+Type "straddle-pp-cli doctor"
+Sleep 500ms
+Enter
+Sleep 4s
+
+# Beat 2 — live API -> local SQLite mirror
+Type "straddle-pp-cli sync --resources customers,payments,funding-events --full"
+Sleep 500ms
+Enter
+Sleep 4s
+
+# Beat 3 — single-object detail card
+Type "straddle-pp-cli customers get {{CUSTOMER_ID}}"
+Sleep 500ms
+Enter
+Sleep 5s
+
+# Beat 4 — settlement reconciliation (analytics the official CLI lacks)
+Type "straddle-pp-cli reconcile"
+Sleep 500ms
+Enter
+Sleep 5s
+
+# Beat 5 — payment lifecycle pipeline
+Type "straddle-pp-cli pipeline"
+Sleep 500ms
+Enter
+Sleep 4s
+
+# Beat 6 — your payments data is just SQL
+Type `straddle-pp-cli sql "select status, count(*) as n, printf('$%,.2f', sum(amount)/100.0) as total from payments group by status order by n desc"`
+Sleep 500ms
+Enter
+Sleep 6s
