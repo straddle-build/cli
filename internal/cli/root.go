@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -17,7 +18,25 @@ import (
 	"straddle-pp-cli/internal/config"
 )
 
-var version = "1.0.0"
+// version is stamped by GoReleaser via ldflags
+// (-X .../internal/cli.version={{ .Version }}). Empty when the build
+// skipped the ldflag; Version() then falls back to module build info.
+var version = ""
+
+// Version resolves the CLI version: the ldflags-stamped value when
+// present (release builds); else the module version recorded in build
+// info (covers `go install module@vX`); else "dev" (local builds, tests).
+func Version() string {
+	if version != "" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if v := info.Main.Version; v != "" && v != "(devel)" {
+			return v
+		}
+	}
+	return "dev"
+}
 
 type rootFlags struct {
 	asJSON        bool
@@ -168,7 +187,7 @@ Agent mode: add --agent to any command for JSON output + non-interactive mode.
 Health check: run 'straddle-pp-cli doctor' to verify auth and connectivity.
 See README.md or the bundled SKILL.md for recipes.`,
 		SilenceUsage: true,
-		Version:      version,
+		Version:      Version(),
 	}
 	rootCmd.SetVersionTemplate("straddle-pp-cli {{ .Version }}\n")
 
@@ -357,7 +376,7 @@ func newVersionCliCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("straddle-pp-cli %s\n", version)
+			fmt.Printf("straddle-pp-cli %s\n", Version())
 		},
 	}
 }
