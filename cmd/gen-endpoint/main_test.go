@@ -176,6 +176,65 @@ func TestRunGenerateWritesGeneratedEndpointRegistration(t *testing.T) {
 	}
 }
 
+func TestRunGenerateSupportedAdditionsFailsWhenCoverageIsIncomplete(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	cliDir := filepath.Join(repo, "internal", "cli")
+	if err := os.MkdirAll(cliDir, 0o755); err != nil {
+		t.Fatalf("mkdir internal/cli: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(cliDir, "widgets_create.go"), []byte("package cli\n"), 0o644); err != nil {
+		t.Fatalf("write colliding generated file: %v", err)
+	}
+	spec := writeCommandSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/widgets": {
+				"post": {
+					"tags": ["Widgets"],
+					"operationId": "CreateWidgets",
+					"summary": "Create widget",
+					"requestBody": {"required": true, "content": {"application/json": {}}}
+				}
+			}
+		}
+	}`)
+	driftPath := filepath.Join(t.TempDir(), "drift.json")
+	drift := apisync.DriftResult{
+		SupportedAdditions: []apisync.Operation{
+			{
+				Key:                   "POST /v1/widgets",
+				OperationID:           "CreateWidgets",
+				Endpoint:              "widgets.create",
+				Method:                "POST",
+				Path:                  "/v1/widgets",
+				RequestBodyRequired:   true,
+				RequestBodyMediaTypes: []string{"application/json"},
+			},
+		},
+	}
+	driftData, err := json.Marshal(drift)
+	if err != nil {
+		t.Fatalf("marshal drift: %v", err)
+	}
+	if err := os.WriteFile(driftPath, driftData, 0o644); err != nil {
+		t.Fatalf("write drift: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	err = run([]string{"generate", "--spec", spec, "--repo", repo, "--drift", driftPath, "--supported-additions", "--agent"}, &stdout, &stderr)
+	if err == nil {
+		t.Fatalf("run generate succeeded, want incomplete coverage error\nstdout: %s\nstderr: %s", stdout.String(), stderr.String())
+	}
+	for _, want := range []string{"supported endpoint generation incomplete", "POST /v1/widgets", "widgets_create.go"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("run generate error = %q, want %q", err.Error(), want)
+		}
+	}
+}
+
 func writeCommandSpec(t *testing.T, data string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "spec.json")

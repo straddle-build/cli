@@ -1,7 +1,10 @@
 // Copyright 2026 hello-keith. Licensed under Apache-2.0. See LICENSE.
 package apisync
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type UnsupportedOperation struct {
 	Operation Operation `json:"operation"`
@@ -28,6 +31,7 @@ func UnsupportedReasons(op Operation) []string {
 			reasons = append(reasons, "unsupported parameter location "+param.In+" for "+param.Name)
 		}
 	}
+	reasons = append(reasons, generatedParameterUnsupportedReasons(op)...)
 	if (op.Method == "GET" || op.Method == "DELETE") && (op.RequestBodyRequired || len(op.RequestBodyMediaTypes) > 0) {
 		reasons = append(reasons, "request body is not supported for "+op.Method+" operations")
 	}
@@ -53,4 +57,75 @@ func hasJSONMediaType(mediaTypes []string) bool {
 		}
 	}
 	return false
+}
+
+func generatedParameterUnsupportedReasons(op Operation) []string {
+	var reasons []string
+	for _, param := range append(append([]Parameter{}, op.PathParameters...), append(op.QueryParameters, op.HeaderParameters...)...) {
+		if !isSupportedGeneratedParameterName(param.Name) {
+			reasons = append(reasons, fmt.Sprintf("unsupported parameter name %q: must start with a letter and contain only letters, numbers, hyphens, or underscores", param.Name))
+		}
+	}
+
+	flagOwners := map[string]string{}
+	if op.RequestBodyRequired || len(op.RequestBodyMediaTypes) > 0 {
+		flagOwners["stdin"] = "request body stdin flag"
+	}
+	varOwners := map[string]string{}
+	for _, param := range append(append([]Parameter{}, op.QueryParameters...), generatedHeaderParameters(op.HeaderParameters)...) {
+		flag := flagName(param)
+		owner := parameterOwner(param)
+		if previous, ok := flagOwners[flag]; ok {
+			reasons = append(reasons, fmt.Sprintf("parameter flag name collision %q for %s and %s", flag, previous, owner))
+		} else {
+			flagOwners[flag] = owner
+		}
+
+		variable := paramVarName(param)
+		if param.In == "header" {
+			variable += "Header"
+		}
+		if previous, ok := varOwners[variable]; ok {
+			reasons = append(reasons, fmt.Sprintf("parameter variable name collision %q for %s and %s", variable, previous, owner))
+		} else {
+			varOwners[variable] = owner
+		}
+	}
+	return reasons
+}
+
+func isSupportedGeneratedParameterName(name string) bool {
+	if name == "" || strings.TrimSpace(name) != name {
+		return false
+	}
+	for i, r := range name {
+		if i == 0 {
+			if !isASCIILetter(r) {
+				return false
+			}
+			continue
+		}
+		if isASCIILetter(r) || isASCIIDigit(r) {
+			continue
+		}
+		if r != '-' && r != '_' {
+			return false
+		}
+		if i == len(name)-1 {
+			return false
+		}
+	}
+	return true
+}
+
+func parameterOwner(param Parameter) string {
+	return fmt.Sprintf("%s parameter %q", param.In, param.Name)
+}
+
+func isASCIILetter(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+}
+
+func isASCIIDigit(r rune) bool {
+	return r >= '0' && r <= '9'
 }

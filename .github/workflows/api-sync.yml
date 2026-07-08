@@ -132,6 +132,18 @@ jobs:
 
           cp "${LIVE_SPEC}" spec.json
 
+      - name: Validate generated endpoint coverage
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          coverage_json="${RUNNER_TEMP}/api-sync-coverage.json"
+          go run ./cmd/gen-endpoint check \
+            --spec spec.json \
+            --repo . \
+            --agent > "${coverage_json}"
+
       - name: Capture generated diff
         id: generated_diff
         shell: bash
@@ -250,6 +262,7 @@ jobs:
           path: |
             ${{ runner.temp }}/live-spec.json
             ${{ runner.temp }}/api-drift.json
+            ${{ runner.temp }}/api-sync-coverage.json
             ${{ runner.temp }}/api-sync.patch
             ${{ runner.temp }}/api-sync-human-review.md
           if-no-files-found: ignore

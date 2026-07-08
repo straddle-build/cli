@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/straddle-build/cli/internal/apisync"
@@ -168,12 +169,58 @@ func runGenerate(args []string, stdout, stderr io.Writer) error {
 		}
 		result.Generated = written.Generated
 		result.SkippedExisting = written.SkippedExisting
+		if *only == "supported-additions" {
+			if err := requireSupportedAdditionsCovered(selection, *repo, resolvedOut, result.SkippedExisting); err != nil {
+				return err
+			}
+		}
 	}
 	if *agent {
 		return writeJSON(stdout, result)
 	}
 	writeGenerateSummary(stdout, result)
 	return nil
+}
+
+func requireSupportedAdditionsCovered(selection []apisync.Operation, repo, outDir string, skipped []string) error {
+	var missing []string
+	if samePath(outDir, filepath.Join(repo, "internal", "cli")) {
+		inventory, err := apisync.InventoryRepo(repo)
+		if err != nil {
+			return err
+		}
+		covered := make(map[string]bool, len(inventory.Annotations))
+		for _, annotation := range inventory.Annotations {
+			covered[apisync.OperationKey(annotation.Method, annotation.Path)] = true
+		}
+		for _, op := range selection {
+			if !covered[op.Key] {
+				missing = append(missing, op.Key)
+			}
+		}
+	}
+	if len(missing) == 0 && len(skipped) == 0 {
+		return nil
+	}
+	sort.Strings(missing)
+	sort.Strings(skipped)
+	var parts []string
+	if len(missing) > 0 {
+		parts = append(parts, "missing annotations: "+strings.Join(missing, ", "))
+	}
+	if len(skipped) > 0 {
+		parts = append(parts, "skipped existing files: "+strings.Join(skipped, ", "))
+	}
+	return fmt.Errorf("supported endpoint generation incomplete: %s", strings.Join(parts, "; "))
+}
+
+func samePath(a, b string) bool {
+	aAbs, aErr := filepath.Abs(a)
+	bAbs, bErr := filepath.Abs(b)
+	if aErr == nil && bErr == nil {
+		return filepath.Clean(aAbs) == filepath.Clean(bAbs)
+	}
+	return filepath.Clean(a) == filepath.Clean(b)
 }
 
 func selectOperations(only, driftPath string, ops []apisync.Operation, inventory apisync.Inventory) ([]apisync.Operation, []apisync.UnsupportedOperation, error) {

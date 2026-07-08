@@ -43,6 +43,9 @@ func TestAPISyncWorkflowOnlyUpdatesLockfileForPureSupportedAdditions(t *testing.
 	for _, want := range []string{
 		"      - name: Generate supported endpoint additions\n        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'",
 		"      - name: Update spec lockfile\n        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'",
+		"      - name: Validate generated endpoint coverage\n        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'",
+		"go run ./cmd/gen-endpoint check",
+		"${{ runner.temp }}/api-sync-coverage.json",
 		`echo "- Supported additions: ${{ steps.drift.outputs.supported_additions }}"`,
 	} {
 		if !strings.Contains(workflow, want) {
@@ -153,6 +156,104 @@ func TestUnsupportedReasonsRejectsJSONRequestBodyOnReadOperation(t *testing.T) {
 				t.Fatalf("UnsupportedReasons(%s with JSON body) = %#v, want [%q]", tc.method, reasons, tc.reason)
 			}
 		})
+	}
+}
+
+func TestUnsupportedReasonsRejectsGeneratedParameterNames(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name string
+		want string
+	}{
+		{
+			name: "fields[]",
+			want: `unsupported parameter name "fields[]"`,
+		},
+		{
+			name: "3ds_version",
+			want: `unsupported parameter name "3ds_version"`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			op := apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				QueryParameters: []apisync.Parameter{
+					{Name: tc.name, In: "query"},
+				},
+			}
+
+			reasons := apisync.UnsupportedReasons(op)
+			if !hasReasonContaining(reasons, tc.want) {
+				t.Fatalf("UnsupportedReasons(%q) = %#v, want reason containing %q", tc.name, reasons, tc.want)
+			}
+		})
+	}
+}
+
+func TestClassifyDriftRoutesGeneratedParameterCollisionsToUnsupported(t *testing.T) {
+	t.Parallel()
+
+	baseSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/widgets": {
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "ListWidgets",
+					"summary": "List widgets"
+				}
+			}
+		}
+	}`)
+	headSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/collisions": {
+				"get": {
+					"tags": ["Collisions"],
+					"operationId": "ListCollisions",
+					"summary": "List collisions",
+					"parameters": [
+						{"name": "request-id", "in": "query"},
+						{"name": "request_id", "in": "query"}
+					]
+				}
+			},
+			"/v1/widgets": {
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "ListWidgets",
+					"summary": "List widgets"
+				}
+			}
+		}
+	}`)
+
+	baseOps, err := apisync.LoadSpec(baseSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(base): %v", err)
+	}
+	headOps, err := apisync.LoadSpec(headSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(head): %v", err)
+	}
+
+	result := apisync.ClassifyDrift(baseOps, headOps)
+	if len(result.SupportedAdditions) != 0 {
+		t.Fatalf("SupportedAdditions = %#v, want collision routed to unsupported", result.SupportedAdditions)
+	}
+	if len(result.UnsupportedOperations) != 1 {
+		t.Fatalf("UnsupportedOperations = %#v, want one collision operation", result.UnsupportedOperations)
+	}
+	reasons := result.UnsupportedOperations[0].Reasons
+	for _, want := range []string{"parameter flag name collision", "parameter variable name collision"} {
+		if !hasReasonContaining(reasons, want) {
+			t.Fatalf("unsupported reasons = %#v, want reason containing %q", reasons, want)
+		}
 	}
 }
 
@@ -345,4 +446,13 @@ func writeSpec(t *testing.T, data string) string {
 		t.Fatalf("write spec: %v", err)
 	}
 	return path
+}
+
+func hasReasonContaining(reasons []string, want string) bool {
+	for _, reason := range reasons {
+		if strings.Contains(reason, want) {
+			return true
+		}
+	}
+	return false
 }
