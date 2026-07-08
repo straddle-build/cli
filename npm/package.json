@@ -1,0 +1,29 @@
+{
+  "name": "@straddleio/cli",
+  "version": "0.0.0",
+  "description": "Straddle CLI (straddle) — installs the platform binary from GitHub Releases",
+  "license": "Apache-2.0",
+  "repository": "github:straddle-build/cli",
+  "bin": {
+    "straddle": "bin/straddle.js"
+  },
+  "files": [
+    "bin",
+    "install.js"
+  ],
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

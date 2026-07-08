@@ -1,7 +1,9 @@
 version: 2
 project_name: straddle
+
 changelog:
-  disable: true
+  use: github
+
 builds:
   - id: straddle
     main: ./cmd/straddle
@@ -9,7 +11,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X straddle/internal/cli.version={{ .Version }}
+      - -s -w -X github.com/straddle-build/cli/internal/cli.version={{ .Version }}
     targets:
       - darwin_amd64
       - darwin_arm64
@@ -17,35 +19,37 @@ builds:
       - linux_arm64
       - windows_amd64
       - windows_arm64
-  - id: straddle-pp-mcp
-    main: ./cmd/straddle-pp-mcp
-    binary: straddle-pp-mcp
-    env:
-      - CGO_ENABLED=0
-    ldflags:
-      - -s -w
-    targets:
-      - darwin_amd64
-      - darwin_arm64
-      - linux_amd64
-      - linux_arm64
-      - windows_amd64
-      - windows_arm64
+
 archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats: [zip]
+    files:
+      - LICENSE
+      - NOTICE
+      - README.md
+      - SKILL.md
+
 checksum:
   name_template: checksums.txt
-brews:
+
+homebrew_casks:
   - name: straddle
     repository:
-      owner: hello-keith
+      owner: straddle-build
       name: homebrew-tap
-    homepage: "https://github.com/hello-keith/straddle"
-    description: "Every Straddle API operation, plus a local payments ledger, offline search, and settlement and return analytics no..."
-    install: |
-      bin.install "straddle"
-      bin.install "straddle-pp-mcp"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/straddle-build/cli"
+    description: "Human and agent friendly CLI for the Straddle API"
+    binaries:
+      - straddle
+    # Binaries are unsigned (no notarization): drop the quarantine
+    # attribute at install so Gatekeeper does not block first run.
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/straddle"]
+          end

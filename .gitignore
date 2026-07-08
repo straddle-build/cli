@@ -11,3 +11,6 @@
 *.db-shm
 *.db-wal
 demo/out/
+
+# npm wrapper: vendored binary fetched at install time
+/npm/vendor/
