@@ -45,7 +45,7 @@ From `CLAUDE.md`, the expected validation loop is:
 - `go build -o ./straddle ./cmd/straddle`
 - `./straddle doctor`
 
-There are package-level tests around CLI behavior, store migrations, MCP tooling, account scoping, and the special output/rendering logic.
+There are package-level tests around CLI behavior, store migrations, account scoping, and the special output/rendering logic.
 
 ## Change warnings
 
@@ -66,4 +66,13 @@ Be careful when changing any of these areas:
 - `internal/cli/root.go`
 - `internal/cli/straddle_setup.go`
 - `internal/store/store.go`
-- `internal/mcp/tools.go`
+
+## Release process
+
+Releases are cut from `main` by tag:
+
+1. Push a `vX.Y.Z` tag.
+2. The `Release` workflow (`.github/workflows/release.yml`) runs tests, then GoReleaser publishes the GitHub release (6 os/arch archives + `checksums.txt`), pushes the Homebrew cask to `straddle-build/homebrew-tap`, and publishes the `@straddleio/cli` npm wrapper (skipped automatically when `NPM_TOKEN` is unset).
+3. `install.sh` and `go install github.com/straddle-build/cli/cmd/straddle@latest` resolve the new release with no further action.
+
+Local dry run: `make release-snapshot` builds everything into `dist/` without publishing.

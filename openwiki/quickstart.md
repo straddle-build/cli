@@ -2,10 +2,9 @@
 
 ## What this repository is
 
-`straddle` is a Go CLI and MCP server for Straddle's Pay by Bank and Embed APIs. The repo combines:
+`straddle` is a Go CLI for Straddle's Pay by Bank and Embed APIs. The repo combines:
 
-- a human-facing terminal CLI (`straddle`)
-- an MCP server for agents (`straddle-pp-mcp`)
+- a human-facing terminal CLI (`straddle`) with an agent mode (`--agent`)
 - a local SQLite mirror for synced Straddle resources
 - local analytics and workflows that go beyond one-off API calls
 
@@ -24,11 +23,9 @@ The project is centered on payment operations: charges, payouts, customers, payk
 The main entrypoints and packages are:
 
 - `cmd/straddle/main.go` — CLI entrypoint
-- `cmd/straddle-pp-mcp/main.go` — MCP server entrypoint
 - `internal/cli/` — Cobra command tree and hand-authored CLI features
 - `internal/client/` — HTTP client and request helpers
 - `internal/store/` — SQLite persistence and migrations
-- `internal/mcp/` — MCP tool registration and execution
 - `internal/straddleacct/` — integration-type rules for `Straddle-Account-Id`
 - `demo/` — demo harness for marketing recordings and scripted walkthroughs
 
@@ -37,7 +34,7 @@ The main entrypoints and packages are:
 - The repository is not regenerated from the OpenAPI spec anymore; it is maintained directly.
 - Human CLI output and agent/JSON output are both intentional surfaces and should not drift casually.
 - `Straddle-Account-Id` behavior is business-critical: it depends on the integration type (`account`, `saas`, `marketplace`) and the operation being called.
-- The local SQLite store is part of the product, not a cache detail. Several commands and MCP tools assume it exists after `sync`.
+- The local SQLite store is part of the product, not a cache detail. Several commands assume it exists after `sync`.
 
 ## Best next pages
 

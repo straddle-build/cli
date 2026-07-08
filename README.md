@@ -4,107 +4,62 @@
 
 A full CLI for Straddle's Pay by Bank and Embed APIs that also keeps a local SQLite copy of your charges, payouts, customers, paykeys, and funding events. On top of the synced store it adds reconciliation, a cancel-window payment pipeline, return analysis, and cashflow analytics that the official stateless CLI cannot offer.
 
-Printed by [@hello-keith](https://github.com/hello-keith) (hello-keith).
+Generated with [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press); maintained and released from this repo.
 
 ## Install
 
-The recommended path installs both the `straddle` binary and the `pp-straddle` agent skill (Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other agents supported by the upstream [`skills`](https://github.com/vercel-labs/skills) CLI) in one shot:
+### Homebrew (macOS)
 
 ```bash
-npx -y @mvanhorn/printing-press install straddle
+brew install straddle-build/tap/straddle
 ```
 
-For CLI only (no skill):
+### Shell installer (macOS / Linux)
 
 ```bash
-npx -y @mvanhorn/printing-press install straddle --cli-only
+curl -fsSL https://raw.githubusercontent.com/straddle-build/cli/main/install.sh | sh
 ```
 
-For skill only — installs the skill into the same agents as the default command above, but skips the CLI binary (use this to update or reinstall just the skill):
+Installs the latest release to `~/.local/bin` (override with `STRADDLE_INSTALL_DIR`) after verifying its checksum against the release's `checksums.txt`.
+
+### npm / npx
 
 ```bash
-npx -y @mvanhorn/printing-press install straddle --skill-only
+npx @straddleio/cli doctor   # run without installing
+npm i -g @straddleio/cli     # install the straddle binary globally
 ```
 
-To constrain the skill install to one or more specific agents (repeatable — agent names match the [`skills`](https://github.com/vercel-labs/skills) CLI):
+### Pre-built binaries
+
+Download an archive for your platform from the [releases page](https://github.com/straddle-build/cli/releases). On macOS, clear the Gatekeeper quarantine: `xattr -d com.apple.quarantine <binary>`. On Unix, mark it executable: `chmod +x <binary>`.
+
+### Go
 
 ```bash
-npx -y @mvanhorn/printing-press install straddle --agent claude-code
-npx -y @mvanhorn/printing-press install straddle --agent claude-code --agent codex
+go install github.com/straddle-build/cli/cmd/straddle@latest
 ```
 
-### Without Node
-
-The generated install path is category-agnostic until this CLI is published. If `npx` is not available before publish, install Node or use the category-specific Go fallback from the public-library entry after publish.
-
-### Pre-built binary
-
-Download a pre-built binary for your platform from the [latest release](https://github.com/mvanhorn/printing-press-library/releases/tag/straddle-current). On macOS, clear the Gatekeeper quarantine: `xattr -d com.apple.quarantine <binary>`. On Unix, mark it executable: `chmod +x <binary>`.
-
-<!-- pp-hermes-install-anchor -->
-## Install for Hermes
-
-From the Hermes CLI:
+### From source
 
 ```bash
-hermes skills install mvanhorn/printing-press-library/cli-skills/pp-straddle --force
+git clone https://github.com/straddle-build/cli && cd cli && make build   # -> bin/straddle
 ```
 
-Inside a Hermes chat session:
+### Agent skill
+
+The repo-root [`SKILL.md`](SKILL.md) teaches coding agents (Claude Code, Codex, Cursor, and friends) how to drive this CLI. Install it with the [`skills`](https://github.com/vercel-labs/skills) CLI:
 
 ```bash
-/skills install mvanhorn/printing-press-library/cli-skills/pp-straddle --force
+npx skills add straddle-build/cli
 ```
 
-## Install for OpenClaw
-
-Tell your OpenClaw agent (copy this):
-
-```
-Install the pp-straddle skill from https://github.com/mvanhorn/printing-press-library/tree/main/cli-skills/pp-straddle. The skill defines how its required CLI can be installed.
-```
-
-## Use with Claude Desktop
-
-This CLI ships an [MCPB](https://github.com/modelcontextprotocol/mcpb) bundle — Claude Desktop's standard format for one-click MCP extension installs (no JSON config required).
-
-To install:
-
-1. Download the `.mcpb` for your platform from the [latest release](https://github.com/mvanhorn/printing-press-library/releases/tag/straddle-current).
-2. Double-click the `.mcpb` file. Claude Desktop opens and walks you through the install.
-3. Fill in `STRADDLE_API_KEY` when Claude Desktop prompts you.
-
-Requires Claude Desktop 1.0.0 or later. Pre-built bundles ship for macOS Apple Silicon (`darwin-arm64`) and Windows (`amd64`, `arm64`); for other platforms, use the manual config below.
-
-<details>
-<summary>Manual JSON config (advanced)</summary>
-
-If you can't use the MCPB bundle (older Claude Desktop, unsupported platform), install the MCP binary and configure it manually.
-
-
-Install the MCP binary from this CLI's published public-library entry or pre-built release.
-
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "straddle": {
-      "command": "straddle-pp-mcp",
-      "env": {
-        "STRADDLE_ENVIRONMENT": "<environment>",
-        "STRADDLE_API_KEY": "<your-key>"
-      }
-    }
-  }
-}
-```
-
-</details>
+The legacy `npx -y @mvanhorn/printing-press install straddle` installer also still works.
 
 ## Authentication
 
 Straddle uses a Bearer JWT API key. Set STRADDLE_API_KEY (or pass --api-key) and choose your environment with --environment sandbox|production; sandbox keys only work against sandbox.straddle.com and production keys only against production.straddle.com. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators must scope account-specific calls with the Straddle-Account-Id header via --account-id or STRADDLE_ACCOUNT_ID: a SaaS platform sets it on customer, paykey, charge, payout, review, and onboarding calls; a marketplace sets it only on charge and payout (and onboarding) calls, not on customer or paykey calls; a direct account never sets it. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
+
+Get your API key from the [Straddle dashboard](https://dashboard.straddle.com) (Developer → API Keys); see the [authentication docs](https://docs.straddle.com/api-reference/authentication) for details.
 
 ## Quick Start
 
@@ -402,4 +357,3 @@ This CLI was built by studying these projects and resources:
 - [**straddle-node**](https://github.com/straddleio/straddle-node) — TypeScript
 - [**straddle-python**](https://github.com/straddleio/straddle-python) — Python
 
-Generated by [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press)

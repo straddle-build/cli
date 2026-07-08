@@ -12,22 +12,19 @@ metadata:
         - straddle
 ---
 
-# Straddle — Printing Press CLI
+# Straddle CLI
 
 ## Prerequisites: Install the CLI
 
-This skill drives the `straddle` binary. **You must verify the CLI is installed before invoking any command from this skill.** If it is missing, install it first:
+This skill drives the `straddle` binary. **You must verify the CLI is installed before invoking any command from this skill.** If it is missing, install it first (in preference order):
 
-1. Install via the Printing Press installer:
-   ```bash
-   npx -y @mvanhorn/printing-press install straddle --cli-only
-   ```
-2. Verify: `straddle --version`
-3. Ensure `$GOPATH/bin` (or `$HOME/go/bin`) is on `$PATH`.
+1. Homebrew (macOS): `brew install straddle-build/tap/straddle`
+2. Shell installer (macOS/Linux): `curl -fsSL https://raw.githubusercontent.com/straddle-build/cli/main/install.sh | sh`
+3. npm: `npm i -g @straddleio/cli` (or run ad hoc via `npx @straddleio/cli <command>`)
 
-If the `npx` install fails before this CLI has a public-library category, install Node or use the category-specific Go fallback after publish.
+Verify: `straddle --version`
 
-If `--version` reports "command not found" after install, the install step did not put the binary on `$PATH`. Do not proceed with skill commands until verification succeeds.
+If `--version` reports "command not found" after install, the install directory is not on `$PATH` (the shell installer uses `~/.local/bin`). Add it to `$PATH` and re-verify. Do not proceed with skill commands until verification succeeds.
 
 A full CLI for Straddle's Pay by Bank and Embed APIs that also keeps a local SQLite copy of your charges, payouts, customers, paykeys, and funding events. On top of the synced store it adds reconciliation, a cancel-window payment pipeline, return analysis, and cashflow analytics that the official stateless CLI cannot offer.
 
@@ -360,18 +357,8 @@ Explicit flags always win over profile values; profile values win over defaults.
 Parse `$ARGUMENTS`:
 
 1. **Empty, `help`, or `--help`** → show `straddle --help` output
-2. **Starts with `install`** → ends with `mcp` → MCP installation; otherwise → see Prerequisites above
+2. **Starts with `install`** → see Prerequisites above
 3. **Anything else** → Direct Use (execute as CLI command with `--agent`)
-
-## MCP Server Installation
-
-Install the MCP binary from this CLI's published public-library entry or pre-built release, then register it:
-
-```bash
-claude mcp add straddle-pp-mcp -- straddle-pp-mcp
-```
-
-Verify: `claude mcp list`
 
 ## Direct Use
 

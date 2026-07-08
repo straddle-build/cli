@@ -53,7 +53,7 @@ High-level behavior:
 - `marketplace` integrations treat customer-owned resources differently and require account scoping for some money-moving create calls.
 - account-management operations like organizations and representatives do not use the header; they carry the account in the body or path instead.
 
-This logic is shared by CLI and MCP so the two surfaces cannot diverge.
+This logic is centralized so every command path applies the same rules.
 
 ## Sandbox and testing
 

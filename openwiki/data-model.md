@@ -12,7 +12,7 @@ The local database supports:
 
 - search across synced resources
 - analytics commands such as reconciliation and cashflow reporting
-- MCP tools like `search` and `sql`
+- the `search` and `sql` commands
 - offline read paths when live API access is unavailable or unnecessary
 
 ## Storage characteristics
@@ -51,6 +51,5 @@ If the store is empty, commands like search or reconciliation will not be useful
 - `internal/store/store.go`
 - `internal/cli/sync.go`
 - `internal/cli/search.go`
-- `internal/mcp/tools.go`
 - `internal/cli/straddle_reconcile.go`
 - `internal/cli/straddle_cashflow.go`
