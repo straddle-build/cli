@@ -32,6 +32,9 @@ func UnsupportedReasons(op Operation) []string {
 		}
 	}
 	reasons = append(reasons, generatedParameterUnsupportedReasons(op)...)
+	if strings.TrimSpace(op.RequestBodyRef) != "" {
+		reasons = append(reasons, "request body $ref is not supported: "+op.RequestBodyRef)
+	}
 	if (op.Method == "GET" || op.Method == "DELETE") && (op.RequestBodyRequired || len(op.RequestBodyMediaTypes) > 0) {
 		reasons = append(reasons, "request body is not supported for "+op.Method+" operations")
 	}
@@ -67,7 +70,7 @@ func generatedParameterUnsupportedReasons(op Operation) []string {
 		}
 	}
 
-	flagOwners := map[string]string{}
+	flagOwners := generatedReservedFlagOwners()
 	if op.RequestBodyRequired || len(op.RequestBodyMediaTypes) > 0 {
 		flagOwners["stdin"] = "request body stdin flag"
 	}
@@ -92,6 +95,36 @@ func generatedParameterUnsupportedReasons(op Operation) []string {
 		}
 	}
 	return reasons
+}
+
+func generatedReservedFlagOwners() map[string]string {
+	return map[string]string{
+		"account":               "inherited --account flag",
+		"agent":                 "inherited --agent flag",
+		"allow-partial-failure": "inherited --allow-partial-failure flag",
+		"compact":               "inherited --compact flag",
+		"config":                "inherited --config flag",
+		"csv":                   "inherited --csv flag",
+		"data-source":           "inherited --data-source flag",
+		"deliver":               "inherited --deliver flag",
+		"dry-run":               "inherited --dry-run flag",
+		"help":                  "Cobra --help flag",
+		"human-friendly":        "inherited --human-friendly flag",
+		"idempotent":            "inherited --idempotent flag",
+		"ignore-missing":        "inherited --ignore-missing flag",
+		"json":                  "inherited --json flag",
+		"no-cache":              "inherited --no-cache flag",
+		"no-color":              "inherited --no-color flag",
+		"no-input":              "inherited --no-input flag",
+		"plain":                 "inherited --plain flag",
+		"profile":               "inherited --profile flag",
+		"quiet":                 "inherited --quiet flag",
+		"rate-limit":            "inherited --rate-limit flag",
+		"select":                "inherited --select flag",
+		"timeout":               "inherited --timeout flag",
+		"version":               "Cobra --version flag",
+		"yes":                   "inherited --yes flag",
+	}
 }
 
 func isSupportedGeneratedParameterName(name string) bool {

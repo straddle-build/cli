@@ -209,27 +209,31 @@ func init() {
 					return classifyAPIError(err, flags)
 				}
 	{{- else if eq .Method "DELETE" }}
-				data, _, err := c.DeleteWithParamsAndHeaders(path, params, headers)
+				data, statusCode, err := c.DeleteWithParamsAndHeaders(path, params, headers)
 				if err != nil {
 					return classifyDeleteError(err, flags)
 				}
 	{{- else if eq .Method "POST" }}
-				data, _, err := c.PostWithParamsAndHeaders(path, params, body, headers)
+				data, statusCode, err := c.PostWithParamsAndHeaders(path, params, body, headers)
 				if err != nil {
 					return classifyAPIError(err, flags)
 				}
 	{{- else if eq .Method "PUT" }}
-				data, _, err := c.PutWithParamsAndHeaders(path, params, body, headers)
+				data, statusCode, err := c.PutWithParamsAndHeaders(path, params, body, headers)
 				if err != nil {
 					return classifyAPIError(err, flags)
 				}
 	{{- else if eq .Method "PATCH" }}
-				data, _, err := c.PatchWithParamsAndHeaders(path, params, body, headers)
+				data, statusCode, err := c.PatchWithParamsAndHeaders(path, params, body, headers)
 				if err != nil {
 					return classifyAPIError(err, flags)
 				}
 {{- end }}
+	{{- if eq .Method "GET" }}
 			return printOutputWithFlags(cmd.OutOrStdout(), data, flags)
+	{{- else }}
+			return printGeneratedMutationOutput(cmd, flags, {{ printf "%q" .Method }}, {{ printf "%q" .Endpoint }}, path, statusCode, data)
+	{{- end }}
 		},
 	}
 	{{- range .QueryParams }}

@@ -123,6 +123,66 @@ func TestClassifyDriftReportsUnsupportedNonJSONRequestBodyAddition(t *testing.T)
 	}
 }
 
+func TestClassifyDriftReportsRequestBodyRefAsUnsupported(t *testing.T) {
+	t.Parallel()
+
+	baseSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/widgets": {
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "ListWidgets",
+					"summary": "List widgets"
+				}
+			}
+		}
+	}`)
+	headSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/uploads": {
+				"post": {
+					"tags": ["Uploads"],
+					"operationId": "CreateUpload",
+					"summary": "Upload a file",
+					"requestBody": {
+						"$ref": "#/components/requestBodies/CreateUpload"
+					}
+				}
+			},
+			"/v1/widgets": {
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "ListWidgets",
+					"summary": "List widgets"
+				}
+			}
+		}
+	}`)
+
+	baseOps, err := apisync.LoadSpec(baseSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(base): %v", err)
+	}
+	headOps, err := apisync.LoadSpec(headSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(head): %v", err)
+	}
+
+	result := apisync.ClassifyDrift(baseOps, headOps)
+	if len(result.SupportedAdditions) != 0 {
+		t.Fatalf("SupportedAdditions = %#v, want request-body ref routed to unsupported", result.SupportedAdditions)
+	}
+	if len(result.UnsupportedOperations) != 1 {
+		t.Fatalf("UnsupportedOperations = %#v, want one ref operation", result.UnsupportedOperations)
+	}
+	reasons := result.UnsupportedOperations[0].Reasons
+	if !hasReasonContaining(reasons, "request body $ref is not supported: #/components/requestBodies/CreateUpload") {
+		t.Fatalf("unsupported reasons = %#v, want request-body ref reason", reasons)
+	}
+}
+
 func TestUnsupportedReasonsRejectsJSONRequestBodyOnReadOperation(t *testing.T) {
 	t.Parallel()
 
@@ -189,6 +249,29 @@ func TestUnsupportedReasonsRejectsGeneratedParameterNames(t *testing.T) {
 			reasons := apisync.UnsupportedReasons(op)
 			if !hasReasonContaining(reasons, tc.want) {
 				t.Fatalf("UnsupportedReasons(%q) = %#v, want reason containing %q", tc.name, reasons, tc.want)
+			}
+		})
+	}
+}
+
+func TestUnsupportedReasonsRejectsReservedGeneratedFlagNames(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"account", "json", "config", "help", "version"} {
+		t.Run(name, func(t *testing.T) {
+			op := apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				QueryParameters: []apisync.Parameter{
+					{Name: name, In: "query"},
+				},
+			}
+
+			reasons := apisync.UnsupportedReasons(op)
+			if !hasReasonContaining(reasons, `parameter flag name collision "`+name+`"`) {
+				t.Fatalf("UnsupportedReasons(%q) = %#v, want reserved flag collision", name, reasons)
 			}
 		})
 	}
@@ -361,6 +444,7 @@ func TestGenerateEndpointFileUsesEmptyObjectForNoBodyMutation(t *testing.T) {
 	for _, want := range []string{
 		"body := map[string]any{}",
 		"c.PostWithParamsAndHeaders(path, params, body, headers)",
+		`return printGeneratedMutationOutput(cmd, flags, "POST", "widgets.resubmit", path, statusCode, data)`,
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("generated content missing %q:\n%s", want, got)
@@ -389,6 +473,9 @@ func TestGenerateEndpointFileUsesDeleteClassifier(t *testing.T) {
 	got := file.Content
 	if !strings.Contains(got, "return classifyDeleteError(err, flags)") {
 		t.Fatalf("generated content missing delete classifier:\n%s", got)
+	}
+	if !strings.Contains(got, `return printGeneratedMutationOutput(cmd, flags, "DELETE", "widgets.delete", path, statusCode, data)`) {
+		t.Fatalf("generated DELETE content missing mutation output contract:\n%s", got)
 	}
 	if strings.Contains(got, "return classifyAPIError(err, flags)") {
 		t.Fatalf("generated DELETE content should not use generic API classifier:\n%s", got)

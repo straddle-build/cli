@@ -36,6 +36,7 @@ type Operation struct {
 	HeaderParameters      []Parameter `json:"header_parameters,omitempty"`
 	RequestBodyRequired   bool        `json:"request_body_required,omitempty"`
 	RequestBodyMediaTypes []string    `json:"request_body_media_types,omitempty"`
+	RequestBodyRef        string      `json:"request_body_ref,omitempty"`
 	ReadOnly              bool        `json:"read_only"`
 	Fingerprint           string      `json:"fingerprint"`
 }
@@ -69,6 +70,7 @@ type rawParameter struct {
 }
 
 type rawRequestBody struct {
+	Ref      string                     `json:"$ref"`
 	Required bool                       `json:"required"`
 	Content  map[string]json.RawMessage `json:"content"`
 }
@@ -135,6 +137,7 @@ func ParseSpec(data []byte) ([]Operation, error) {
 				}
 			}
 			if ro.RequestBody != nil {
+				op.RequestBodyRef = strings.TrimSpace(ro.RequestBody.Ref)
 				op.RequestBodyRequired = ro.RequestBody.Required
 				for mediaType := range ro.RequestBody.Content {
 					op.RequestBodyMediaTypes = append(op.RequestBodyMediaTypes, mediaType)
