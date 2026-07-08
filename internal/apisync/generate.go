@@ -93,10 +93,10 @@ func WriteGeneratedFiles(files []GeneratedFile, overwrite bool) (GenerateResult,
 		} else if err != nil && !os.IsNotExist(err) {
 			return result, fmt.Errorf("stat %s: %w", file.Path, err)
 		}
-		if err := os.MkdirAll(filepath.Dir(file.Path), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(file.Path), 0o750); err != nil {
 			return result, err
 		}
-		if err := os.WriteFile(file.Path, []byte(file.Content), 0o644); err != nil {
+		if err := os.WriteFile(file.Path, []byte(file.Content), 0o644); err != nil { // #nosec G306 -- generated source files are intended repo artifacts.
 			return result, fmt.Errorf("writing %s: %w", file.Path, err)
 		}
 		result.Generated = append(result.Generated, file.Path)

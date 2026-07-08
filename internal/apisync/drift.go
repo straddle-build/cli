@@ -80,7 +80,7 @@ func ClassifyDrift(baseOps, headOps []Operation) DriftResult {
 
 func ReadDrift(path string) (DriftResult, error) {
 	var result DriftResult
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- drift paths are explicit local CLI/workflow inputs.
 	if err != nil {
 		return result, fmt.Errorf("reading drift %s: %w", path, err)
 	}

@@ -74,7 +74,7 @@ type rawRequestBody struct {
 }
 
 func LoadSpec(path string) ([]Operation, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- spec paths are explicit local CLI/workflow inputs.
 	if err != nil {
 		return nil, fmt.Errorf("reading spec %s: %w", path, err)
 	}
@@ -121,7 +121,7 @@ func ParseSpec(data []byte) ([]Operation, error) {
 				Fingerprint: fingerprintOperation(method, path, raw),
 			}
 			for _, p := range append(pathParams, ro.Parameters...) {
-				param := Parameter{Name: p.Name, In: p.In, Required: p.Required, Description: p.Description}
+				param := Parameter(p)
 				switch p.In {
 				case "path":
 					op.PathParameters = append(op.PathParameters, param)
@@ -196,9 +196,10 @@ func deriveEndpoint(operationID string, tags []string) string {
 	resource := "endpoint"
 	if len(tags) > 0 && strings.TrimSpace(tags[0]) != "" {
 		resource = kebab(tags[0])
-		if resource == "charge" {
+		switch resource {
+		case "charge":
 			resource = "charges"
-		} else if resource == "payout" {
+		case "payout":
 			resource = "payouts"
 		}
 	}

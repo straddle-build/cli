@@ -93,7 +93,7 @@ func runDrift(args []string, stdout, stderr io.Writer) error {
 		}
 	}
 	if *summaryPath != "" {
-		if err := os.WriteFile(*summaryPath, []byte(driftSummary(result)), 0o644); err != nil {
+		if err := os.WriteFile(*summaryPath, []byte(driftSummary(result)), 0o600); err != nil {
 			return err
 		}
 	}
@@ -144,8 +144,7 @@ func runGenerate(args []string, stdout, stderr io.Writer) error {
 	for _, op := range selection {
 		file, err := apisync.GenerateEndpointFile(op, resolvedOut)
 		if err != nil {
-			unsupported = append(unsupported, apisync.UnsupportedOperation{Operation: op, Reasons: []string{err.Error()}})
-			continue
+			return fmt.Errorf("generating %s: %w", op.Key, err)
 		}
 		files = append(files, file)
 	}
@@ -215,7 +214,7 @@ func writeJSON(w io.Writer, value any) error {
 }
 
 func writeJSONFile(path string, value any) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil && filepath.Dir(path) != "." {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil && filepath.Dir(path) != "." {
 		return err
 	}
 	data, err := json.MarshalIndent(value, "", "  ")
@@ -223,7 +222,7 @@ func writeJSONFile(path string, value any) error {
 		return err
 	}
 	data = append(data, '\n')
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, 0o600)
 }
 
 func writeCheckSummary(w io.Writer, result apisync.CheckResult) {
