@@ -60,7 +60,7 @@ func TestResolveStraddleAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd, f := newAccountTestCmd("/v1/charges", "POST")
-	if err := resolveStraddleAccount(cmd, f); err != nil {
+	if err := resolveStraddleAccount(cmd, f, nil); err != nil {
 		t.Fatalf("charge create: %v", err)
 	}
 	if f.straddleAccountResolved != "acct_sticky" {
@@ -69,7 +69,7 @@ func TestResolveStraddleAccount(t *testing.T) {
 
 	// The sticky value must NOT leak onto an account-management call.
 	cmd, f = newAccountTestCmd("/v1/accounts", "POST")
-	if err := resolveStraddleAccount(cmd, f); err != nil {
+	if err := resolveStraddleAccount(cmd, f, nil); err != nil {
 		t.Fatalf("accounts create: %v", err)
 	}
 	if f.straddleAccountResolved != "" {
@@ -81,7 +81,7 @@ func TestResolveStraddleAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd, f = newAccountTestCmd("/v1/charges", "POST")
-	if err := resolveStraddleAccount(cmd, f); err == nil {
+	if err := resolveStraddleAccount(cmd, f, nil); err == nil {
 		t.Error("charge create without an account should error under saas")
 	}
 }

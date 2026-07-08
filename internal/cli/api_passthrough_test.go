@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/straddle-build/cli/internal/straddleacct"
 )
 
 func runRootForAPITest(t *testing.T, args []string, stdin string) (string, string, error) {
@@ -116,6 +118,57 @@ func TestAPIPassthroughGETWithParamsHeadersAndSelect(t *testing.T) {
 	}
 	if _, ok := data["description"]; ok {
 		t.Fatalf("--select id should remove description from data: %v", data)
+	}
+}
+
+func TestAPIPassthroughAccountFlagUsesRawPathPolicy(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	t.Setenv("STRADDLE_PLATFORM_CONFIG", filepath.Join(t.TempDir(), "platform.toml"))
+	if err := straddleacct.SaveContext(straddleacct.Context{IntegrationType: straddleacct.TypeSaaS}); err != nil {
+		t.Fatalf("save platform context: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get(straddleacct.Header); got != "acct_flag" {
+			t.Fatalf("%s header = %q, want acct_flag", straddleacct.Header, got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"ch_scoped"}`))
+	}))
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	stdout, _, err := runRootForAPITest(t, []string{"--json", "--account", "acct_flag", "api", "get", "/v1/charges"}, "")
+	if err != nil {
+		t.Fatalf("api get passthrough with --account returned error: %v", err)
+	}
+	env := decodeAPIEnvelope(t, stdout)
+	if env["success"] != true {
+		t.Fatalf("success = %v, want true; envelope: %v", env["success"], env)
+	}
+}
+
+func TestAPIPassthroughStickyAccountUsesRawPathPolicy(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	t.Setenv("STRADDLE_PLATFORM_CONFIG", filepath.Join(t.TempDir(), "platform.toml"))
+	if err := straddleacct.SaveContext(straddleacct.Context{IntegrationType: straddleacct.TypeSaaS, CurrentAccount: "acct_sticky"}); err != nil {
+		t.Fatalf("save platform context: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get(straddleacct.Header); got != "acct_sticky" {
+			t.Fatalf("%s header = %q, want acct_sticky", straddleacct.Header, got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"ch_sticky"}`))
+	}))
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	if _, _, err := runRootForAPITest(t, []string{"--json", "api", "get", "/v1/charges"}, ""); err != nil {
+		t.Fatalf("api get passthrough with sticky account returned error: %v", err)
 	}
 }
 

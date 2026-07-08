@@ -62,6 +62,7 @@ func GenerateEndpointFile(op Operation, outDir string) (GeneratedFile, error) {
 		ReadOnly:       op.ReadOnly,
 		PathParams:     op.PathParameters,
 		QueryParams:    op.QueryParameters,
+		HeaderParams:   generatedHeaderParameters(op.HeaderParameters),
 		HasRequestBody: op.RequestBodyRequired || len(op.RequestBodyMediaTypes) > 0,
 		NeedsBody:      op.Method == "POST" || op.Method == "PUT" || op.Method == "PATCH",
 	}
@@ -115,6 +116,7 @@ type fileTemplateData struct {
 	ReadOnly       bool
 	PathParams     []Parameter
 	QueryParams    []Parameter
+	HeaderParams   []Parameter
 	HasRequestBody bool
 	NeedsBody      bool
 }
@@ -141,13 +143,16 @@ func init() {
 	registerGeneratedEndpoint({{ printf "%q" .Endpoint }}, {{ .FuncName }})
 }
 
-func {{ .FuncName }}(flags *rootFlags) *cobra.Command {
-{{- range .QueryParams }}
-	var {{ varName . }} string
-{{- end }}
-{{- if .HasRequestBody }}
-	var stdinBody bool
-{{- end }}
+	func {{ .FuncName }}(flags *rootFlags) *cobra.Command {
+	{{- range .QueryParams }}
+		var {{ varName . }} string
+	{{- end }}
+	{{- range .HeaderParams }}
+		var {{ varName . }}Header string
+	{{- end }}
+	{{- if .HasRequestBody }}
+		var stdinBody bool
+	{{- end }}
 
 	cmd := &cobra.Command{
 		Use:     {{ printf "%q" .CommandUse }},
@@ -168,13 +173,19 @@ func {{ .FuncName }}(flags *rootFlags) *cobra.Command {
 			path = replacePathParam(path, {{ printf "%q" $param.Name }}, args[{{ $i }}])
 {{- end }}
 			params := map[string]string{}
-{{- range .QueryParams }}
-			if cmd.Flags().Changed({{ printf "%q" (flagName .) }}) {
-				params[{{ printf "%q" .Name }}] = {{ varName . }}
-			}
-{{- end }}
-{{- if .NeedsBody }}
-			var body map[string]any
+	{{- range .QueryParams }}
+				if cmd.Flags().Changed({{ printf "%q" (flagName .) }}) {
+					params[{{ printf "%q" .Name }}] = {{ varName . }}
+				}
+	{{- end }}
+				headers := map[string]string{}
+	{{- range .HeaderParams }}
+				if cmd.Flags().Changed({{ printf "%q" (flagName .) }}) {
+					headers[{{ printf "%q" .Name }}] = {{ varName . }}Header
+				}
+	{{- end }}
+	{{- if .NeedsBody }}
+				var body map[string]any
 {{- if .HasRequestBody }}
 			if stdinBody {
 				stdinData, err := io.ReadAll(os.Stdin)
@@ -190,41 +201,44 @@ func {{ .FuncName }}(flags *rootFlags) *cobra.Command {
 {{- end }}
 {{- end }}
 
-{{- if eq .Method "GET" }}
-			data, err := c.Get(path, params)
-			if err != nil {
-				return classifyAPIError(err, flags)
-			}
-{{- else if eq .Method "DELETE" }}
-			data, _, err := c.DeleteWithParams(path, params)
-			if err != nil {
-				return classifyAPIError(err, flags)
-			}
-{{- else if eq .Method "POST" }}
-			data, _, err := c.PostWithParams(path, params, body)
-			if err != nil {
-				return classifyAPIError(err, flags)
-			}
-{{- else if eq .Method "PUT" }}
-			data, _, err := c.PutWithParams(path, params, body)
-			if err != nil {
-				return classifyAPIError(err, flags)
-			}
-{{- else if eq .Method "PATCH" }}
-			data, _, err := c.PatchWithParams(path, params, body)
-			if err != nil {
-				return classifyAPIError(err, flags)
-			}
+	{{- if eq .Method "GET" }}
+				data, err := c.GetWithHeaders(path, params, headers)
+				if err != nil {
+					return classifyAPIError(err, flags)
+				}
+	{{- else if eq .Method "DELETE" }}
+				data, _, err := c.DeleteWithParamsAndHeaders(path, params, headers)
+				if err != nil {
+					return classifyAPIError(err, flags)
+				}
+	{{- else if eq .Method "POST" }}
+				data, _, err := c.PostWithParamsAndHeaders(path, params, body, headers)
+				if err != nil {
+					return classifyAPIError(err, flags)
+				}
+	{{- else if eq .Method "PUT" }}
+				data, _, err := c.PutWithParamsAndHeaders(path, params, body, headers)
+				if err != nil {
+					return classifyAPIError(err, flags)
+				}
+	{{- else if eq .Method "PATCH" }}
+				data, _, err := c.PatchWithParamsAndHeaders(path, params, body, headers)
+				if err != nil {
+					return classifyAPIError(err, flags)
+				}
 {{- end }}
 			return printOutputWithFlags(cmd.OutOrStdout(), data, flags)
 		},
 	}
-{{- range .QueryParams }}
-	cmd.Flags().StringVar(&{{ varName . }}, {{ printf "%q" (flagName .) }}, "", {{ printf "%q" .Description }})
-{{- end }}
-{{- if .HasRequestBody }}
-	cmd.Flags().BoolVar(&stdinBody, "stdin", false, "Read JSON request body from stdin")
-{{- end }}
+	{{- range .QueryParams }}
+		cmd.Flags().StringVar(&{{ varName . }}, {{ printf "%q" (flagName .) }}, "", {{ printf "%q" .Description }})
+	{{- end }}
+	{{- range .HeaderParams }}
+		cmd.Flags().StringVar(&{{ varName . }}Header, {{ printf "%q" (flagName .) }}, "", {{ printf "%q" .Description }})
+	{{- end }}
+	{{- if .HasRequestBody }}
+		cmd.Flags().BoolVar(&stdinBody, "stdin", false, "Read JSON request body from stdin")
+	{{- end }}
 	return cmd
 }
 `))
@@ -295,7 +309,18 @@ func example(op Operation) string {
 }
 
 func flagName(param Parameter) string {
-	return strings.ReplaceAll(param.Name, "_", "-")
+	return strings.ToLower(strings.ReplaceAll(param.Name, "_", "-"))
+}
+
+func generatedHeaderParameters(params []Parameter) []Parameter {
+	headers := make([]Parameter, 0, len(params))
+	for _, param := range params {
+		if strings.EqualFold(param.Name, "Straddle-Account-Id") {
+			continue
+		}
+		headers = append(headers, param)
+	}
+	return headers
 }
 
 func paramVarName(param Parameter) string {

@@ -268,7 +268,7 @@ See README.md or the bundled SKILL.md for recipes.`,
 		// Resolve the Straddle-Account-Id header for this command (gated by
 		// integration type); runs after profile application so a profile-set
 		// --account is honored. See straddle_account.go.
-		if err := resolveStraddleAccount(cmd, flags); err != nil {
+		if err := resolveStraddleAccount(cmd, flags, args); err != nil {
 			return err
 		}
 		// Record the resource name for human detail-card titling (cosmetic;

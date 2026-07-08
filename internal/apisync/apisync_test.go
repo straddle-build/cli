@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/straddle-build/cli/internal/apisync"
@@ -162,6 +163,41 @@ func TestParseSpecAppliesPathLevelParameters(t *testing.T) {
 	}
 	if len(ops[0].PathParameters) != 1 || ops[0].PathParameters[0].Name != "id" {
 		t.Fatalf("path parameters = %#v, want id from path item", ops[0].PathParameters)
+	}
+}
+
+func TestGenerateEndpointFileEmitsHeaderFlags(t *testing.T) {
+	t.Parallel()
+
+	file, err := apisync.GenerateEndpointFile(apisync.Operation{
+		OperationID: "GetWidget",
+		Endpoint:    "widgets.get",
+		Method:      "GET",
+		Path:        "/v1/widgets/{id}",
+		PathParameters: []apisync.Parameter{
+			{Name: "id", In: "path"},
+		},
+		HeaderParameters: []apisync.Parameter{
+			{Name: "Straddle-Account-Id", In: "header"},
+			{Name: "Request-Id", In: "header", Description: "Trace one request."},
+		},
+	}, t.TempDir())
+	if err != nil {
+		t.Fatalf("GenerateEndpointFile: %v", err)
+	}
+	got := file.Content
+	for _, want := range []string{
+		"var flagRequestIdHeader string",
+		`headers["Request-Id"] = flagRequestIdHeader`,
+		`c.GetWithHeaders(path, params, headers)`,
+		`cmd.Flags().StringVar(&flagRequestIdHeader, "request-id", "", "Trace one request.")`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("generated content missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "Straddle-Account-Id") {
+		t.Fatalf("generated content should not expose Straddle-Account-Id as a header flag:\n%s", got)
 	}
 }
 

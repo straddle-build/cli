@@ -122,6 +122,16 @@ jobs:
             --supported-additions \
             --agent
 
+      - name: Update spec lockfile
+        if: steps.drift.outputs.supported_additions != '0'
+        shell: bash
+        env:
+          LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
+        run: |
+          set -euo pipefail
+
+          cp "${LIVE_SPEC}" spec.json
+
       - name: Capture generated diff
         id: generated_diff
         shell: bash

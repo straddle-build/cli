@@ -115,13 +115,13 @@ func (c *Client) Get(path string, params map[string]string) (json.RawMessage, er
 func (c *Client) GetWithHeaders(path string, params map[string]string, headers map[string]string) (json.RawMessage, error) {
 	// Check cache for GET requests
 	if !c.NoCache && !c.DryRun && c.cacheDir != "" {
-		if cached, ok := c.readCache(path, params); ok {
+		if cached, ok := c.readCache(path, params, headers); ok {
 			return cached, nil
 		}
 	}
 	result, _, err := c.do("GET", path, params, nil, headers)
 	if err == nil && !c.NoCache && !c.DryRun && c.cacheDir != "" {
-		c.writeCache(path, params, result)
+		c.writeCache(path, params, headers, result)
 	}
 	return result, err
 }
@@ -145,7 +145,7 @@ func (c *Client) GetNoCache(path string, params map[string]string) (json.RawMess
 func (c *Client) GetWithHeadersNoCache(path string, params map[string]string, headers map[string]string) (json.RawMessage, error) {
 	result, _, err := c.do("GET", path, params, nil, headers)
 	if err == nil && !c.NoCache && !c.DryRun && c.cacheDir != "" {
-		c.writeCache(path, params, result)
+		c.writeCache(path, params, headers, result)
 	}
 	return result, err
 }
@@ -155,7 +155,7 @@ func (c *Client) ProbeGet(path string) (int, error) {
 	return status, err
 }
 
-func (c *Client) cacheKey(path string, params map[string]string) string {
+func (c *Client) cacheKey(path string, params map[string]string, headers map[string]string) string {
 	key := path
 	key += "|base_url=" + c.BaseURL
 	if c.Config != nil {
@@ -167,6 +167,7 @@ func (c *Client) cacheKey(path string, params map[string]string) string {
 		if c.Config.Path != "" {
 			key += "|config_path=" + c.Config.Path
 		}
+		key += normalizedHeaderKey("config_headers", c.Config.Headers)
 	}
 	paramKeys := make([]string, 0, len(params))
 	for k := range params {
@@ -187,12 +188,47 @@ func (c *Client) cacheKey(path string, params map[string]string) string {
 			key += "|" + name + "=" + c.Config.TemplateVars[name]
 		}
 	}
+	key += normalizedHeaderKey("request_headers", headers)
 	h := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(h[:8])
 }
 
-func (c *Client) readCache(path string, params map[string]string) (json.RawMessage, bool) {
-	cacheFile := filepath.Join(c.cacheDir, c.cacheKey(path, params)+".json")
+func normalizedHeaderKey(prefix string, headers map[string]string) string {
+	if len(headers) == 0 {
+		return ""
+	}
+	byName := map[string][]string{}
+	for name, value := range headers {
+		name = strings.ToLower(strings.TrimSpace(name))
+		if name == "" {
+			continue
+		}
+		byName[name] = append(byName[name], value)
+	}
+	names := make([]string, 0, len(byName))
+	for name := range byName {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var key strings.Builder
+	for _, name := range names {
+		values := byName[name]
+		sort.Strings(values)
+		for _, value := range values {
+			valueHash := sha256.Sum256([]byte(value))
+			key.WriteString("|")
+			key.WriteString(prefix)
+			key.WriteString(":")
+			key.WriteString(name)
+			key.WriteString("=")
+			key.WriteString(hex.EncodeToString(valueHash[:8]))
+		}
+	}
+	return key.String()
+}
+
+func (c *Client) readCache(path string, params map[string]string, headers map[string]string) (json.RawMessage, bool) {
+	cacheFile := filepath.Join(c.cacheDir, c.cacheKey(path, params, headers)+".json")
 	info, err := os.Stat(cacheFile)
 	if err != nil || time.Since(info.ModTime()) > 5*time.Minute {
 		return nil, false
@@ -207,9 +243,9 @@ func (c *Client) readCache(path string, params map[string]string) (json.RawMessa
 // writeCache persists a response body for the read-through GET cache.
 // Owner-only permissions: cached bodies routinely contain customer PII
 // and payment data.
-func (c *Client) writeCache(path string, params map[string]string, data json.RawMessage) {
+func (c *Client) writeCache(path string, params map[string]string, headers map[string]string, data json.RawMessage) {
 	_ = os.MkdirAll(c.cacheDir, 0o700)
-	cacheFile := filepath.Join(c.cacheDir, c.cacheKey(path, params)+".json")
+	cacheFile := filepath.Join(c.cacheDir, c.cacheKey(path, params, headers)+".json")
 	_ = os.WriteFile(cacheFile, []byte(data), 0o600)
 }
 
