@@ -316,6 +316,7 @@ See README.md or the bundled SKILL.md for recipes.`,
 	rootCmd.AddCommand(newSetupCmd(flags))
 	rootCmd.AddCommand(newUseAccountCmd(flags))
 	rootCmd.AddCommand(newVersionCliCmd())
+	installGeneratedEndpoints(rootCmd, flags)
 
 	return rootCmd
 }
