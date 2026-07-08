@@ -28,7 +28,7 @@ import (
 // "charges"), set in the root PersistentPreRunE from the command's
 // pp:endpoint annotation. Used only to title the human detail card; empty
 // for commands without an endpoint annotation. Read-only after pre-run, and
-// only consulted on the --human-friendly TTY path (never in MCP/agent mode).
+// only consulted on the --human-friendly TTY path (never in agent mode).
 var currentResource string
 
 // resourceFromEndpoint extracts the resource segment from a pp:endpoint

@@ -1,11 +1,8 @@
 // Copyright 2026 hello-keith. Licensed under Apache-2.0. See LICENSE.
 //
 // Local-SQLite power feature: run read-only SQL against the synced store.
-// The MCP server already exposes a typed `sql` tool (handleSQL) and the
-// cobratree framework set reserves the name `sql`, but the generator does not
-// emit a human-facing `sql` Cobra command — so this fills that gap. The
-// cobratree walker skips `sql` (framework set), so this does not double up with
-// the typed MCP tool. Hand-authored; survives regen.
+// The generator does not emit a human-facing `sql` Cobra command — this
+// fills that gap. Hand-authored; survives regen.
 package cli
 
 import (
@@ -19,7 +16,7 @@ import (
 
 // stripLeadingSQLNoiseCLI drops leading whitespace, line/block comments, and
 // statement separators so the read-only gate matches what SQLite actually
-// parses as the first keyword. Mirrors the MCP server's stripLeadingSQLNoise.
+// parses as the first keyword.
 func stripLeadingSQLNoiseCLI(query string) string {
 	for {
 		query = strings.TrimLeft(query, " \t\r\n;")
@@ -42,9 +39,8 @@ func stripLeadingSQLNoiseCLI(query string) string {
 	}
 }
 
-// validateReadOnlySQL allows only SELECT / WITH queries. Mirrors the MCP
-// server's validateReadOnlyQuery so the CLI and agent surfaces enforce the
-// same boundary.
+// validateReadOnlySQL allows only SELECT / WITH queries, enforcing the
+// CLI's read-only SQL boundary.
 func validateReadOnlySQL(query string) error {
 	upper := strings.ToUpper(stripLeadingSQLNoiseCLI(query))
 	if !strings.HasPrefix(upper, "SELECT") && !strings.HasPrefix(upper, "WITH") {

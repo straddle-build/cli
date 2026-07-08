@@ -602,7 +602,7 @@ func (c *Client) authHeader() (string, error) {
 }
 
 // binaryResponseEnvelope wraps a non-textual success body so it survives the
-// json.RawMessage contract every consumer (CLI output, --json, MCP tools)
+// json.RawMessage contract every consumer (CLI output, --json)
 // depends on. Without it, raw bytes (PDF, zip, image) are corrupted by
 // sanitizeJSONResponse and emitted as invalid JSON. The _pp_binary
 // discriminator lets callers and agents detect and base64-decode the payload.

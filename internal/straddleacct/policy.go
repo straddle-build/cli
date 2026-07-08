@@ -2,8 +2,7 @@
 //
 // Package straddleacct decides when a Straddle API call must carry the
 // Straddle-Account-Id header, based on the operation and the platform's
-// integration type. It is the shared brain used by both the CLI command path
-// and the in-process MCP handler so agent calls are gated identically.
+// integration type. It is the policy brain for the CLI command path.
 //
 // The "which operations accept the header" set comes straight from the OpenAPI
 // spec (47 operational ops declare the param; 23 account-management ops do

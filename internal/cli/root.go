@@ -79,8 +79,8 @@ type rootFlags struct {
 	deliverSink DeliverSink
 }
 
-// RootCmd returns the Cobra command tree without executing it. The MCP server
-// uses this to mirror every user-facing command as an agent tool.
+// RootCmd returns the Cobra command tree without executing it, for tests
+// and tooling.
 func RootCmd() *cobra.Command {
 	var flags rootFlags
 	return newRootCmd(&flags)
