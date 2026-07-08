@@ -5,12 +5,13 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/straddle-build/cli/internal/cliutil"
-	"github.com/straddle-build/cli/internal/config"
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/spf13/cobra"
+	"github.com/straddle-build/cli/internal/cliutil"
+	"github.com/straddle-build/cli/internal/config"
 )
 
 func newAuthCmd(flags *rootFlags) *cobra.Command {
@@ -70,11 +71,11 @@ func openSetupURL(url string) error {
 	var c *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
-		c = exec.Command("open", url)
+		c = exec.Command("open", url) //nolint:gosec // url is the hardcoded dashboard constant
 	case "linux":
-		c = exec.Command("xdg-open", url)
+		c = exec.Command("xdg-open", url) //nolint:gosec // url is the hardcoded dashboard constant
 	case "windows":
-		c = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+		c = exec.Command("rundll32", "url.dll,FileProtocolHandler", url) //nolint:gosec // url is the hardcoded dashboard constant
 	default:
 		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
 	}

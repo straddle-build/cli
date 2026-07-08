@@ -1,10 +1,35 @@
+version: "2"
+
 linters:
+  default: none
   enable:
     - errorlint
+    - gosec
     - govet
     - ineffassign
     - staticcheck
     - unused
+  exclusions:
+    rules:
+      # Test-only cleanup paths (deferred/paired Close in fixtures) are not
+      # shipped code; gosec's G1xx noise there drowns real findings.
+      - path: _test\.go
+        linters:
+          - gosec
+  settings:
+    staticcheck:
+      # golangci-lint's default exclusions, plus ST1005: this CLI's error
+      # strings deliberately carry multi-line, punctuated "hint:" blocks so
+      # humans and agents get actionable next steps with the failure.
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1005
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
 
 formatters:
   enable:

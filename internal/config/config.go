@@ -50,7 +50,7 @@ func Load(configPath string) (*Config, error) {
 	cfg.Path = path
 
 	// Try to load config file
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // user-supplied local config path is the feature
 	if err == nil {
 		if err := toml.Unmarshal(data, cfg); err != nil {
 			return nil, fmt.Errorf("parsing config %s: %w", path, err)
@@ -182,19 +182,6 @@ func (c *Config) AuthHeader() string {
 	return ""
 }
 
-func applyAuthFormat(format string, replacements map[string]string) string {
-	if format == "" {
-		return ""
-	}
-	for key, value := range replacements {
-		format = strings.ReplaceAll(format, "{"+key+"}", value)
-	}
-	if strings.Contains(format, "{") {
-		return ""
-	}
-	return format
-}
-
 func (c *Config) SaveTokens(clientID, clientSecret, accessToken, refreshToken string, expiry time.Time) error {
 	c.ClientID = clientID
 	c.ClientSecret = clientSecret
@@ -226,12 +213,9 @@ func (c *Config) save() error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("creating config dir: %w", err)
 	}
-	data, err := toml.Marshal(c)
+	data, err := toml.Marshal(c) //nolint:gosec // persisting tokens to the 0600 config file is the auth set-token feature
 	if err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
 	}
 	return os.WriteFile(c.Path, data, 0o600)
 }
-
-// Ensure strings import is used
-var _ = strings.ReplaceAll

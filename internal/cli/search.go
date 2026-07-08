@@ -57,28 +57,6 @@ func isNilOrEmpty(raw json.RawMessage) bool {
 	return true
 }
 
-// extractSearchResults unwraps API search responses by checking common envelope paths.
-func extractSearchResults(data json.RawMessage) []json.RawMessage {
-	// Try direct array first
-	var items []json.RawMessage
-	if json.Unmarshal(data, &items) == nil {
-		return items
-	}
-	// Try common wrapper paths: data, results, items
-	var wrapped map[string]json.RawMessage
-	if json.Unmarshal(data, &wrapped) == nil {
-		for _, key := range []string{"data", "results", "items", "records", "entries"} {
-			if inner, ok := wrapped[key]; ok {
-				if json.Unmarshal(inner, &items) == nil {
-					return items
-				}
-			}
-		}
-	}
-	// Return as single-item array
-	return []json.RawMessage{data}
-}
-
 func newSearchCmd(flags *rootFlags) *cobra.Command {
 	var resourceType string
 	var limit int

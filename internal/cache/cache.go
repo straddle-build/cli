@@ -35,7 +35,7 @@ func (s *Store) Get(key string) (json.RawMessage, bool) {
 	if err != nil || time.Since(info.ModTime()) > s.TTL {
 		return nil, false
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // path is sha256-derived inside the owned cache dir
 	if err != nil {
 		return nil, false
 	}

@@ -53,7 +53,7 @@ func TestSchemaVersion_StampExistingZeroDB(t *testing.T) {
 	if _, err := raw.Exec(`PRAGMA user_version = 0`); err != nil {
 		t.Fatalf("stamp zero: %v", err)
 	}
-	raw.Close()
+	_ = raw.Close()
 
 	s, err := Open(dbPath)
 	if err != nil {
@@ -84,7 +84,7 @@ func TestSchemaVersion_RefusesNewerDB(t *testing.T) {
 	if _, err := raw.Exec(`PRAGMA user_version = 999`); err != nil {
 		t.Fatalf("stamp future version: %v", err)
 	}
-	raw.Close()
+	_ = raw.Close()
 
 	_, err = Open(dbPath)
 	if err == nil {

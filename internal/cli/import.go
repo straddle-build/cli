@@ -48,7 +48,7 @@ but do not stop the import.`,
 			if inputFile == "-" || inputFile == "" {
 				reader = os.Stdin
 			} else {
-				f, err := os.Open(inputFile)
+				f, err := os.Open(inputFile) //nolint:gosec // user-supplied local path is intentional
 				if err != nil {
 					return fmt.Errorf("opening input file: %w", err)
 				}

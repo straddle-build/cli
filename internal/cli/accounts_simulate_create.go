@@ -38,8 +38,6 @@ func newAccountsSimulateCreateCmd(flags *rootFlags) *cobra.Command {
 					fmt.Fprintf(os.Stderr, "warning: --%s %q not in allowed set %v\n", "final-status", flagFinalStatus, allowedFinalStatus)
 				}
 			}
-			if !stdinBody {
-			}
 			c, err := flags.newClient()
 			if err != nil {
 				return err

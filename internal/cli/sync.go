@@ -6,9 +6,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/straddle-build/cli/internal/cliutil"
-	"github.com/straddle-build/cli/internal/store"
 	"net/url"
 	"os"
 	"regexp"
@@ -18,6 +15,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/straddle-build/cli/internal/cliutil"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 // unresolvedPathKeyRE matches `{key}` placeholders left in a sync path

@@ -8,10 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/straddle-build/cli/internal/client"
-	"github.com/straddle-build/cli/internal/cliutil"
 	"io"
 	"net/url"
 	"os"
@@ -22,6 +18,11 @@ import (
 	"text/tabwriter"
 	"time"
 	"unicode"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/straddle-build/cli/internal/client"
+	"github.com/straddle-build/cli/internal/cliutil"
 )
 
 var As = errors.As
@@ -1295,10 +1296,6 @@ func prioritizeFields(item map[string]any, includeComplex bool) []string {
 	// "BuildingName" → last segment "name" → tier 0... but we want to avoid this.
 	// Solution: exact match on the full lowered name OR suffix segment match,
 	// with a penalty for compound names that have a non-identity prefix.
-	type pattern struct {
-		word string
-		tier int
-	}
 	// Exact matches (full field name, case-insensitive) — highest confidence
 	exactMatches := map[string]int{
 		"id": 0, "name": 0, "title": 0, "slug": 0, "key": 0,

@@ -63,7 +63,7 @@ func appendFeedback(entry FeedbackEntry) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // p is the CLI-owned feedback ledger path
 	if err != nil {
 		return fmt.Errorf("opening feedback ledger: %w", err)
 	}
@@ -192,7 +192,7 @@ func newFeedbackListCmd(flags *rootFlags) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			data, err := os.ReadFile(p)
+			data, err := os.ReadFile(p) //nolint:gosec // p is the CLI-owned feedback ledger path
 			if err != nil {
 				if os.IsNotExist(err) {
 					if flags.asJSON {

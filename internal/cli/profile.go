@@ -45,7 +45,7 @@ func loadProfileStore() (*profileStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(p)
+	data, err := os.ReadFile(p) //nolint:gosec // p is the CLI-owned profile store path
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &profileStore{Profiles: map[string]Profile{}}, nil
