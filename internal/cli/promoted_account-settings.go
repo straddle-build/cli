@@ -17,7 +17,7 @@ func newAccountSettingsPromotedCmd(flags *rootFlags) *cobra.Command {
 		Use:         "account-settings <account_id>",
 		Short:       "Get all resolved settings for the specified account, including inherited values from organization, platform, and...",
 		Long:        "Shortcut for 'account-settings get-settings'. Get all resolved settings for the specified account, including inherited values from organization, platform, and...",
-		Example:     "  straddle-pp-cli account-settings 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle account-settings 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "account-settings.get-settings", "pp:method": "GET", "pp:path": "/v1/account_settings/{account_id}", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := flags.newClient()

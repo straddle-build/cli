@@ -24,7 +24,7 @@ func newBridgeCreateSpeedchexCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create-speedchex",
 		Short:       "Creates a new paykey using a Speedchex token as the source. This endpoint allows you to create a secure payment...",
-		Example:     "  straddle-pp-cli bridge create-speedchex --customer-id 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle bridge create-speedchex --customer-id 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "bridge.create-speedchex", "pp:method": "POST", "pp:path": "/v1/bridge/speedchex"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

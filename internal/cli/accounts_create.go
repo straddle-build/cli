@@ -42,7 +42,7 @@ func newAccountsCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Creates a new account associated with your Straddle platform integration. This endpoint allows you to set up an...",
-		Example:     "  straddle-pp-cli accounts create --access-level standard",
+		Example:     "  straddle accounts create --access-level standard",
 		Annotations: map[string]string{"pp:endpoint": "accounts.create", "pp:method": "POST", "pp:path": "/v1/accounts"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

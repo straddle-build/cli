@@ -1,5 +1,6 @@
-# Compiled binary (built via `go build -o ./straddle-pp-cli ./cmd/straddle-pp-cli`)
-/straddle-pp-cli
+# Build outputs (`make build` -> bin/straddle; stray root builds)
+/straddle
+/bin/
 
 # Build / release artifacts
 /build/

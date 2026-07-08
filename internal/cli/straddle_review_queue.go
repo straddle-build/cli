@@ -51,8 +51,8 @@ func newReviewQueueCmd(flags *rootFlags) *cobra.Command {
 		Long: "List synced customers and paykeys in review status, sorted oldest first\n" +
 			"with age in queue. These are the identity items blocking downstream\n" +
 			"charges and payouts from releasing. Use --type to narrow to one kind.",
-		Example: "  straddle-pp-cli review-queue --json\n" +
-			"  straddle-pp-cli review-queue --type customers --json",
+		Example: "  straddle review-queue --json\n" +
+			"  straddle review-queue --type customers --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil
@@ -115,7 +115,7 @@ func newReviewQueueCmd(flags *rootFlags) *cobra.Command {
 			}
 			w := cmd.OutOrStdout()
 			if len(items) == 0 {
-				fmt.Fprintln(w, "Review queue empty. (Run 'straddle-pp-cli sync' if you expected items.)")
+				fmt.Fprintln(w, "Review queue empty. (Run 'straddle sync' if you expected items.)")
 				return nil
 			}
 			fmt.Fprintf(w, "%-28s %-9s %6s  %s\n", "ID", "KIND", "AGE_D", "NAME")

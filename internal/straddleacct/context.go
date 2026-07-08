@@ -32,7 +32,7 @@ func ValidIntegrationType(s string) bool {
 
 // ContextPath resolves the platform context file. STRADDLE_PLATFORM_CONFIG
 // overrides it directly; otherwise it sits beside the main config file (next
-// to STRADDLE_CONFIG when set, else ~/.config/straddle-pp-cli/platform.toml),
+// to STRADDLE_CONFIG when set, else ~/.config/straddle/platform.toml),
 // so it travels with the rest of the CLI's configuration.
 func ContextPath() string {
 	if p := os.Getenv("STRADDLE_PLATFORM_CONFIG"); p != "" {
@@ -42,7 +42,7 @@ func ContextPath() string {
 		return filepath.Join(filepath.Dir(c), "platform.toml")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "straddle-pp-cli", "platform.toml")
+	return filepath.Join(home, ".config", "straddle", "platform.toml")
 }
 
 // LoadContext reads the platform context. A missing file yields an empty

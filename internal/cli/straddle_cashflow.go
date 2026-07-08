@@ -43,8 +43,8 @@ func newCashflowCmd(flags *rootFlags) *cobra.Command {
 			"out) per day, including days with zero activity, and report net flow.\n" +
 			"Volume is bucketed by each payment's created date. Use --weekly to roll\n" +
 			"days up into 7-day buckets.",
-		Example: "  straddle-pp-cli cashflow --days 30 --json\n" +
-			"  straddle-pp-cli cashflow --days 90 --weekly --json",
+		Example: "  straddle cashflow --days 30 --json\n" +
+			"  straddle cashflow --days 90 --weekly --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil

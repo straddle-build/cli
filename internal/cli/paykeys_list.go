@@ -26,7 +26,7 @@ func newPaykeysListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Returns a list of paykeys associated with a Straddle account. This endpoint supports advanced sorting and filtering...",
-		Example:     "  straddle-pp-cli paykeys list",
+		Example:     "  straddle paykeys list",
 		Annotations: map[string]string{"pp:endpoint": "paykeys.list", "pp:method": "GET", "pp:path": "/v1/paykeys", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-by") {

@@ -24,7 +24,7 @@ func newBridgeCreatePlaidPaykeyCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create-plaid-paykey",
 		Short:       "Use Bridge to create a new paykey using a Plaid token as the source. This endpoint allows you to create a secure...",
-		Example:     "  straddle-pp-cli bridge create-plaid-paykey --customer-id 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle bridge create-plaid-paykey --customer-id 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "bridge.create-plaid-paykey", "pp:method": "POST", "pp:path": "/v1/bridge/plaid"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

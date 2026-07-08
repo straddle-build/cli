@@ -16,7 +16,7 @@ func newLinkedBankAccountsGetCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get <linked_bank_account_id>",
 		Short:       "Retrieves the details of a linked bank account that has previously been created. Supply the unique linked bank...",
-		Example:     "  straddle-pp-cli linked-bank-accounts get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle linked-bank-accounts get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "linked-bank-accounts.get", "pp:method": "GET", "pp:path": "/v1/linked_bank_accounts/{linked_bank_account_id}", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

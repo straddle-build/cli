@@ -20,7 +20,7 @@ func newFundingEventsCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Simulate a funding event for testing. This endpoint can only be used in the sandbox environment.",
-		Example:     "  straddle-pp-cli funding-events create --funding-event-job-type charges",
+		Example:     "  straddle funding-events create --funding-event-job-type charges",
 		Annotations: map[string]string{"pp:endpoint": "funding-events.create", "pp:method": "POST", "pp:path": "/v1/funding_events/simulate"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

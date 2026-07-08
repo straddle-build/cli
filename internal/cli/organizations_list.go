@@ -23,7 +23,7 @@ func newOrganizationsListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Retrieves a list of organizations associated with your Straddle integration. The organizations are returned sorted...",
-		Example:     "  straddle-pp-cli organizations list",
+		Example:     "  straddle organizations list",
 		Annotations: map[string]string{"pp:endpoint": "organizations.list", "pp:method": "GET", "pp:path": "/v1/organizations", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-order") {

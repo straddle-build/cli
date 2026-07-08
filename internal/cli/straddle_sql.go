@@ -62,8 +62,8 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 			"representatives, linked_bank_accounts. The JSON resource body is in the\n" +
 			"`data` column (use json_extract(data, '$.field')). Read-only: only\n" +
 			"SELECT/WITH are accepted.",
-		Example: "  straddle-pp-cli sql \"SELECT json_extract(data,'\\$.status') AS status, COUNT(*) n FROM payments GROUP BY status\" --json\n" +
-			"  straddle-pp-cli sql \"SELECT id, json_extract(data,'\\$.amount') AS amount FROM payments ORDER BY amount DESC LIMIT 10\"",
+		Example: "  straddle sql \"SELECT json_extract(data,'\\$.status') AS status, COUNT(*) n FROM payments GROUP BY status\" --json\n" +
+			"  straddle sql \"SELECT id, json_extract(data,'\\$.amount') AS amount FROM payments ORDER BY amount DESC LIMIT 10\"",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return cmd.Help()
@@ -77,11 +77,11 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 			}
 
 			if dbPath == "" {
-				dbPath = defaultDBPath("straddle-pp-cli")
+				dbPath = defaultDBPath("straddle")
 			}
 			db, err := store.OpenReadOnly(dbPath)
 			if err != nil {
-				return fmt.Errorf("opening local database: %w\nRun 'straddle-pp-cli sync' first.", err)
+				return fmt.Errorf("opening local database: %w\nRun 'straddle sync' first.", err)
 			}
 			defer db.Close()
 
@@ -125,7 +125,7 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 				return flags.printJSON(cmd, results)
 			}
 			if len(results) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "0 rows. (Run 'straddle-pp-cli sync' if the store is empty.)")
+				fmt.Fprintln(cmd.OutOrStdout(), "0 rows. (Run 'straddle sync' if the store is empty.)")
 				return nil
 			}
 			return printAutoTable(cmd.OutOrStdout(), results)

@@ -24,7 +24,7 @@ func newBridgeCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Creates a new paykey using a Quiltt token as the source. This endpoint allows you to create a secure payment token...",
-		Example:     "  straddle-pp-cli bridge create --customer-id 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle bridge create --customer-id 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "bridge.create", "pp:method": "POST", "pp:path": "/v1/bridge/quiltt"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

@@ -20,7 +20,7 @@ func newCustomersReviewUpdateCustomerCmd(flags *rootFlags) *cobra.Command {
 		Use:         "update-customer <id>",
 		Aliases:     []string{"update"},
 		Short:       "Updates the status of a customer's identity decision. This endpoint allows you to modify the outcome of a customer...",
-		Example:     "  straddle-pp-cli customers review update-customer 550e8400-e29b-41d4-a716-446655440000 --status verified",
+		Example:     "  straddle customers review update-customer 550e8400-e29b-41d4-a716-446655440000 --status verified",
 		Annotations: map[string]string{"pp:endpoint": "review.update-customer", "pp:method": "PATCH", "pp:path": "/v1/customers/{id}/review"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

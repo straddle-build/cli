@@ -33,7 +33,7 @@ func newCustomersCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Creates a new customer record and automatically initiates identity, fraud, and risk assessment scores. This endpoint...",
-		Example:     "  straddle-pp-cli customers create --email user@example.com",
+		Example:     "  straddle customers create --email user@example.com",
 		Annotations: map[string]string{"pp:endpoint": "customers.create", "pp:method": "POST", "pp:path": "/v1/customers"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

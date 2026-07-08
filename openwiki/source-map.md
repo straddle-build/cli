@@ -4,7 +4,7 @@ This page is the fastest way to find the code behind a command.
 
 ## Primary packages
 
-- `cmd/straddle-pp-cli/main.go` — CLI entrypoint; hands off to the Cobra command tree.
+- `cmd/straddle/main.go` — CLI entrypoint; hands off to the Cobra command tree.
 - `cmd/straddle-pp-mcp/main.go` — MCP entrypoint; exposes the same capabilities over stdio or streamable HTTP.
 - `internal/cli/root.go` — Cobra root command, persistent flags, exit behavior, and shared output rules.
 - `internal/cli/straddle_setup.go` — persisted integration type (`account`, `saas`, `marketplace`) and current embedded account helpers.

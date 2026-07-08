@@ -26,7 +26,7 @@ func newBridgeCreateTanCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create-tan",
 		Short:       "Create tan",
-		Example:     "  straddle-pp-cli bridge create-tan --account-type checking",
+		Example:     "  straddle bridge create-tan --account-type checking",
 		Annotations: map[string]string{"pp:endpoint": "bridge.create-tan", "pp:method": "POST", "pp:path": "/v1/bridge/tan"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

@@ -45,8 +45,8 @@ func newPipelineCmd(flags *rootFlags) *cobra.Command {
 			"created, scheduled, or on_hold can still be held/released/cancelled;\n" +
 			"once a payment reaches pending it is locked. Use --cancelable to list\n" +
 			"only the payments you can still act on before a cutoff.",
-		Example: "  straddle-pp-cli pipeline --json\n" +
-			"  straddle-pp-cli pipeline --cancelable --json --select id,type,status,amount",
+		Example: "  straddle pipeline --json\n" +
+			"  straddle pipeline --cancelable --json --select id,type,status,amount",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil
@@ -117,7 +117,7 @@ func newPipelineCmd(flags *rootFlags) *cobra.Command {
 			}
 			w := cmd.OutOrStdout()
 			if len(result.ByStatus) == 0 {
-				fmt.Fprintln(w, "No payments synced. Run 'straddle-pp-cli sync' first.")
+				fmt.Fprintln(w, "No payments synced. Run 'straddle sync' first.")
 				return nil
 			}
 			fmt.Fprintf(w, "%-12s %-11s %6s  %s\n", "STATUS", "CANCELABLE", "COUNT", "TOTAL")

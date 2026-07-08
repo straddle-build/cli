@@ -16,7 +16,7 @@ func newPaykeysReviewGetCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get <id>",
 		Short:       "Get additional details about a paykey.",
-		Example:     "  straddle-pp-cli paykeys review get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle paykeys review get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "review.get", "pp:method": "GET", "pp:path": "/v1/paykeys/{id}/review", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

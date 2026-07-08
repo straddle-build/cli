@@ -2,7 +2,7 @@
 
 ## Objective
 
-A hands-free, re-renderable demo of `straddle-pp-cli` for product marketing.
+A hands-free, re-renderable demo of `straddle` for product marketing.
 A VHS tape types a ~90-second highlight reel into a real terminal with natural
 pacing and renders it to video — no human at the keyboard, repeatable after
 every CLI change.
@@ -16,12 +16,12 @@ data, no visible glitches.
 
 | Beat | Command (as typed on screen) | What it shows |
 |---|---|---|
-| 1 | `straddle-pp-cli doctor` | Instant health check: auth, connectivity, local store |
-| 2 | `straddle-pp-cli sync --resources customers,payments,funding-events` | Live API → local SQLite mirror |
-| 3 | `straddle-pp-cli customers get <fresh-id> --human-friendly` | The detail card renderer (branch feature) |
-| 4 | `straddle-pp-cli reconcile` | Settled vs outstanding — analytics the official CLI lacks |
-| 5 | `straddle-pp-cli pipeline` | Lifecycle status table + cancelable-now summary (swapped in for `returns`, which is monotone in this sandbox: all `insufficient_funds`, no reversals) |
-| 6 | `straddle-pp-cli sql "select status, count(*) n from payments group by status order by n desc"` | Your payments data is just SQL |
+| 1 | `straddle doctor` | Instant health check: auth, connectivity, local store |
+| 2 | `straddle sync --resources customers,payments,funding-events` | Live API → local SQLite mirror |
+| 3 | `straddle customers get <fresh-id> --human-friendly` | The detail card renderer (branch feature) |
+| 4 | `straddle reconcile` | Settled vs outstanding — analytics the official CLI lacks |
+| 5 | `straddle pipeline` | Lifecycle status table + cancelable-now summary (swapped in for `returns`, which is monotone in this sandbox: all `insufficient_funds`, no reversals) |
+| 6 | `straddle sql "select status, count(*) n from payments group by status order by n desc"` | Your payments data is just SQL |
 
 `<fresh-id>` is a real UUID substituted at render time (see Structure) so the
 screen shows an honest-looking command, and it can never 404.
@@ -30,7 +30,7 @@ screen shows an honest-looking command, and it can never 404.
 
 - charmbracelet **VHS** (new dep, `brew install vhs`; brings `ttyd` + `ffmpeg`)
 - bash for the prepare/render wrapper
-- The CLI itself, built from the current branch (`go build -o ./straddle-pp-cli ./cmd/straddle-pp-cli`)
+- The CLI itself, built from the current branch (`go build -o ./straddle ./cmd/straddle`)
 - Sandbox environment via the existing oauth2 config — no new credentials
 
 ## Commands
@@ -63,7 +63,7 @@ Plain defensive bash, matching the repo's simple-tooling bias:
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-CUSTOMER_ID=$(./straddle-pp-cli sql \
+CUSTOMER_ID=$(./straddle sql \
   "select id from customers order by created_at desc limit 1" --quiet)
 [ -n "$CUSTOMER_ID" ] || { echo "no customers in local store" >&2; exit 1; }
 ```

@@ -31,7 +31,7 @@ func newCustomersUpdateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <id>",
 		Short:       "Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII,...",
-		Example:     "  straddle-pp-cli customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com",
+		Example:     "  straddle customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com",
 		Annotations: map[string]string{"pp:endpoint": "customers.update", "pp:method": "PUT", "pp:path": "/v1/customers/{id}"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

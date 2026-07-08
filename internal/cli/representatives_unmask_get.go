@@ -16,7 +16,7 @@ func newRepresentativesUnmaskGetCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get <representative_id>",
 		Short:       "Retrieves the unmasked details of a representative that has previously been created. Supply the unique...",
-		Example:     "  straddle-pp-cli representatives unmask get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle representatives unmask get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "unmask.get", "pp:method": "GET", "pp:path": "/v1/representatives/{representative_id}/unmask", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

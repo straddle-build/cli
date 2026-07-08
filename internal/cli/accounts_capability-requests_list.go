@@ -25,7 +25,7 @@ func newAccountsCapabilityRequestsListCmd(flags *rootFlags) *cobra.Command {
 		Use:         "list <account_id>",
 		Aliases:     []string{"get"},
 		Short:       "Retrieves a list of capability requests associated with an account. The requests are returned sorted by creation...",
-		Example:     "  straddle-pp-cli accounts capability-requests list 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle accounts capability-requests list 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "capability-requests.list", "pp:method": "GET", "pp:path": "/v1/accounts/{account_id}/capability_requests", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

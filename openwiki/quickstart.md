@@ -2,9 +2,9 @@
 
 ## What this repository is
 
-`straddle-pp-cli` is a Go CLI and MCP server for Straddle's Pay by Bank and Embed APIs. The repo combines:
+`straddle` is a Go CLI and MCP server for Straddle's Pay by Bank and Embed APIs. The repo combines:
 
-- a human-facing terminal CLI (`straddle-pp-cli`)
+- a human-facing terminal CLI (`straddle`)
 - an MCP server for agents (`straddle-pp-mcp`)
 - a local SQLite mirror for synced Straddle resources
 - local analytics and workflows that go beyond one-off API calls
@@ -23,7 +23,7 @@ The project is centered on payment operations: charges, payouts, customers, payk
 
 The main entrypoints and packages are:
 
-- `cmd/straddle-pp-cli/main.go` — CLI entrypoint
+- `cmd/straddle/main.go` — CLI entrypoint
 - `cmd/straddle-pp-mcp/main.go` — MCP server entrypoint
 - `internal/cli/` — Cobra command tree and hand-authored CLI features
 - `internal/client/` — HTTP client and request helpers

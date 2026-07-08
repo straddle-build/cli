@@ -30,7 +30,7 @@ Straddle-Account-Id header is sent on platform calls.
 
 Run without --type to print the current setting. Platforms then pick an acting
 account with 'use-account <acct_id>'.`,
-		Example: "  straddle-pp-cli setup --type saas",
+		Example: "  straddle setup --type saas",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, err := straddleacct.LoadContext()
 			if err != nil {
@@ -67,7 +67,7 @@ Straddle-Account-Id header. It sticks until you change it; --account on any
 command overrides it for that one call.
 
 Run without an id to show the current account. Use --clear to unset it.`,
-		Example: "  straddle-pp-cli use-account acct_01h...",
+		Example: "  straddle use-account acct_01h...",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, err := straddleacct.LoadContext()

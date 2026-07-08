@@ -26,7 +26,7 @@ func newFundingEventPaymentsPromotedCmd(flags *rootFlags) *cobra.Command {
 		Use:         "funding-event-payments <id>",
 		Short:       "All the payments that made up the funding event",
 		Long:        "Shortcut for 'funding-event-payments get'. All the payments that made up the funding event",
-		Example:     "  straddle-pp-cli funding-event-payments 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle funding-event-payments 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "funding-event-payments.get", "pp:method": "GET", "pp:path": "/v1/funding_event_payments/{id}", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("default-sort") {

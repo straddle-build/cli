@@ -31,7 +31,7 @@ func newFundingEventsListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Retrieves a list of funding events for your account. This endpoint supports advanced sorting and filtering options.",
-		Example:     "  straddle-pp-cli funding-events list",
+		Example:     "  straddle funding-events list",
 		Annotations: map[string]string{"pp:endpoint": "funding-events.list", "pp:method": "GET", "pp:path": "/v1/funding_events", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-by") {

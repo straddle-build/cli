@@ -20,7 +20,7 @@ func newPayoutsReleasePayoutCmd(flags *rootFlags) *cobra.Command {
 		Use:         "payout <id>",
 		Aliases:     []string{"update"},
 		Short:       "Release a payout from a `hold` status to allow it to be rescheduled for processing.",
-		Example:     "  straddle-pp-cli payouts release payout 550e8400-e29b-41d4-a716-446655440000 --reason example-value",
+		Example:     "  straddle payouts release payout 550e8400-e29b-41d4-a716-446655440000 --reason example-value",
 		Annotations: map[string]string{"pp:endpoint": "release.payout", "pp:method": "PUT", "pp:path": "/v1/payouts/{id}/release"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

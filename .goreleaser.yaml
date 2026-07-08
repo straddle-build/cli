@@ -1,15 +1,15 @@
 version: 2
-project_name: straddle-pp-cli
+project_name: straddle
 changelog:
   disable: true
 builds:
-  - id: straddle-pp-cli
-    main: ./cmd/straddle-pp-cli
-    binary: straddle-pp-cli
+  - id: straddle
+    main: ./cmd/straddle
+    binary: straddle
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X straddle-pp-cli/internal/cli.version={{ .Version }}
+      - -s -w -X straddle/internal/cli.version={{ .Version }}
     targets:
       - darwin_amd64
       - darwin_arm64
@@ -40,12 +40,12 @@ archives:
 checksum:
   name_template: checksums.txt
 brews:
-  - name: straddle-pp-cli
+  - name: straddle
     repository:
       owner: hello-keith
       name: homebrew-tap
-    homepage: "https://github.com/hello-keith/straddle-pp-cli"
+    homepage: "https://github.com/hello-keith/straddle"
     description: "Every Straddle API operation, plus a local payments ledger, offline search, and settlement and return analytics no..."
     install: |
-      bin.install "straddle-pp-cli"
+      bin.install "straddle"
       bin.install "straddle-pp-mcp"

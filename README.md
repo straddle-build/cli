@@ -8,7 +8,7 @@ Printed by [@hello-keith](https://github.com/hello-keith) (hello-keith).
 
 ## Install
 
-The recommended path installs both the `straddle-pp-cli` binary and the `pp-straddle` agent skill (Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other agents supported by the upstream [`skills`](https://github.com/vercel-labs/skills) CLI) in one shot:
+The recommended path installs both the `straddle` binary and the `pp-straddle` agent skill (Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and other agents supported by the upstream [`skills`](https://github.com/vercel-labs/skills) CLI) in one shot:
 
 ```bash
 npx -y @mvanhorn/printing-press install straddle
@@ -110,23 +110,23 @@ Straddle uses a Bearer JWT API key. Set STRADDLE_API_KEY (or pass --api-key) and
 
 ```bash
 # Confirm STRADDLE_API_KEY is set and the chosen environment is reachable before anything else.
-straddle-pp-cli doctor
+straddle doctor
 
 
 # Pull charges, payouts, customers, paykeys, and funding events into the local store so search and analytics work offline.
-straddle-pp-cli sync
+straddle sync
 
 
 # Search across charges and payouts in one call; the unified payments view is the fastest way to see recent activity.
-straddle-pp-cli payments --json
+straddle payments --json
 
 
 # See which synced payments have not yet settled to a funding event.
-straddle-pp-cli reconcile --outstanding --json
+straddle reconcile --outstanding --json
 
 
 # Find payments you can still cancel before they reach the locked pending state.
-straddle-pp-cli pipeline --cancelable --json
+straddle pipeline --cancelable --json
 
 ```
 
@@ -140,14 +140,14 @@ These capabilities aren't available in any other tool for this API.
   _Reach for this to answer 'which charges funded this deposit' or 'what is still unsettled' without paging the API per payment._
 
   ```bash
-  straddle-pp-cli reconcile --outstanding --json
+  straddle reconcile --outstanding --json
   ```
 - **`cashflow`** — Aggregate synced charge volume in versus payout volume out over a date window, including zero-activity days, with net flow per day or week.
 
   _Use to see money in versus money out at a glance, including the days nothing moved, without summing payments by hand._
 
   ```bash
-  straddle-pp-cli cashflow --days 30 --json
+  straddle cashflow --days 30 --json
   ```
 
 ### Payment lifecycle control
@@ -156,14 +156,14 @@ These capabilities aren't available in any other tool for this API.
   _Use before a cutoff to find every payment you can still stop, since pending and later states cannot be cancelled._
 
   ```bash
-  straddle-pp-cli pipeline --cancelable --json
+  straddle pipeline --cancelable --json
   ```
 - **`returns`** — Surface failed and reversed payments with their ACH reason codes and rank repeat-offender paykeys and customers from the local store.
 
   _Use to spot accounts that keep returning (R01 NSF, R02 closed, R05 dispute) so you can block or re-verify them._
 
   ```bash
-  straddle-pp-cli returns --days 30 --repeat-offenders --json
+  straddle returns --days 30 --repeat-offenders --json
   ```
 
 ### Risk & identity ops
@@ -172,14 +172,14 @@ These capabilities aren't available in any other tool for this API.
   _Use to clear the identity backlog: these are the items blocking downstream charges and payouts from releasing._
 
   ```bash
-  straddle-pp-cli review-queue --json
+  straddle review-queue --json
   ```
 - **`expiring`** — List paykeys approaching their expires_at and blocked paykeys that are unblock-eligible, so payments do not fail on stale tokens.
 
   _Use to find paykeys to refresh or unblock before recurring charges fail against an expired or blocked token._
 
   ```bash
-  straddle-pp-cli expiring --days 14 --json
+  straddle expiring --days 14 --json
   ```
 
 ### Sandbox testing
@@ -188,12 +188,12 @@ These capabilities aren't available in any other tool for this API.
   _Use when writing sandbox tests to pick the exact sandbox_outcome (paid, failed_insufficient_funds, reversed_customer_dispute) that triggers the state you want._
 
   ```bash
-  straddle-pp-cli sandbox outcomes --json
+  straddle sandbox outcomes --json
   ```
 
 ## Usage
 
-Run `straddle-pp-cli --help` for the full command reference and flag list.
+Run `straddle --help` for the full command reference and flag list.
 
 ## Commands
 
@@ -201,131 +201,131 @@ Run `straddle-pp-cli --help` for the full command reference and flag list.
 
 Manage account settings
 
-- **`straddle-pp-cli account-settings <account_id>`** - Get all resolved settings for the specified account, including inherited values from organization, platform, and system defaults.
+- **`straddle account-settings <account_id>`** - Get all resolved settings for the specified account, including inherited values from organization, platform, and system defaults.
 
 ### accounts
 
 Accounts represent businesses using Straddle through your platform. Each account must complete automated verification before processing payments. Use accounts to manage your users' payment capabilities, track verification status, and control access to features. Accounts can be instantly created in sandbox and require additional verification for production access.
 
-- **`straddle-pp-cli accounts create`** - Creates a new account associated with your Straddle platform integration. This endpoint allows you to set up an account with specified details, including business information and access levels.
-- **`straddle-pp-cli accounts get`** - Retrieves the details of an account that has previously been created. Supply the unique account ID that was returned from your previous request, and Straddle will return the corresponding account information.
-- **`straddle-pp-cli accounts list`** - Returns a list of accounts associated with your Straddle platform integration. The accounts are returned sorted by creation date, with the most recently created accounts appearing first. This endpoint supports advanced sorting and filtering options.
-- **`straddle-pp-cli accounts update`** - Updates an existing account's information. This endpoint allows you to update various account details during onboarding or after the account has been created.
+- **`straddle accounts create`** - Creates a new account associated with your Straddle platform integration. This endpoint allows you to set up an account with specified details, including business information and access levels.
+- **`straddle accounts get`** - Retrieves the details of an account that has previously been created. Supply the unique account ID that was returned from your previous request, and Straddle will return the corresponding account information.
+- **`straddle accounts list`** - Returns a list of accounts associated with your Straddle platform integration. The accounts are returned sorted by creation date, with the most recently created accounts appearing first. This endpoint supports advanced sorting and filtering options.
+- **`straddle accounts update`** - Updates an existing account's information. This endpoint allows you to update various account details during onboarding or after the account has been created.
 
 ### bridge
 
 Bridge provides a comprehensive suite of tools for connecting customer bank accounts. Use it to generate secure widget sessions for instant account verification, accept tokens from major providers like Plaid and Finicity, or verify accounts directly via our API. Bridge handles all sensitive banking credentials and ensures secure, compliant connections with support for 90% of US bank accounts.
 
-- **`straddle-pp-cli bridge create`** - Creates a new paykey using a Quiltt token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Quiltt.
-- **`straddle-pp-cli bridge create-bank-account-paykey`** - Use Bridge to create a new paykey using a bank routing and account number as the source. This endpoint allows you to create a secure payment token linked to a specific bank account.
-- **`straddle-pp-cli bridge create-plaid-paykey`** - Use Bridge to create a new paykey using a Plaid token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Plaid.
-- **`straddle-pp-cli bridge create-speedchex`** - Creates a new paykey using a Speedchex token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Speedchex.
-- **`straddle-pp-cli bridge create-tan`** - Create tan
-- **`straddle-pp-cli bridge create-token`** - Use this endpoint to generate a session token for use in the Bridge widget.
+- **`straddle bridge create`** - Creates a new paykey using a Quiltt token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Quiltt.
+- **`straddle bridge create-bank-account-paykey`** - Use Bridge to create a new paykey using a bank routing and account number as the source. This endpoint allows you to create a secure payment token linked to a specific bank account.
+- **`straddle bridge create-plaid-paykey`** - Use Bridge to create a new paykey using a Plaid token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Plaid.
+- **`straddle bridge create-speedchex`** - Creates a new paykey using a Speedchex token as the source. This endpoint allows you to create a secure payment token linked to a bank account authenticated through Speedchex.
+- **`straddle bridge create-tan`** - Create tan
+- **`straddle bridge create-token`** - Use this endpoint to generate a session token for use in the Bridge widget.
 
 ### charges
 
 Charges represent attempts to debit money from a customer's bank account using a Paykey. Each charge includes automatic balance verification, real-time fraud screening, and multi-rail optimization and detailed status tracking throughout the payment lifecycle. Use charges to accept bank payments with confidence knowing every transaction is protected.
 
-- **`straddle-pp-cli charges create`** - Use charges to collect money from a customer for the sale of goods or services.
-- **`straddle-pp-cli charges get`** - Retrieves the details of an existing charge. Supply the unique charge `id`, and Straddle will return the corresponding charge information.
-- **`straddle-pp-cli charges update`** - Change the values of parameters associated with a charge prior to processing. The status of the charge must be `created`, `scheduled`, or `on_hold`.
+- **`straddle charges create`** - Use charges to collect money from a customer for the sale of goods or services.
+- **`straddle charges get`** - Retrieves the details of an existing charge. Supply the unique charge `id`, and Straddle will return the corresponding charge information.
+- **`straddle charges update`** - Change the values of parameters associated with a charge prior to processing. The status of the charge must be `created`, `scheduled`, or `on_hold`.
 
 ### customers
 
 Customers represent the end users who send or receive payments through your integration. Each customer undergoes automatic identity verification and fraud screening upon creation. Use customers to track payment history, manage bank account connections, and maintain a secure record of all transactions associated with a user. Customers can be either individuals or businesses with appropriate compliance checks for each type.
 
-- **`straddle-pp-cli customers create`** - Creates a new customer record and automatically initiates identity, fraud, and risk assessment scores. This endpoint allows you to create a customer profile and associate it with paykeys and payments.
-- **`straddle-pp-cli customers delete`** - Permanently removes a customer record from Straddle. This action cannot be undone and should only be used to satisfy regulatory requirements or for privacy compliance.
-- **`straddle-pp-cli customers get`** - Retrieves the details of an existing customer. Supply the unique customer ID that was returned from your 'create customer' request, and Straddle will return the corresponding customer information.
-- **`straddle-pp-cli customers list`** - Lists or searches customers connected to your account. All supported query parameters are optional. If none are provided, the response will include all customers connected to your account. This endpoint supports advanced sorting and filtering options.
-- **`straddle-pp-cli customers update`** - Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII, and metadata.
+- **`straddle customers create`** - Creates a new customer record and automatically initiates identity, fraud, and risk assessment scores. This endpoint allows you to create a customer profile and associate it with paykeys and payments.
+- **`straddle customers delete`** - Permanently removes a customer record from Straddle. This action cannot be undone and should only be used to satisfy regulatory requirements or for privacy compliance.
+- **`straddle customers get`** - Retrieves the details of an existing customer. Supply the unique customer ID that was returned from your 'create customer' request, and Straddle will return the corresponding customer information.
+- **`straddle customers list`** - Lists or searches customers connected to your account. All supported query parameters are optional. If none are provided, the response will include all customers connected to your account. This endpoint supports advanced sorting and filtering options.
+- **`straddle customers update`** - Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII, and metadata.
 
 ### funding-event-payments
 
 Manage funding event payments
 
-- **`straddle-pp-cli funding-event-payments <id>`** - All the payments that made up the funding event
+- **`straddle funding-event-payments <id>`** - All the payments that made up the funding event
 
 ### funding-events
 
 Funding events represent all money movement between Straddle and an Account's external bank accounts. They are automatically generated when charges settle or payouts are initiated. Each event provides detailed tracking of settlement status, fee breakdowns, and reconciliation data across both incoming and outgoing transfers. Use funding events to monitor your platform's entire money movement lifecycle.
 
-- **`straddle-pp-cli funding-events create`** - Simulate a funding event for testing. This endpoint can only be used in the sandbox environment.
-- **`straddle-pp-cli funding-events get`** - Retrieves the details of an existing funding event. Supply the unique funding event `id`, and Straddle will return the individual transaction items that make up the funding event.
-- **`straddle-pp-cli funding-events list`** - Retrieves a list of funding events for your account. This endpoint supports advanced sorting and filtering options.
+- **`straddle funding-events create`** - Simulate a funding event for testing. This endpoint can only be used in the sandbox environment.
+- **`straddle funding-events get`** - Retrieves the details of an existing funding event. Supply the unique funding event `id`, and Straddle will return the individual transaction items that make up the funding event.
+- **`straddle funding-events list`** - Retrieves a list of funding events for your account. This endpoint supports advanced sorting and filtering options.
 
 ### linked-bank-accounts
 
 Linked bank accounts connect your platform users' external bank accounts to Straddle for settlements and payment funding. Each linked account undergoes automated verification and continuous monitoring. Use linked accounts to manage where clients receive deposits, fund payouts, and track settlement preferences.
 
-- **`straddle-pp-cli linked-bank-accounts create`** - Creates a new linked bank account associated with a Straddle account. This endpoint allows you to associate external bank accounts with a Straddle account for various payment operations such as payment deposits, payout withdrawals, and more.
-- **`straddle-pp-cli linked-bank-accounts get`** - Retrieves the details of a linked bank account that has previously been created. Supply the unique linked bank account `id`, and Straddle will return the corresponding information. The response includes masked account details for security purposes.
-- **`straddle-pp-cli linked-bank-accounts list`** - Returns a list of bank accounts associated with a specific Straddle account. The linked bank accounts are returned sorted by creation date, with the most recently created appearing first. This endpoint supports pagination to handle accounts with multiple linked bank accounts.
-- **`straddle-pp-cli linked-bank-accounts update`** - Updates an existing linked bank account's information. This can be used to update account details during onboarding or to update metadata associated with the linked account. The linked bank account must be in 'created' or 'onboarding' status.
+- **`straddle linked-bank-accounts create`** - Creates a new linked bank account associated with a Straddle account. This endpoint allows you to associate external bank accounts with a Straddle account for various payment operations such as payment deposits, payout withdrawals, and more.
+- **`straddle linked-bank-accounts get`** - Retrieves the details of a linked bank account that has previously been created. Supply the unique linked bank account `id`, and Straddle will return the corresponding information. The response includes masked account details for security purposes.
+- **`straddle linked-bank-accounts list`** - Returns a list of bank accounts associated with a specific Straddle account. The linked bank accounts are returned sorted by creation date, with the most recently created appearing first. This endpoint supports pagination to handle accounts with multiple linked bank accounts.
+- **`straddle linked-bank-accounts update`** - Updates an existing linked bank account's information. This can be used to update account details during onboarding or to update metadata associated with the linked account. The linked bank account must be in 'created' or 'onboarding' status.
 
 ### organizations
 
 Organizations are a powerful feature in Straddle that allow you to manage multiple accounts under a single umbrella. This hierarchical structure is particularly useful for businesses with complex operations, multiple departments, or legally related entities.
 
-- **`straddle-pp-cli organizations create`** - Creates a new organization related to your Straddle integration. Organizations can be used to group related accounts and manage permissions across multiple users.
-- **`straddle-pp-cli organizations get-by-id`** - Retrieves the details of an Organization that has previously been created. Supply the unique organization ID that was returned from your previous request, and Straddle will return the corresponding organization information.
-- **`straddle-pp-cli organizations list`** - Retrieves a list of organizations associated with your Straddle integration. The organizations are returned sorted by creation date, with the most recently created organizations appearing first. This endpoint supports advanced sorting and filtering options to help you find specific organizations.
+- **`straddle organizations create`** - Creates a new organization related to your Straddle integration. Organizations can be used to group related accounts and manage permissions across multiple users.
+- **`straddle organizations get-by-id`** - Retrieves the details of an Organization that has previously been created. Supply the unique organization ID that was returned from your previous request, and Straddle will return the corresponding organization information.
+- **`straddle organizations list`** - Retrieves a list of organizations associated with your Straddle integration. The organizations are returned sorted by creation date, with the most recently created organizations appearing first. This endpoint supports advanced sorting and filtering options to help you find specific organizations.
 
 ### paykeys
 
 Paykeys are secure tokens that link verified customer identities to their bank accounts. Each Paykey includes built-in balance checking, fraud detection through LSTM machine learning models, and can be reused for subscriptions and recurring payments without storing sensitive data. Paykeys eliminate fraud by ensuring the person initiating payment owns the funding account.
 
-- **`straddle-pp-cli paykeys get`** - Retrieves the details of an existing paykey. Supply the unique paykey `id` and Straddle will return the corresponding paykey record , including the `paykey` token value and masked bank account details.
-- **`straddle-pp-cli paykeys list`** - Returns a list of paykeys associated with a Straddle account. This endpoint supports advanced sorting and filtering options.
+- **`straddle paykeys get`** - Retrieves the details of an existing paykey. Supply the unique paykey `id` and Straddle will return the corresponding paykey record , including the `paykey` token value and masked bank account details.
+- **`straddle paykeys list`** - Returns a list of paykeys associated with a Straddle account. This endpoint supports advanced sorting and filtering options.
 
 ### payments
 
 Payments provide endpoints to filter both Charges and Payouts with multiple different parameters.
 
-- **`straddle-pp-cli payments`** - Search for payments, including `charges` and `payouts`, using a variety of criteria. This endpoint supports advanced sorting and filtering options.
+- **`straddle payments`** - Search for payments, including `charges` and `payouts`, using a variety of criteria. This endpoint supports advanced sorting and filtering options.
 
 ### payouts
 
 Payouts represent transfers from Straddle to customer bank accounts. Create payouts to handle disbursements, process refunds, or manage marketplace settlements. Use payouts to send money quickly and securely with the most cost-effective rail automatically selected.
 
-- **`straddle-pp-cli payouts create`** - Use payouts to send money to your customers.
-- **`straddle-pp-cli payouts get`** - Retrieves the details of an existing payout. Supply the unique payout `id` to retrieve the corresponding payout information.
-- **`straddle-pp-cli payouts update`** - Update the details of a payout prior to processing. The status of the payout must be `created`, `scheduled`, or `on_hold`.
+- **`straddle payouts create`** - Use payouts to send money to your customers.
+- **`straddle payouts get`** - Retrieves the details of an existing payout. Supply the unique payout `id` to retrieve the corresponding payout information.
+- **`straddle payouts update`** - Update the details of a payout prior to processing. The status of the payout must be `created`, `scheduled`, or `on_hold`.
 
 ### reports
 
 Manage reports
 
-- **`straddle-pp-cli reports`** - Create
+- **`straddle reports`** - Create
 
 ### representatives
 
 Representatives are individuals who have legal authority or significant responsibility within a business entity associated with a Straddle account. Each representative undergoes automated verification as part of KYC/KYB compliance. Use representatives to collect and verify beneficial owners, control persons, and authorized signers required for account onboarding. Representatives also determine who can legally operate the account and make important changes.
 
-- **`straddle-pp-cli representatives create`** - Creates a new representative associated with an account. Representatives are individuals who have legal authority or significant responsibility within the business.
-- **`straddle-pp-cli representatives get`** - Retrieves the details of an existing representative. Supply the unique representative ID, and Straddle will return the corresponding representative information.
-- **`straddle-pp-cli representatives list`** - Returns a list of representatives associated with a specific account or organization. The representatives are returned sorted by creation date, with the most recently created representatives appearing first. This endpoint supports advanced sorting and filtering options.
-- **`straddle-pp-cli representatives update`** - Updates an existing representative's information. This can be used to update personal details, contact information, or the relationship to the account or organization.
+- **`straddle representatives create`** - Creates a new representative associated with an account. Representatives are individuals who have legal authority or significant responsibility within the business.
+- **`straddle representatives get`** - Retrieves the details of an existing representative. Supply the unique representative ID, and Straddle will return the corresponding representative information.
+- **`straddle representatives list`** - Returns a list of representatives associated with a specific account or organization. The representatives are returned sorted by creation date, with the most recently created representatives appearing first. This endpoint supports advanced sorting and filtering options.
+- **`straddle representatives update`** - Updates an existing representative's information. This can be used to update personal details, contact information, or the relationship to the account or organization.
 
 
 ## Output Formats
 
 ```bash
 # Human-readable table (default in terminal, JSON when piped)
-straddle-pp-cli accounts list
+straddle accounts list
 
 # JSON for scripting and agents
-straddle-pp-cli accounts list --json
+straddle accounts list --json
 
 # Filter to specific fields
-straddle-pp-cli accounts list --json --select id,name,status
+straddle accounts list --json --select id,name,status
 
 # Dry run — show the request without sending
-straddle-pp-cli accounts list --dry-run
+straddle accounts list --dry-run
 
 # Agent mode — JSON + compact + no prompts in one flag
-straddle-pp-cli accounts list --agent
+straddle accounts list --agent
 ```
 
 ## Agent Usage
@@ -356,14 +356,14 @@ Base URL: `https://{environment}.straddle.com`
 ## Health Check
 
 ```bash
-straddle-pp-cli doctor
+straddle doctor
 ```
 
 Verifies configuration, credentials, and connectivity to the API.
 
 ## Configuration
 
-Config file: `~/.config/straddle-pp-cli/config.toml`
+Config file: `~/.config/straddle/config.toml`
 
 Static request headers can be configured under `headers`; per-command header overrides take precedence.
 
@@ -376,7 +376,7 @@ Environment variables:
 
 ## Troubleshooting
 **Authentication errors (exit code 4)**
-- Run `straddle-pp-cli doctor` to check credentials
+- Run `straddle doctor` to check credentials
 - Verify the environment variable is set: `echo $STRADDLE_API_KEY`
 **Not found errors (exit code 3)**
 - Check the resource ID is correct

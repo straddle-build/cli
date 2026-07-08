@@ -31,7 +31,7 @@ func newRepresentativesUpdateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <representative_id>",
 		Short:       "Updates an existing representative's information. This can be used to update personal details, contact information,...",
-		Example:     "  straddle-pp-cli representatives update 550e8400-e29b-41d4-a716-446655440000 --dob 2026-01-15",
+		Example:     "  straddle representatives update 550e8400-e29b-41d4-a716-446655440000 --dob 2026-01-15",
 		Annotations: map[string]string{"pp:endpoint": "representatives.update", "pp:method": "PUT", "pp:path": "/v1/representatives/{representative_id}"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

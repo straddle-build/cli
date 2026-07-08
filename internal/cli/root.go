@@ -170,7 +170,7 @@ func isCobraUsageError(err error) bool {
 
 func newRootCmd(flags *rootFlags) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "straddle-pp-cli",
+		Use:   "straddle",
 		Short: `Straddle CLI — Every Straddle API operation, plus a local payments ledger, offline search, and settlement and return analytics no stat…`,
 		Long: `Straddle CLI — Every Straddle API operation, plus a local payments ledger, offline search, and settlement and return analytics no stat…
 
@@ -184,12 +184,12 @@ Highlights (not in the official API docs):
   • sandbox   Print the deterministic sandbox_outcome values for customers, paykeys, charges, and payouts plus the sandbox test bank values so test scenarios are scriptable.
 
 Agent mode: add --agent to any command for JSON output + non-interactive mode.
-Health check: run 'straddle-pp-cli doctor' to verify auth and connectivity.
+Health check: run 'straddle doctor' to verify auth and connectivity.
 See README.md or the bundled SKILL.md for recipes.`,
 		SilenceUsage: true,
 		Version:      Version(),
 	}
-	rootCmd.SetVersionTemplate("straddle-pp-cli {{ .Version }}\n")
+	rootCmd.SetVersionTemplate("straddle {{ .Version }}\n")
 
 	rootCmd.PersistentFlags().BoolVar(&flags.asJSON, "json", false, "Output as JSON")
 	rootCmd.PersistentFlags().BoolVar(&flags.compact, "compact", false, "Return only key fields (id, name, status, timestamps) for minimal token usage")
@@ -210,7 +210,7 @@ See README.md or the bundled SKILL.md for recipes.`,
 	rootCmd.PersistentFlags().BoolVar(&flags.agent, "agent", false, "Set all agent-friendly defaults (--json --compact --no-input --no-color --yes)")
 	rootCmd.PersistentFlags().BoolVar(&flags.allowPartialFailure, "allow-partial-failure", false, "Downgrade response-body partial-failure (e.g. partialFailureError) to a warning instead of a non-zero exit")
 	rootCmd.PersistentFlags().StringVar(&flags.dataSource, "data-source", "auto", "Data source for read commands: auto (live with local fallback), live (API only), local (synced data only)")
-	rootCmd.PersistentFlags().StringVar(&flags.profileName, "profile", "", "Apply values from a saved profile (see 'straddle-pp-cli profile list')")
+	rootCmd.PersistentFlags().StringVar(&flags.profileName, "profile", "", "Apply values from a saved profile (see 'straddle profile list')")
 	rootCmd.PersistentFlags().StringVar(&flags.deliverSpec, "deliver", "", "Route output to a sink: stdout (default), file:<path>, webhook:<url>")
 	rootCmd.PersistentFlags().Float64Var(&flags.rateLimit, "rate-limit", 0, "Max requests per second (0 to disable)")
 	rootCmd.PersistentFlags().StringVar(&flags.straddleAccount, "account", "", "Embedded account id sent as the Straddle-Account-Id header (Embed platform scoping)")
@@ -376,7 +376,7 @@ func newVersionCliCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("straddle-pp-cli %s\n", Version())
+			fmt.Printf("straddle %s\n", Version())
 		},
 	}
 }

@@ -24,7 +24,7 @@ func newAccountsOnboardAccountCmd(flags *rootFlags) *cobra.Command {
 		Use:         "account <account_id>",
 		Aliases:     []string{"create"},
 		Short:       "Initiates the onboarding process for a new account. This endpoint can only be used for accounts where at least one...",
-		Example:     "  straddle-pp-cli accounts onboard account 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle accounts onboard account 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "onboard.account", "pp:method": "POST", "pp:path": "/v1/accounts/{account_id}/onboard"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

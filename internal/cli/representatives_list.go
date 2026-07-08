@@ -25,7 +25,7 @@ func newRepresentativesListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Returns a list of representatives associated with a specific account or organization. The representatives are...",
-		Example:     "  straddle-pp-cli representatives list",
+		Example:     "  straddle representatives list",
 		Annotations: map[string]string{"pp:endpoint": "representatives.list", "pp:method": "GET", "pp:path": "/v1/representatives", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-order") {

@@ -29,7 +29,7 @@ func newCustomersListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Lists or searches customers connected to your account. All supported query parameters are optional. If none are...",
-		Example:     "  straddle-pp-cli customers list",
+		Example:     "  straddle customers list",
 		Annotations: map[string]string{"pp:endpoint": "customers.list", "pp:method": "GET", "pp:path": "/v1/customers", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-by") {

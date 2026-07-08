@@ -17,7 +17,7 @@ func newPayoutsUnmaskPayoutsV1GetCmd(flags *rootFlags) *cobra.Command {
 		Use:         "payouts-v1-get <id>",
 		Aliases:     []string{"get"},
 		Short:       "Get a payout by id.",
-		Example:     "  straddle-pp-cli payouts unmask payouts-v1-get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle payouts unmask payouts-v1-get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "unmask.payouts-v1-get", "pp:method": "GET", "pp:path": "/v1/payouts/{id}/unmask", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

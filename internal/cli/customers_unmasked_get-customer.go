@@ -17,7 +17,7 @@ func newCustomersUnmaskedGetCustomerCmd(flags *rootFlags) *cobra.Command {
 		Use:         "get-customer <id>",
 		Aliases:     []string{"get"},
 		Short:       "Retrieves the unmasked details, including PII, of an existing customer. Supply the unique customer ID that was...",
-		Example:     "  straddle-pp-cli customers unmasked get-customer 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle customers unmasked get-customer 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "unmasked.get-customer", "pp:method": "GET", "pp:path": "/v1/customers/{id}/unmasked", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

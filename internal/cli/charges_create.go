@@ -31,7 +31,7 @@ func newChargesCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Use charges to collect money from a customer for the sale of goods or services.",
-		Example:     "  straddle-pp-cli charges create --consent-type internet",
+		Example:     "  straddle charges create --consent-type internet",
 		Annotations: map[string]string{"pp:endpoint": "charges.create", "pp:method": "POST", "pp:path": "/v1/charges"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

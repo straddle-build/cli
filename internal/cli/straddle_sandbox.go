@@ -80,8 +80,8 @@ func newSandboxCmd(flags *rootFlags) *cobra.Command {
 		Long: "Print Straddle's sandbox simulation contract: the config.sandbox_outcome\n" +
 			"values for customers, paykeys, charges, and payouts, plus the sandbox test\n" +
 			"bank values. Optional topic: outcomes | bank | all (default all).",
-		Example: "  straddle-pp-cli sandbox outcomes --json\n" +
-			"  straddle-pp-cli sandbox bank",
+		Example: "  straddle sandbox outcomes --json\n" +
+			"  straddle sandbox bank",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			topic := "all"
 			if len(args) > 0 {

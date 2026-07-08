@@ -91,22 +91,22 @@ Resource scoping:
   the dependent by name; the parent table must already be populated
   from a prior sync.`,
 		Example: `  # Sync all resources
-  straddle-pp-cli sync
+  straddle sync
 
   # Sync specific resources only
-  straddle-pp-cli sync --resources channels,messages
+  straddle sync --resources channels,messages
 
   # Full resync (ignore previous checkpoint)
-  straddle-pp-cli sync --full
+  straddle sync --full
 
   # Incremental sync: only records from the last 7 days
-  straddle-pp-cli sync --since 7d
+  straddle sync --since 7d
 
   # Parallel sync with 8 workers
-  straddle-pp-cli sync --concurrency 8
+  straddle sync --concurrency 8
 
   # Latest-only: refresh head of each resource, no historical backfill
-  straddle-pp-cli sync --latest-only`,
+  straddle sync --latest-only`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			userParams, err := parseSyncUserParams(paramFlags, resourceParamFlags, globalParamFlags)
 			if err != nil {
@@ -150,7 +150,7 @@ Resource scoping:
 			}
 
 			if dbPath == "" {
-				dbPath = defaultDBPath("straddle-pp-cli")
+				dbPath = defaultDBPath("straddle")
 			}
 
 			db, err := store.OpenWithContext(cmd.Context(), dbPath)
@@ -370,7 +370,7 @@ Resource scoping:
 	cmd.Flags().BoolVar(&full, "full", false, "Full resync (ignore previous checkpoint)")
 	cmd.Flags().StringVar(&since, "since", "", "Incremental sync duration (e.g. 7d, 24h, 1w, 30m)")
 	cmd.Flags().IntVar(&concurrency, "concurrency", 4, "Number of parallel sync workers")
-	cmd.Flags().StringVar(&dbPath, "db", "", "Database path (default: ~/.local/share/straddle-pp-cli/data.db)")
+	cmd.Flags().StringVar(&dbPath, "db", "", "Database path (default: ~/.local/share/straddle/data.db)")
 	cmd.Flags().IntVar(&maxPages, "max-pages", 100, "Maximum pages to fetch per resource (0 = unlimited; cap-hit emits a sync_warning event)")
 	cmd.Flags().BoolVar(&latestOnly, "latest-only", false, "Refresh head of each resource only; clears resume cursor and caps pages at 1. Mutually exclusive with --since (--since wins).")
 	cmd.Flags().BoolVar(&strict, "strict", false, "Exit non-zero on any per-resource failure (default: only critical failures or all-resource failure exit non-zero).")

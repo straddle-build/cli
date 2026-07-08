@@ -123,7 +123,7 @@ func buildAgentContext(rootCmd *cobra.Command) agentContext {
 	return agentContext{
 		SchemaVersion: agentContextSchemaVersion,
 		CLI: agentContextCLI{
-			Name:        "straddle-pp-cli",
+			Name:        "straddle",
 			Description: "Every Straddle API operation, plus a local payments ledger, offline search, and settlement and return analytics no...",
 			Version:     rootCmd.Version,
 		},

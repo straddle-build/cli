@@ -20,7 +20,7 @@ func newChargesCancelChargeCmd(flags *rootFlags) *cobra.Command {
 		Use:         "charge <id>",
 		Aliases:     []string{"update"},
 		Short:       "Cancel a charge to prevent it from being originated for processing. The status of the charge must be `created`,...",
-		Example:     "  straddle-pp-cli charges cancel charge 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle charges cancel charge 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "cancel.charge", "pp:method": "PUT", "pp:path": "/v1/charges/{id}/cancel"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

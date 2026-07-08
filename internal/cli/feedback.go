@@ -35,7 +35,7 @@ func feedbackFilePath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("resolving home dir: %w", err)
 	}
-	dir := filepath.Join(home, ".straddle-pp-cli")
+	dir := filepath.Join(home, ".straddle")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", fmt.Errorf("creating state dir: %w", err)
 	}
@@ -100,7 +100,7 @@ func newFeedbackCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "feedback [text]",
 		Short: "Record feedback about this CLI (local by default; upstream opt-in)",
-		Long: `Feedback is captured locally first at ~/.straddle-pp-cli/feedback.jsonl.
+		Long: `Feedback is captured locally first at ~/.straddle/feedback.jsonl.
 When ` + "`STRADDLE_FEEDBACK_ENDPOINT`" + ` is set and either --send is
 passed or ` + "`STRADDLE_FEEDBACK_AUTO_SEND=true`" + `, the entry is
 POSTed as JSON after the local write.
@@ -131,7 +131,7 @@ maintainer sees it.`,
 
 			entry := FeedbackEntry{
 				Text:      text,
-				CLI:       "straddle-pp-cli",
+				CLI:       "straddle",
 				Version:   version,
 				AgentID:   os.Getenv("AGENT_ID"),
 				Timestamp: time.Now().UTC(),
@@ -184,9 +184,9 @@ func newFeedbackListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List recent feedback entries",
-		Example: `  straddle-pp-cli feedback list
-  straddle-pp-cli feedback list --limit 5
-  straddle-pp-cli feedback list --json`,
+		Example: `  straddle feedback list
+  straddle feedback list --limit 5
+  straddle feedback list --json`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			p, err := feedbackFilePath()
 			if err != nil {

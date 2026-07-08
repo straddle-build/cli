@@ -42,8 +42,8 @@ From `CLAUDE.md`, the expected validation loop is:
 
 - `go test ./...`
 - `go vet ./...`
-- `go build -o ./straddle-pp-cli ./cmd/straddle-pp-cli`
-- `./straddle-pp-cli doctor`
+- `go build -o ./straddle ./cmd/straddle`
+- `./straddle doctor`
 
 There are package-level tests around CLI behavior, store migrations, MCP tooling, account scoping, and the special output/rendering logic.
 

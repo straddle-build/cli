@@ -16,7 +16,7 @@ func newPaykeysGetCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get <id>",
 		Short:       "Retrieves the details of an existing paykey. Supply the unique paykey `id` and Straddle will return the...",
-		Example:     "  straddle-pp-cli paykeys get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle paykeys get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "paykeys.get", "pp:method": "GET", "pp:path": "/v1/paykeys/{id}", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

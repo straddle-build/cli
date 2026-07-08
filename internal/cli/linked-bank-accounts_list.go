@@ -25,7 +25,7 @@ func newLinkedBankAccountsListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Returns a list of bank accounts associated with a specific Straddle account. The linked bank accounts are returned...",
-		Example:     "  straddle-pp-cli linked-bank-accounts list",
+		Example:     "  straddle linked-bank-accounts list",
 		Annotations: map[string]string{"pp:endpoint": "linked-bank-accounts.list", "pp:method": "GET", "pp:path": "/v1/linked_bank_accounts", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-order") {

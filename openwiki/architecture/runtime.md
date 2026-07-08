@@ -4,14 +4,14 @@
 
 This repo exposes Straddle through two binaries:
 
-- `straddle-pp-cli` — the interactive and scriptable user CLI
+- `straddle` — the interactive and scriptable user CLI
 - `straddle-pp-mcp` — the Model Context Protocol server for agent use
 
 Both surfaces are backed by the same Cobra command tree and shared policy code, so humans and agents see the same business rules.
 
 ## Entry points
 
-- `cmd/straddle-pp-cli/main.go` calls `cli.Execute()`.
+- `cmd/straddle/main.go` calls `cli.Execute()`.
 - `cmd/straddle-pp-mcp/main.go` starts an MCP server and registers tools from `internal/mcp`.
 - `internal/cli/root.go` defines the root Cobra command, persistent flags, usage/error handling, and root execution path.
 

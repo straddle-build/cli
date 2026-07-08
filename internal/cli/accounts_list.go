@@ -24,7 +24,7 @@ func newAccountsListCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "Returns a list of accounts associated with your Straddle platform integration. The accounts are returned sorted by...",
-		Example:     "  straddle-pp-cli accounts list",
+		Example:     "  straddle accounts list",
 		Annotations: map[string]string{"pp:endpoint": "accounts.list", "pp:method": "GET", "pp:path": "/v1/accounts", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("sort-order") {

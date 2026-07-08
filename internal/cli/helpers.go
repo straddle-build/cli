@@ -486,19 +486,19 @@ func classifyAPIError(err error, flags *rootFlags) error {
 		return authErr(fmt.Errorf("%w\nhint: the API rejected the request — this usually means auth is missing or invalid."+
 			"\n      Set your API key: export STRADDLE_API_KEY=<your-key>"+
 			"\n      Get a key at: https://dashboard.straddle.com"+
-			"\n      Run 'straddle-pp-cli doctor' to check auth status."+
+			"\n      Run 'straddle doctor' to check auth status."+
 			"\n      Response: "+cliutil.SanitizeErrorBody(msg), err))
 	case strings.Contains(msg, "HTTP 401"):
-		return authErr(fmt.Errorf("%w\nhint: check your token. Set it with: straddle-pp-cli auth set-token <token>"+
+		return authErr(fmt.Errorf("%w\nhint: check your token. Set it with: straddle auth set-token <token>"+
 			"\n      or: export STRADDLE_API_KEY=<your-token>"+
 			"\n      Get a key at: https://dashboard.straddle.com"+
-			"\n      Run 'straddle-pp-cli doctor' to check auth status.", err))
+			"\n      Run 'straddle doctor' to check auth status.", err))
 	case strings.Contains(msg, "HTTP 403"):
 		return authErr(fmt.Errorf("%w\nhint: permission denied. Your credentials are valid but lack access to this resource."+
 			"\n      Check that your API key has the required permissions."+
 			"\n      Set it with: export STRADDLE_API_KEY=<your-key>"+
 			"\n      Get a key at: https://dashboard.straddle.com"+
-			"\n      Run 'straddle-pp-cli doctor' to check auth status.", err))
+			"\n      Run 'straddle doctor' to check auth status.", err))
 	case strings.Contains(msg, "HTTP 404"):
 		return notFoundErr(fmt.Errorf("%w\nhint: resource not found. Run the 'list' command to see available items", err))
 	case strings.Contains(msg, "HTTP 429"):

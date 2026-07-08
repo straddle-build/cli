@@ -19,7 +19,7 @@ func newPaykeysUnblockUpdateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <id>",
 		Short:       "Unblocks a paykey that was previously blocked due to an R29 return code. Only paykeys blocked with R29 returns that...",
-		Example:     "  straddle-pp-cli paykeys unblock update 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle paykeys unblock update 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "unblock.update", "pp:method": "PATCH", "pp:path": "/v1/paykeys/{id}/unblock"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

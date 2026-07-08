@@ -26,21 +26,21 @@ func newAnalyticsCmd(flags *rootFlags) *cobra.Command {
 		Long: `Analyze locally synced data with count, group-by, and summary operations.
 Data must be synced first with the sync command.`,
 		Example: `  # Count records by type
-  straddle-pp-cli analytics --type messages
+  straddle analytics --type messages
 
   # Group by a field
-  straddle-pp-cli analytics --type messages --group-by author_id
+  straddle analytics --type messages --group-by author_id
 
   # Top 10 most frequent values
-  straddle-pp-cli analytics --type messages --group-by channel_id --limit 10 --json`,
+  straddle analytics --type messages --group-by channel_id --limit 10 --json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dbPath == "" {
-				dbPath = defaultDBPath("straddle-pp-cli")
+				dbPath = defaultDBPath("straddle")
 			}
 
 			db, err := store.OpenWithContext(cmd.Context(), dbPath)
 			if err != nil {
-				return fmt.Errorf("opening local database: %w\nRun 'straddle-pp-cli sync' first.", err)
+				return fmt.Errorf("opening local database: %w\nRun 'straddle sync' first.", err)
 			}
 			defer db.Close()
 

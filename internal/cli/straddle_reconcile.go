@@ -56,8 +56,8 @@ func newReconcileCmd(flags *rootFlags) *cobra.Command {
 		Long: "Match synced charges and payouts to their funding events from the local\n" +
 			"store. With no flags, groups payments under each funding event and lists\n" +
 			"what has not settled yet. Requires 'sync' to have populated the store.",
-		Example: "  straddle-pp-cli reconcile --outstanding --json\n" +
-			"  straddle-pp-cli reconcile --funding-event fe_123 --json",
+		Example: "  straddle reconcile --outstanding --json\n" +
+			"  straddle reconcile --funding-event fe_123 --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil
@@ -159,7 +159,7 @@ func newReconcileCmd(flags *rootFlags) *cobra.Command {
 			}
 			w := cmd.OutOrStdout()
 			if len(result.FundingEvents) == 0 && result.Outstanding.PaymentCount == 0 {
-				fmt.Fprintln(w, "No payments synced. Run 'straddle-pp-cli sync' first.")
+				fmt.Fprintln(w, "No payments synced. Run 'straddle sync' first.")
 				return nil
 			}
 			for _, g := range result.FundingEvents {

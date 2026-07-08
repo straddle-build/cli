@@ -7,13 +7,13 @@ cd "$(dirname "$0")/.."
 
 command -v vhs >/dev/null || { echo "vhs not installed (brew install vhs)" >&2; exit 1; }
 
-go build -o ./straddle-pp-cli ./cmd/straddle-pp-cli
+go build -o ./straddle ./cmd/straddle
 
 # Off-camera full sync so every resource is fresh: doctor shows a clean cache
 # and the on-camera scoped sync is a fast re-pull, never a cold crawl.
-./straddle-pp-cli sync --full >/dev/null
+./straddle sync --full >/dev/null
 
-CUSTOMER_ID=$(./straddle-pp-cli sql \
+CUSTOMER_ID=$(./straddle sql \
   "select id from customers order by created_at desc limit 1" --csv | tail -1)
 [ -n "$CUSTOMER_ID" ] || { echo "no customers in local store after sync" >&2; exit 1; }
 

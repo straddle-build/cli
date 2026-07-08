@@ -22,7 +22,7 @@ func newChargesUpdateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <id>",
 		Short:       "Change the values of parameters associated with a charge prior to processing. The status of the charge must be...",
-		Example:     "  straddle-pp-cli charges update 550e8400-e29b-41d4-a716-446655440000 --description example-value",
+		Example:     "  straddle charges update 550e8400-e29b-41d4-a716-446655440000 --description example-value",
 		Annotations: map[string]string{"pp:endpoint": "charges.update", "pp:method": "PUT", "pp:path": "/v1/charges/{id}"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

@@ -26,7 +26,7 @@ func newLinkedBankAccountsCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Creates a new linked bank account associated with a Straddle account. This endpoint allows you to associate external...",
-		Example:     "  straddle-pp-cli linked-bank-accounts create --account-id 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle linked-bank-accounts create --account-id 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "linked-bank-accounts.create", "pp:method": "POST", "pp:path": "/v1/linked_bank_accounts"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !stdinBody {

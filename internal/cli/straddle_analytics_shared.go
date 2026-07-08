@@ -112,11 +112,11 @@ type straddleFundingEvent struct {
 // pointing at `sync` when it cannot be opened.
 func openStraddleStore(cmd *cobra.Command, dbPath string) (*store.Store, error) {
 	if dbPath == "" {
-		dbPath = defaultDBPath("straddle-pp-cli")
+		dbPath = defaultDBPath("straddle")
 	}
 	db, err := store.OpenWithContext(cmd.Context(), dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("opening local database: %w\nRun 'straddle-pp-cli sync' first.", err)
+		return nil, fmt.Errorf("opening local database: %w\nRun 'straddle sync' first.", err)
 	}
 	return db, nil
 }

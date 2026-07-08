@@ -20,7 +20,7 @@ func newPayoutsCancelPayoutCmd(flags *rootFlags) *cobra.Command {
 		Use:         "payout <id>",
 		Aliases:     []string{"update"},
 		Short:       "Cancel a payout to prevent it from being processed. The status of the payout must be `created`, `scheduled`, or...",
-		Example:     "  straddle-pp-cli payouts cancel payout 550e8400-e29b-41d4-a716-446655440000 --reason example-value",
+		Example:     "  straddle payouts cancel payout 550e8400-e29b-41d4-a716-446655440000 --reason example-value",
 		Annotations: map[string]string{"pp:endpoint": "cancel.payout", "pp:method": "PUT", "pp:path": "/v1/payouts/{id}/cancel"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

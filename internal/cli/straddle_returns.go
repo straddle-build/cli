@@ -63,8 +63,8 @@ func newReturnsCmd(flags *rootFlags) *cobra.Command {
 		Long: "Surface synced payments that failed before funding or reversed after\n" +
 			"funding, with their ACH reason codes (R01 NSF, R02 closed, R05 dispute).\n" +
 			"Use --repeat-offenders to rank the paykeys that keep bouncing.",
-		Example: "  straddle-pp-cli returns --days 30 --json\n" +
-			"  straddle-pp-cli returns --days 90 --repeat-offenders --json",
+		Example: "  straddle returns --days 30 --json\n" +
+			"  straddle returns --days 90 --repeat-offenders --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil

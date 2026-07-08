@@ -36,14 +36,14 @@ func newAuthSetupCmd(_ *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "setup",
 		Short:   "Print steps for obtaining a credential (use --launch to open the URL)",
-		Example: "  straddle-pp-cli auth setup\n  straddle-pp-cli auth setup --launch",
+		Example: "  straddle auth setup\n  straddle auth setup --launch",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			w := cmd.OutOrStdout()
 			fmt.Fprintln(w, "Get a key at: https://dashboard.straddle.com")
 			fmt.Fprintln(w, "")
 			fmt.Fprintln(w, "Then set:")
 			fmt.Fprintln(w, "  export STRADDLE_API_KEY=\"<your-token>\"")
-			fmt.Fprintln(w, "  straddle-pp-cli auth set-token <token>")
+			fmt.Fprintln(w, "  straddle auth set-token <token>")
 			fmt.Fprintln(w, "")
 			fmt.Fprintln(w, "Docs: https://docs.straddle.com/api-reference/authentication")
 			if !launch {
@@ -85,7 +85,7 @@ func newAuthStatusCmd(flags *rootFlags) *cobra.Command {
 	return &cobra.Command{
 		Use:     "status",
 		Short:   "Show authentication status",
-		Example: "  straddle-pp-cli auth status",
+		Example: "  straddle auth status",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(flags.configPath)
 			if err != nil {
@@ -118,7 +118,7 @@ func newAuthStatusCmd(flags *rootFlags) *cobra.Command {
 				fmt.Fprintln(w, "")
 				fmt.Fprintln(w, "Set your token:")
 				fmt.Fprintln(w, "  export STRADDLE_API_KEY=\"your-token-here\"")
-				fmt.Fprintf(w, "  straddle-pp-cli auth set-token <token>\n")
+				fmt.Fprintf(w, "  straddle auth set-token <token>\n")
 				return authErr(fmt.Errorf("no credentials configured"))
 			}
 
@@ -134,7 +134,7 @@ func newAuthSetTokenCmd(flags *rootFlags) *cobra.Command {
 	return &cobra.Command{
 		Use:     "set-token <token>",
 		Short:   "Save an API token to the config file",
-		Example: "  straddle-pp-cli auth set-token YOUR_TOKEN_HERE",
+		Example: "  straddle auth set-token YOUR_TOKEN_HERE",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(flags.configPath)
@@ -170,7 +170,7 @@ func newAuthLogoutCmd(flags *rootFlags) *cobra.Command {
 	return &cobra.Command{
 		Use:     "logout",
 		Short:   "Clear stored credentials",
-		Example: "  straddle-pp-cli auth logout",
+		Example: "  straddle auth logout",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(flags.configPath)
 			if err != nil {

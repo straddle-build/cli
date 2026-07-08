@@ -43,8 +43,8 @@ func newExpiringCmd(flags *rootFlags) *cobra.Command {
 		Long: "List synced paykeys approaching expires_at (within --days), already\n" +
 			"expired, or blocked but unblock-eligible. These are the tokens to refresh\n" +
 			"or unblock before recurring charges fail against them.",
-		Example: "  straddle-pp-cli expiring --days 14 --json\n" +
-			"  straddle-pp-cli expiring --days 30 --json --select id,reason,days_to_expiry",
+		Example: "  straddle expiring --days 14 --json\n" +
+			"  straddle expiring --days 30 --json --select id,reason,days_to_expiry",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRunOK(flags) {
 				return nil

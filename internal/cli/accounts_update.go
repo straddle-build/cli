@@ -39,7 +39,7 @@ func newAccountsUpdateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <account_id>",
 		Short:       "Updates an existing account's information. This endpoint allows you to update various account details during...",
-		Example:     "  straddle-pp-cli accounts update 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle accounts update 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "accounts.update", "pp:method": "PUT", "pp:path": "/v1/accounts/{account_id}"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

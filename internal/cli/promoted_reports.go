@@ -17,7 +17,7 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 		Use:         "reports",
 		Short:       "Create",
 		Long:        "Shortcut for 'reports create'. Create",
-		Example:     "  straddle-pp-cli reports",
+		Example:     "  straddle reports",
 		Annotations: map[string]string{"pp:endpoint": "reports.create", "pp:method": "POST", "pp:path": "/v1/reports/total_customers_by_status"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := flags.newClient()

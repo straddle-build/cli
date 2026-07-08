@@ -45,7 +45,7 @@ func Load(configPath string) (*Config, error) {
 	}
 	if path == "" {
 		home, _ := os.UserHomeDir()
-		path = filepath.Join(home, ".config", "straddle-pp-cli", "config.toml")
+		path = filepath.Join(home, ".config", "straddle", "config.toml")
 	}
 	cfg.Path = path
 

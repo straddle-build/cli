@@ -1,6 +1,6 @@
 # Straddle Printed CLI Agent Guide
 
-This directory is a generated `straddle-pp-cli` printed CLI. It was produced by [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press), so treat systemic fixes as upstream Printing Press fixes first. Keep local edits narrow and document why a generated-tree patch belongs here.
+This directory is a generated `straddle` printed CLI. It was produced by [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press), so treat systemic fixes as upstream Printing Press fixes first. Keep local edits narrow and document why a generated-tree patch belongs here.
 
 ## OpenWiki
 
@@ -18,28 +18,28 @@ When working in this repository, read the OpenWiki quickstart first, then follow
 Start by asking the generated CLI for current runtime truth:
 
 ```bash
-straddle-pp-cli doctor --json
-straddle-pp-cli agent-context --pretty
+straddle doctor --json
+straddle agent-context --pretty
 ```
 
 Use runtime discovery instead of relying on a copied command list:
 
 ```bash
-straddle-pp-cli which "<capability>" --json
-straddle-pp-cli <command> --help
+straddle which "<capability>" --json
+straddle <command> --help
 ```
 
 Add `--agent` to command invocations for JSON, compact output, non-interactive defaults, no color, and confirmation-safe scripting:
 
 ```bash
-straddle-pp-cli <command> --agent
+straddle <command> --agent
 ```
 
 Before running an unfamiliar command that may mutate remote state, inspect its help and prefer a dry run:
 
 ```bash
-straddle-pp-cli <command> --help
-straddle-pp-cli <command> --dry-run --agent
+straddle <command> --help
+straddle <command> --dry-run --agent
 ```
 
 Use `--yes --no-input` only after the target, arguments, and side effects are clear.

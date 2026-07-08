@@ -16,7 +16,7 @@ func newPaykeysRevealGetCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get <id>",
 		Short:       "Retrieves the details of a paykey that has previously been created. Supply the unique paykey ID that was returned...",
-		Example:     "  straddle-pp-cli paykeys reveal get 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle paykeys reveal get 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "reveal.get", "pp:method": "GET", "pp:path": "/v1/paykeys/{id}/reveal", "mcp:read-only": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {

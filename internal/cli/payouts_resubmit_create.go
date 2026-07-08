@@ -21,7 +21,7 @@ func newPayoutsResubmitCreateCmd(flags *rootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <id>",
 		Short:       "Resubmit a failed or reversed payout.",
-		Example:     "  straddle-pp-cli payouts resubmit create 550e8400-e29b-41d4-a716-446655440000",
+		Example:     "  straddle payouts resubmit create 550e8400-e29b-41d4-a716-446655440000",
 		Annotations: map[string]string{"pp:endpoint": "resubmit.create", "pp:method": "POST", "pp:path": "/v1/payouts/{id}/resubmit"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
