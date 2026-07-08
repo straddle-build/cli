@@ -17,6 +17,8 @@ This repo is maintained as a standalone Go CLI. Edit source directly, keep chang
 
 `cmd/gen-endpoint` owns endpoint coverage, drift classification, and generic endpoint generation from `spec.json`. Run `go run ./cmd/gen-endpoint check --spec spec.json --repo .` when command annotations or the API lockfile change.
 
+Dependabot runs weekly for Go modules and GitHub Actions. Go module minor and patch updates are grouped under `go-minor-and-patch`, except `modernc.org/sqlite`, which stays out of that group because the local SQLite store is operationally sensitive. GitHub Actions updates are grouped together.
+
 The repo-local `.no-mistakes.yaml` pins gate commands: test runs `go build ./... && go test ./...`; lint runs `go vet ./...`, `golangci-lint`, `govulncheck`, and `gitleaks`.
 
 ## Security

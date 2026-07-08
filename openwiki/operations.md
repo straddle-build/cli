@@ -82,6 +82,7 @@ Be careful when changing any of these areas:
 - `cmd/gen-endpoint/`
 - `internal/apisync/`
 - `.github/workflows/api-sync.yml`
+- `.github/dependabot.yml`
 - `internal/cli/root.go`
 - `internal/cli/straddle_setup.go`
 - `internal/store/store.go`
@@ -95,3 +96,7 @@ Releases are cut from `main` by tag:
 3. `install.sh` and `go install github.com/straddle-build/cli/cmd/straddle@latest` resolve the new release with no further action.
 
 Local dry run: `make release-snapshot` builds everything into `dist/` without publishing.
+
+## Dependency maintenance
+
+Dependabot is configured in `.github/dependabot.yml` for weekly Go module and GitHub Actions updates. Go module minor and patch updates are grouped under `go-minor-and-patch`, except `modernc.org/sqlite`; review SQLite updates separately because the local store depends on it. GitHub Actions updates are grouped together.

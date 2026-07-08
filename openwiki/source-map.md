@@ -160,6 +160,7 @@ These are the command families that make this repo more than a direct API wrappe
 - `spec.json` — OpenAPI source spec.
 - `manifest.json` — package manifest metadata.
 - `.github/workflows/api-sync.yml` - scheduled, manual, and dispatch-driven endpoint sync workflow.
+- `.github/dependabot.yml` - weekly Go module and GitHub Actions dependency update grouping.
 - `plans/api-sync.md` - implementation plan and ME-344 handoff assumptions for API sync.
 
 ## How to use this map
