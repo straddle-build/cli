@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"straddle-pp-cli/internal/straddleacct"
+	"github.com/straddle-build/cli/internal/straddleacct"
 )
 
 func newSetupCmd(flags *rootFlags) *cobra.Command {

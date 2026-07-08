@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/mark3labs/mcp-go/server"
-	mcptools "straddle-pp-cli/internal/mcp"
+	mcptools "github.com/straddle-build/cli/internal/mcp"
 )
 
 // Transport selection order: --transport flag, then PP_MCP_TRANSPORT env,

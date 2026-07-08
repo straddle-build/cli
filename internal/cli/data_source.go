@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"straddle-pp-cli/internal/client"
-	"straddle-pp-cli/internal/store"
+	"github.com/straddle-build/cli/internal/client"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 // isNetworkError returns true for errors caused by network connectivity issues

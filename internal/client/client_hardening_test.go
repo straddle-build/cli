@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"straddle-pp-cli/internal/config"
+	"github.com/straddle-build/cli/internal/config"
 )
 
 // TestClient_CheckRedirectCredentialPolicy pins the redirect credential

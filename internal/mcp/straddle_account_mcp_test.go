@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"straddle-pp-cli/internal/straddleacct"
+	"github.com/straddle-build/cli/internal/straddleacct"
 )
 
 func TestApplyMCPAccount(t *testing.T) {

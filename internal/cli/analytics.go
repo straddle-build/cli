@@ -10,7 +10,7 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"straddle-pp-cli/internal/store"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 func newAnalyticsCmd(flags *rootFlags) *cobra.Command {

@@ -1,4 +1,4 @@
-module straddle-pp-cli
+module github.com/straddle-build/cli
 
 go 1.26.3
 

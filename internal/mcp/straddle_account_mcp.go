@@ -12,7 +12,7 @@ import (
 	"errors"
 	"fmt"
 
-	"straddle-pp-cli/internal/straddleacct"
+	"github.com/straddle-build/cli/internal/straddleacct"
 )
 
 // applyMCPAccount returns request headers with Straddle-Account-Id injected

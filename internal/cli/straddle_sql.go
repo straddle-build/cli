@@ -14,7 +14,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"straddle-pp-cli/internal/store"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 // stripLeadingSQLNoiseCLI drops leading whitespace, line/block comments, and

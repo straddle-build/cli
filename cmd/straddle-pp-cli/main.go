@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"straddle-pp-cli/internal/cli"
+	"github.com/straddle-build/cli/internal/cli"
 )
 
 func main() {

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"straddle-pp-cli/internal/store"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 func newWorkflowCmd(flags *rootFlags) *cobra.Command {

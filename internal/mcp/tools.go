@@ -15,12 +15,12 @@ import (
 
 	mcplib "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"straddle-pp-cli/internal/cli"
-	"straddle-pp-cli/internal/client"
-	"straddle-pp-cli/internal/cliutil"
-	"straddle-pp-cli/internal/config"
-	"straddle-pp-cli/internal/mcp/cobratree"
-	"straddle-pp-cli/internal/store"
+	"github.com/straddle-build/cli/internal/cli"
+	"github.com/straddle-build/cli/internal/client"
+	"github.com/straddle-build/cli/internal/cliutil"
+	"github.com/straddle-build/cli/internal/config"
+	"github.com/straddle-build/cli/internal/mcp/cobratree"
+	"github.com/straddle-build/cli/internal/store"
 )
 
 // RegisterTools registers all API operations as MCP tools.
