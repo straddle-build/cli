@@ -1,7 +1,44 @@
 {
   "schema_version": 1,
-  "applied_at": "2026-05-20",
+  "applied_at": "2026-07-08",
   "base_run_id": "20260520-004456",
   "base_printing_press_version": "4.9.0",
-  "patches": []
+  "patches": [
+    {
+      "id": "security-hardening",
+      "summary": "Enforce https-only base URLs (loopback-http exempt), delete Authorization on https->http redirect downgrades, owner-only permissions (0700/0600) for the HTTP cache, SQLite store, and --deliver dirs, and redact credential-shaped strings from APIError bodies at construction.",
+      "reason": "Production security audit ahead of the first public release; cached bodies and synced rows carry customer PII and payment data.",
+      "files": ["internal/config/config.go", "internal/client/client.go", "internal/cache/cache.go", "internal/store/store.go", "internal/cli/deliver.go", "internal/cliutil/text.go"]
+    },
+    {
+      "id": "credential-url-fix",
+      "summary": "Replace the generator's placeholder credential URL (run.pstmn.io) with https://dashboard.straddle.com and link the authentication docs from auth setup.",
+      "reason": "The generated auth_key_url was a broken placeholder; users need the real dashboard and docs.",
+      "files": ["internal/cli/auth.go", "internal/cli/doctor.go", "internal/cli/helpers.go"]
+    },
+    {
+      "id": "version-resolution",
+      "summary": "Replace the hardcoded version constant with Version(): GoReleaser ldflags, then module build info, then dev.",
+      "reason": "Release builds and go install module@vX must report their real version.",
+      "files": ["internal/cli/root.go"]
+    },
+    {
+      "id": "module-path-rename",
+      "summary": "Rename the Go module from straddle-pp-cli to github.com/straddle-build/cli and rewrite all import paths.",
+      "reason": "go install requires a resolvable module path.",
+      "files": ["go.mod", "cmd/**/*.go", "internal/**/*.go"]
+    },
+    {
+      "id": "remove-embedded-mcp",
+      "summary": "Delete the embedded MCP server (cmd/straddle-pp-mcp, internal/mcp, manifest.json) and the mcp-go dependency; inert mcp:* Cobra annotations stay for agent-context.",
+      "reason": "This repo ships the CLI only; a standalone MCP server will live in its own repo. Removed at commit 'Remove embedded MCP server' for recoverability.",
+      "files": ["cmd/straddle-pp-mcp/", "internal/mcp/", "manifest.json", "Makefile", "go.mod"]
+    },
+    {
+      "id": "product-rename-straddle",
+      "summary": "Rename the shipped binary and all user-facing strings/paths from straddle-pp-cli to straddle; generated headers drop DO NOT EDIT (repo is maintained directly).",
+      "reason": "Production name for the first public release; provenance files keep the original name verbatim.",
+      "files": ["cmd/straddle/", "internal/**/*.go", "Makefile", ".gitignore", "SKILL.md", "README.md", "AGENTS.md", "CLAUDE.md", "NOTICE", "demo/", "openwiki/"]
+    }
+  ]
 }
