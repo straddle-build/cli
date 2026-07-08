@@ -4,8 +4,6 @@
 
 A full CLI for Straddle's Pay by Bank and Embed APIs that also keeps a local SQLite copy of your charges, payouts, customers, paykeys, and funding events. On top of the synced store it adds reconciliation, a cancel-window payment pipeline, return analysis, and cashflow analytics that the official stateless CLI cannot offer.
 
-Generated with [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press); maintained and released from this repo.
-
 ## Install
 
 ### Homebrew (macOS)
@@ -57,11 +55,9 @@ The repo-root [`SKILL.md`](SKILL.md) teaches coding agents (Claude Code, Codex, 
 npx skills add straddle-build/cli
 ```
 
-The legacy `npx -y @mvanhorn/printing-press install straddle` installer also still works.
-
 ## Authentication
 
-Straddle uses a Bearer JWT API key. Set STRADDLE_API_KEY (or pass --api-key) and choose your environment with --environment sandbox|production; sandbox keys only work against sandbox.straddle.com and production keys only against production.straddle.com. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators must scope account-specific calls with the Straddle-Account-Id header via --account-id or STRADDLE_ACCOUNT_ID: a SaaS platform sets it on customer, paykey, charge, payout, review, and onboarding calls; a marketplace sets it only on charge and payout (and onboarding) calls, not on customer or paykey calls; a direct account never sets it. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
+Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `straddle auth set-token`; set `STRADDLE_ENVIRONMENT=sandbox|production` when you need a non-default environment. Sandbox keys only work against `sandbox.straddle.com` and production keys only work against `production.straddle.com`. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators declare an integration type with `straddle setup` and scope account-specific calls with `straddle use-account` or `--account`: a SaaS platform scopes customer, paykey, bridge, payment, review, and funding-event calls; a marketplace scopes payment and funding-event calls but does not scope customer or paykey calls; a direct account never sets the header. Account-management and onboarding calls carry account IDs in the path or body, not in `Straddle-Account-Id`. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
 
 Get your API key from the [Straddle dashboard](https://dashboard.straddle.com) (Developer → API Keys); see the [authentication docs](https://docs.straddle.com/api-reference/authentication) for details.
 
@@ -150,11 +146,30 @@ These capabilities aren't available in any other tool for this API.
   straddle sandbox outcomes --json
   ```
 
+### Full API coverage
+- **`api`** - Browse hidden API interfaces or call a raw API path with the same auth, account scoping, dry-run, verify, output, and redaction behavior as the friendly commands.
+
+  _Use this when a newly published endpoint exists in the API before a dedicated top-level command has been tuned._
+
+  ```bash
+  straddle api
+  straddle api get /v1/charges --param limit=10 --json
+  echo '{}' | straddle api post /v1/charges --stdin --agent
+  ```
+
 ## Usage
 
 Run `straddle --help` for the full command reference and flag list.
 
 ## Commands
+
+### api
+
+Browse API interfaces or call raw API paths.
+
+- **`straddle api`** - List hidden API interfaces.
+- **`straddle api <interface>`** - Show methods for one interface.
+- **`straddle api <method> <path>`** - Call a raw API path when `<method>` is `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`. Use repeatable `--param key=value` for query parameters, repeatable `--header key=value` for extra request headers, and `--stdin` for JSON request bodies on `POST`, `PUT`, and `PATCH`.
 
 ### account-settings
 
@@ -305,10 +320,10 @@ Exit codes: `0` success, `2` usage error, `3` not found, `4` auth error, `5` API
 
 ## Runtime Endpoint
 
-This CLI resolves endpoint placeholders at runtime, so one installed binary can target different tenants or API versions without regeneration.
+This CLI resolves endpoint placeholders at runtime, so one installed binary can target different tenants or API versions without rebuilding.
 
 Endpoint environment variables:
-- `STRADDLE_ENVIRONMENT` resolves `{environment}`
+- `STRADDLE_ENVIRONMENT` resolves `{environment}` and defaults to `sandbox` when unset
 
 Base URL: `https://{environment}.straddle.com`
 
@@ -330,7 +345,7 @@ Environment variables:
 
 | Name | Kind | Required | Description |
 | --- | --- | --- | --- |
-| `STRADDLE_ENVIRONMENT` | endpoint | Yes |  |
+| `STRADDLE_ENVIRONMENT` | endpoint | No | Resolves `{environment}` in the base URL; defaults to `sandbox`. |
 | `STRADDLE_API_KEY` | per_call | Yes | Set to your API credential. |
 
 ## Troubleshooting
@@ -344,11 +359,11 @@ Environment variables:
 ### API-specific
 
 - **401 Unauthorized on every call** — Set STRADDLE_API_KEY to a key for the environment you target; sandbox keys do not work against production and vice versa.
-- **Calls hit the wrong environment** — Pass --environment sandbox or --environment production (default is sandbox); the base URL switches between sandbox.straddle.com and production.straddle.com.
+- **Calls hit the wrong environment** - Set `STRADDLE_ENVIRONMENT=sandbox` or `STRADDLE_ENVIRONMENT=production` (default is sandbox); the base URL switches between sandbox.straddle.com and production.straddle.com.
 - **A charge cannot be cancelled or held** — Once a payment reaches pending it is locked; run pipeline --cancelable to see which payments are still in created/scheduled/on_hold and can be acted on.
 - **Charges fail with an expired paykey** — Run expiring to list paykeys near expires_at, then refresh or re-bridge the bank account before retrying.
 - **search or reconcile returns nothing** — Run sync first; the local store is empty until you populate it.
-- **Platform calls return the wrong account's data or 403** — Set --account-id (or STRADDLE_ACCOUNT_ID) to the embedded account: SaaS platforms scope customer/paykey/charge/payout/review calls, marketplaces scope only charge/payout calls; direct accounts omit it.
+- **Platform calls return the wrong account's data or 403** - Run `straddle setup --type saas|marketplace`, set the acting account with `straddle use-account acct_...`, or pass `--account acct_...` for one command. SaaS platforms scope customer, paykey, bridge, payment, review, and funding-event calls; marketplaces scope payment and funding-event calls; direct accounts omit it.
 
 ---
 
@@ -360,4 +375,3 @@ This CLI was built by studying these projects and resources:
 - [**straddle-go**](https://github.com/straddleio/straddle-go) — Go
 - [**straddle-node**](https://github.com/straddleio/straddle-node) — TypeScript
 - [**straddle-python**](https://github.com/straddleio/straddle-python) — Python
-

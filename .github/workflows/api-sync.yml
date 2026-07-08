@@ -1,0 +1,282 @@
+name: API Sync
+
+on:
+  schedule:
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+    inputs:
+      spec_url:
+        description: "Optional live OpenAPI spec URL. Overrides STRADDLE_API_SPEC_URL for this run."
+        required: false
+        type: string
+      dry_run:
+        description: "Skip remote PR/issue creation even when API_SYNC_BOT_TOKEN is configured."
+        required: false
+        default: false
+        type: boolean
+  repository_dispatch:
+    types:
+      - straddle-api-spec-published
+      - api-sync
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-sync
+  cancel-in-progress: false
+
+env:
+  # ME-343 interim source contract: set STRADDLE_API_SPEC_URL to the current
+  # Stainless/GCS OpenAPI artifact URL as a repo variable or secret. ME-344
+  # should replace that fallback with the Scalar registry URL, or dispatch this
+  # workflow with client_payload.spec_url when the external publisher lands.
+  LIVE_SPEC_URL: ${{ github.event.client_payload.spec_url || github.event.inputs.spec_url || vars.STRADDLE_API_SPEC_URL || secrets.STRADDLE_API_SPEC_URL }}
+  DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+  # Bot-created PRs that need normal PR CI cannot rely on the default
+  # GITHUB_TOKEN. Configure API_SYNC_BOT_TOKEN as a fine-grained PAT or GitHub
+  # App token with contents and pull-request write access when remote mutation is ready.
+  HAS_API_SYNC_BOT_TOKEN: ${{ secrets.API_SYNC_BOT_TOKEN != '' && 'true' || 'false' }}
+  # Issue creation is intentionally opt-in until ME-344 finalizes dispatch and
+  # dedupe policy. Set API_SYNC_CREATE_ISSUES=true once the bot token is ready.
+  CREATE_REMOTE_ISSUES: ${{ vars.API_SYNC_CREATE_ISSUES == 'true' && 'true' || 'false' }}
+
+jobs:
+  sync:
+    name: Sync generated API endpoints
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Fetch live OpenAPI spec
+        id: fetch_spec
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${LIVE_SPEC_URL}" ]; then
+            echo "LIVE_SPEC_URL is empty." >&2
+            echo "Set repo variable or secret STRADDLE_API_SPEC_URL to the interim Stainless/GCS artifact URL, pass workflow_dispatch input spec_url, or send repository_dispatch client_payload.spec_url." >&2
+            exit 1
+          fi
+
+          live_spec="${RUNNER_TEMP}/live-spec.json"
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --output "${live_spec}" "${LIVE_SPEC_URL}"
+          test -s "${live_spec}"
+          echo "live_spec=${live_spec}" >> "${GITHUB_OUTPUT}"
+
+      - name: Classify API drift with generator
+        id: drift
+        shell: bash
+        env:
+          LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
+        run: |
+          set -euo pipefail
+
+          drift_json="${RUNNER_TEMP}/api-drift.json"
+          go run ./cmd/gen-endpoint drift \
+            --base spec.json \
+            --head "${LIVE_SPEC}" \
+            --repo . \
+            --agent > "${drift_json}"
+
+          jq -e 'type == "object"' "${drift_json}" >/dev/null
+
+          supported_additions="$(jq '(.supported_additions // []) | length' "${drift_json}")"
+          changes="$(jq '(.changes // []) | length' "${drift_json}")"
+          removals="$(jq '(.removals // []) | length' "${drift_json}")"
+          unsupported_operations="$(jq '(.unsupported_operations // []) | length' "${drift_json}")"
+          human_review_count="$((changes + removals + unsupported_operations))"
+
+          echo "drift_json=${drift_json}" >> "${GITHUB_OUTPUT}"
+          echo "supported_additions=${supported_additions}" >> "${GITHUB_OUTPUT}"
+          echo "changes=${changes}" >> "${GITHUB_OUTPUT}"
+          echo "removals=${removals}" >> "${GITHUB_OUTPUT}"
+          echo "unsupported_operations=${unsupported_operations}" >> "${GITHUB_OUTPUT}"
+          echo "human_review_count=${human_review_count}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate supported endpoint additions
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
+        shell: bash
+        env:
+          LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
+          DRIFT_JSON: ${{ steps.drift.outputs.drift_json }}
+        run: |
+          set -euo pipefail
+
+          # cmd/gen-endpoint owns the endpoint support decision. The workflow
+          # only asks it to apply additions already classified as supported.
+          go run ./cmd/gen-endpoint generate \
+            --spec "${LIVE_SPEC}" \
+            --repo . \
+            --drift "${DRIFT_JSON}" \
+            --supported-additions \
+            --agent
+
+      - name: Update spec lockfile
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
+        shell: bash
+        env:
+          LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
+        run: |
+          set -euo pipefail
+
+          cp "${LIVE_SPEC}" spec.json
+
+      - name: Validate generated endpoint coverage
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          coverage_json="${RUNNER_TEMP}/api-sync-coverage.json"
+          go run ./cmd/gen-endpoint check \
+            --spec spec.json \
+            --repo . \
+            --agent > "${coverage_json}"
+
+      - name: Capture generated diff
+        id: generated_diff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          patch_file="${RUNNER_TEMP}/api-sync.patch"
+          if [ -z "$(git status --porcelain -- .)" ]; then
+            echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+            : > "${patch_file}"
+          else
+            # Supported additions are usually new command files. Mark
+            # untracked files as intent-to-add so the patch artifact includes
+            # them without staging a commit for the PR action.
+            git add --intent-to-add -- .
+            git diff --binary -- . > "${patch_file}"
+            echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "patch_file=${patch_file}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare human-review issue body
+        id: human_review
+        if: steps.drift.outputs.human_review_count != '0'
+        shell: bash
+        env:
+          DRIFT_JSON: ${{ steps.drift.outputs.drift_json }}
+        run: |
+          set -euo pipefail
+
+          issue_body="${RUNNER_TEMP}/api-sync-human-review.md"
+          {
+            echo "API spec drift needs human review."
+            echo
+            echo "Generator classification:"
+            echo "- Supported additions: ${{ steps.drift.outputs.supported_additions }}"
+            echo "- Changed operations: ${{ steps.drift.outputs.changes }}"
+            echo "- Removed operations: ${{ steps.drift.outputs.removals }}"
+            echo "- Unsupported new operations: ${{ steps.drift.outputs.unsupported_operations }}"
+            echo
+            echo "Supported additions are auto-generated only when no changed, removed, or unsupported operations are present. Do not hand-edit endpoint drift here; update cmd/gen-endpoint/internal/apisync if the classification is wrong."
+            echo
+            echo "\`\`\`json"
+            cat "${DRIFT_JSON}"
+            echo "\`\`\`"
+          } > "${issue_body}"
+          echo "issue_body=${issue_body}" >> "${GITHUB_OUTPUT}"
+
+      - name: Open supported-additions PR
+        if: steps.generated_diff.outputs.has_changes == 'true' && env.DRY_RUN != 'true' && env.HAS_API_SYNC_BOT_TOKEN == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.API_SYNC_BOT_TOKEN }}
+          branch: automation/api-sync
+          delete-branch: true
+          commit-message: "chore: sync generated API endpoint commands"
+          title: "chore: sync generated API endpoint commands"
+          body: |
+            Generated supported endpoint additions from the latest OpenAPI spec.
+
+            Source:
+            - Trigger: `${{ github.event_name }}`
+            - Drift command: `go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --agent`
+            - Generate command: `go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent`
+
+            Token note: this PR is created with `API_SYNC_BOT_TOKEN` because the default `GITHUB_TOKEN` does not trigger normal PR CI for bot-authored PRs.
+
+      - name: Report pending PR creation
+        if: steps.generated_diff.outputs.has_changes == 'true' && (env.DRY_RUN == 'true' || env.HAS_API_SYNC_BOT_TOKEN != 'true')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Supported endpoint additions generated a diff, but the workflow did not create a PR." >> "${GITHUB_STEP_SUMMARY}"
+          echo >> "${GITHUB_STEP_SUMMARY}"
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "Reason: workflow_dispatch dry_run=true." >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "Reason: API_SYNC_BOT_TOKEN is not configured. Configure a fine-grained PAT or GitHub App token; do not use the default GITHUB_TOKEN for bot PRs that need normal PR CI." >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Open human-review issue
+        if: steps.drift.outputs.human_review_count != '0' && env.DRY_RUN != 'true' && env.HAS_API_SYNC_BOT_TOKEN == 'true' && env.CREATE_REMOTE_ISSUES == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.API_SYNC_BOT_TOKEN }}
+          ISSUE_BODY: ${{ steps.human_review.outputs.issue_body }}
+        run: |
+          set -euo pipefail
+
+          gh issue create \
+            --title "API spec drift requires human review" \
+            --body-file "${ISSUE_BODY}"
+
+      - name: Report pending issue creation
+        if: steps.drift.outputs.human_review_count != '0' && (env.DRY_RUN == 'true' || env.HAS_API_SYNC_BOT_TOKEN != 'true' || env.CREATE_REMOTE_ISSUES != 'true')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Human-review API drift was detected, but the workflow did not create an issue." >> "${GITHUB_STEP_SUMMARY}"
+          echo >> "${GITHUB_STEP_SUMMARY}"
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "Reason: workflow_dispatch dry_run=true." >> "${GITHUB_STEP_SUMMARY}"
+          elif [ "${HAS_API_SYNC_BOT_TOKEN}" != "true" ]; then
+            echo "Reason: API_SYNC_BOT_TOKEN is not configured." >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "Reason: API_SYNC_CREATE_ISSUES is not set to true, pending ME-344 dispatch/dedupe finalization." >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          echo "Issue body artifact: api-sync-${{ github.run_id }}." >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload API sync artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: api-sync-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/live-spec.json
+            ${{ runner.temp }}/api-drift.json
+            ${{ runner.temp }}/api-sync-coverage.json
+            ${{ runner.temp }}/api-sync.patch
+            ${{ runner.temp }}/api-sync-human-review.md
+          if-no-files-found: ignore
+
+      - name: Summarize API sync result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "## API sync" >> "${GITHUB_STEP_SUMMARY}"
+          echo >> "${GITHUB_STEP_SUMMARY}"
+          echo "- Supported additions: ${{ steps.drift.outputs.supported_additions || 'n/a' }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "- Changed operations: ${{ steps.drift.outputs.changes || 'n/a' }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "- Removed operations: ${{ steps.drift.outputs.removals || 'n/a' }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "- Unsupported operations: ${{ steps.drift.outputs.unsupported_operations || 'n/a' }}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "- Generated diff: ${{ steps.generated_diff.outputs.has_changes || 'n/a' }}" >> "${GITHUB_STEP_SUMMARY}"

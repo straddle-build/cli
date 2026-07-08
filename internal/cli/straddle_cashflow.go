@@ -2,7 +2,7 @@
 //
 // Novel feature: cashflow analytics. Aggregates synced charge volume in versus
 // payout volume out over a date window, including zero-activity days, with net
-// flow per day or week. Hand-authored; survives regen.
+// flow per day or week.
 package cli
 
 import (

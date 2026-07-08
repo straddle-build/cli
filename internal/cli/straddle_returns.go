@@ -2,7 +2,7 @@
 //
 // Novel feature: ACH return / NSF analysis. Surfaces failed and reversed
 // payments with their reason codes and ranks repeat-offender paykeys/customers
-// from the local store. Hand-authored; survives regen.
+// from the local store.
 package cli
 
 import (

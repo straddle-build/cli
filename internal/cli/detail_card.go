@@ -26,12 +26,12 @@ import (
 
 // currentResource is the resource name for the command in flight (e.g.
 // "charges"), set in the root PersistentPreRunE from the command's
-// pp:endpoint annotation. Used only to title the human detail card; empty
+// straddle:endpoint annotation. Used only to title the human detail card; empty
 // for commands without an endpoint annotation. Read-only after pre-run, and
 // only consulted on the --human-friendly TTY path (never in agent mode).
 var currentResource string
 
-// resourceFromEndpoint extracts the resource segment from a pp:endpoint
+// resourceFromEndpoint extracts the resource segment from a straddle:endpoint
 // annotation value like "charges.get" -> "charges".
 func resourceFromEndpoint(ep string) string {
 	if ep == "" {

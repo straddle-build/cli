@@ -2,7 +2,7 @@
 //
 // Local-SQLite power feature: run read-only SQL against the synced store.
 // The generator does not emit a human-facing `sql` Cobra command — this
-// fills that gap. Hand-authored; survives regen.
+// fills that gap.
 package cli
 
 import (

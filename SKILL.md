@@ -93,7 +93,24 @@ These capabilities aren't available in any other tool for this API.
   straddle sandbox outcomes --json
   ```
 
+### Full API coverage
+- **`api`** - Browse hidden API interfaces or call a raw API path with the same auth, account scoping, dry-run, verify, output, and redaction behavior as the friendly commands.
+
+  _Use this when a newly published endpoint exists in the API before a dedicated top-level command has been tuned._
+
+  ```bash
+  straddle api
+  straddle api get /v1/charges --param limit=10 --json
+  echo '{}' | straddle api post /v1/charges --stdin --agent
+  ```
+
 ## Command Reference
+
+**api** - Browse API endpoints or call a raw API path.
+
+- `straddle api` - List hidden API interfaces.
+- `straddle api <interface>` - Show methods for one interface.
+- `straddle api <method> <path>` - Call a raw path when `<method>` is `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`. Use repeatable `--param key=value`, repeatable `--header key=value`, and `--stdin` for JSON bodies on `POST`, `PUT`, and `PATCH`.
 
 **account-settings** — Manage account settings
 
@@ -232,9 +249,17 @@ straddle sandbox outcomes --json
 
 Look up the exact sandbox_outcome value to pass on a create call to force paid, failed, or reversed in tests.
 
+### Call a newly published endpoint
+
+```bash
+straddle api get /v1/charges --param limit=10 --agent
+```
+
+Use raw `api` passthrough when the API has an endpoint before this CLI has a dedicated friendly command.
+
 ## Auth Setup
 
-Straddle uses a Bearer JWT API key. Set STRADDLE_API_KEY (or pass --api-key) and choose your environment with --environment sandbox|production; sandbox keys only work against sandbox.straddle.com and production keys only against production.straddle.com. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators declare an integration type once and the CLI then scopes calls to the right embedded account automatically — see **Platform scoping (Embed)** below. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
+Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `straddle auth set-token`; set `STRADDLE_ENVIRONMENT=sandbox|production` when you need a non-default environment. Sandbox keys only work against `sandbox.straddle.com` and production keys only work against `production.straddle.com`. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators declare an integration type once and the CLI then scopes calls to the right embedded account automatically. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
 
 Run `straddle doctor` to verify setup.
 

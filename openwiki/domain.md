@@ -27,7 +27,7 @@ The identity/compliance side of the product centers on:
 - blocked or expiring paykeys
 - linked bank accounts
 
-These concepts show up both in the generated command tree and in the hand-authored workflow commands such as `review-queue`, `expiring`, `setup`, and `use-account`.
+These concepts show up both in the API command surface and in the hand-authored workflow commands such as `review-queue`, `expiring`, `setup`, and `use-account`.
 
 ### Platform and account hierarchy
 

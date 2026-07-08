@@ -23,7 +23,9 @@ The project is centered on payment operations: charges, payouts, customers, payk
 The main entrypoints and packages are:
 
 - `cmd/straddle/main.go` — CLI entrypoint
+- `cmd/gen-endpoint/` - API sync generator, endpoint coverage checker, and drift classifier
 - `internal/cli/` — Cobra command tree and hand-authored CLI features
+- `internal/apisync/` - OpenAPI parsing, repo inventory, drift classification, and endpoint generation support
 - `internal/client/` — HTTP client and request helpers
 - `internal/store/` — SQLite persistence and migrations
 - `internal/straddleacct/` — integration-type rules for `Straddle-Account-Id`
@@ -31,7 +33,8 @@ The main entrypoints and packages are:
 
 ## What to know before changing code
 
-- The repository is not regenerated from the OpenAPI spec anymore; it is maintained directly.
+- The repository is maintained as a standalone Go CLI with source, docs, and release config in this repo.
+- `spec.json` is the API lockfile; `cmd/gen-endpoint` keeps endpoint coverage and drift visible.
 - Human CLI output and agent/JSON output are both intentional surfaces and should not drift casually.
 - `Straddle-Account-Id` behavior is business-critical: it depends on the integration type (`account`, `saas`, `marketplace`) and the operation being called.
 - The local SQLite store is part of the product, not a cache detail. Several commands assume it exists after `sync`.

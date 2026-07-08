@@ -2,7 +2,7 @@
 //
 // Novel feature: settlement reconciliation. Joins synced payments to their
 // funding events in the local store so you can see what settled and what is
-// still outstanding. Hand-authored; survives regen.
+// still outstanding.
 package cli
 
 import (

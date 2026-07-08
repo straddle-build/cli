@@ -2,7 +2,7 @@
 //
 // Novel feature: paykey expiry and block monitor. Lists paykeys approaching
 // expires_at and blocked paykeys that are unblock-eligible, so recurring
-// payments do not fail on stale tokens. Hand-authored; survives regen.
+// payments do not fail on stale tokens.
 package cli
 
 import (

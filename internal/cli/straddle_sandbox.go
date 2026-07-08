@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// pp:novel-static-reference
-//
 // Source: https://docs.straddle.com/guides/resources/sandbox-paybybank
 // These are Straddle's published sandbox simulation contract. Pass the value on
 // a create call's config.sandbox_outcome (e.g. charges/payouts create
@@ -67,7 +65,7 @@ func straddleSandboxReference() sandboxReference {
 			"Set config.sandbox_outcome on the create call (charges/payouts: --config-sandbox-outcome).",
 			"Sandbox processes simulated payments roughly every minute, preserving async state transitions.",
 			"Reversal outcomes are ideal for testing reconciliation (paid then returned).",
-			"Sandbox keys only work against sandbox.straddle.com; set --environment sandbox (the default).",
+			"Sandbox keys only work against sandbox.straddle.com; set STRADDLE_ENVIRONMENT=sandbox or leave it unset.",
 		},
 	}
 }
