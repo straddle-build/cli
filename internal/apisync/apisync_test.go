@@ -186,6 +186,61 @@ func TestParseSpecAppliesPathLevelParameters(t *testing.T) {
 	}
 }
 
+func TestClassifyDriftReportsPathLevelParameterChange(t *testing.T) {
+	t.Parallel()
+
+	baseSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/widgets/{id}": {
+				"parameters": [
+					{"name": "id", "in": "path", "required": true, "description": "Widget id"}
+				],
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "GetWidget",
+					"summary": "Get widget"
+				}
+			}
+		}
+	}`)
+	headSpec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/widgets/{id}": {
+				"parameters": [
+					{"name": "id", "in": "path", "required": true, "description": "Updated widget id"}
+				],
+				"get": {
+					"tags": ["Widgets"],
+					"operationId": "GetWidget",
+					"summary": "Get widget"
+				}
+			}
+		}
+	}`)
+
+	baseOps, err := apisync.LoadSpec(baseSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(base): %v", err)
+	}
+	headOps, err := apisync.LoadSpec(headSpec)
+	if err != nil {
+		t.Fatalf("LoadSpec(head): %v", err)
+	}
+
+	result := apisync.ClassifyDrift(baseOps, headOps)
+	if result.NoDrift {
+		t.Fatal("NoDrift = true, want path-level parameter change to be reported")
+	}
+	if len(result.Changes) != 1 {
+		t.Fatalf("Changes = %d, want 1", len(result.Changes))
+	}
+	if result.Changes[0].Key != "GET /v1/widgets/{id}" {
+		t.Fatalf("change key = %q, want GET /v1/widgets/{id}", result.Changes[0].Key)
+	}
+}
+
 func TestGenerateEndpointFileUsesEmptyObjectForNoBodyMutation(t *testing.T) {
 	t.Parallel()
 
@@ -212,6 +267,30 @@ func TestGenerateEndpointFileUsesEmptyObjectForNoBodyMutation(t *testing.T) {
 	}
 	if strings.Contains(got, "var body map[string]any") {
 		t.Fatalf("generated content should not declare a typed nil body for no-body mutations:\n%s", got)
+	}
+}
+
+func TestGenerateEndpointFileUsesDeleteClassifier(t *testing.T) {
+	t.Parallel()
+
+	file, err := apisync.GenerateEndpointFile(apisync.Operation{
+		OperationID: "DeleteWidget",
+		Endpoint:    "widgets.delete",
+		Method:      "DELETE",
+		Path:        "/v1/widgets/{id}",
+		PathParameters: []apisync.Parameter{
+			{Name: "id", In: "path"},
+		},
+	}, t.TempDir())
+	if err != nil {
+		t.Fatalf("GenerateEndpointFile: %v", err)
+	}
+	got := file.Content
+	if !strings.Contains(got, "return classifyDeleteError(err, flags)") {
+		t.Fatalf("generated content missing delete classifier:\n%s", got)
+	}
+	if strings.Contains(got, "return classifyAPIError(err, flags)") {
+		t.Fatalf("generated DELETE content should not use generic API classifier:\n%s", got)
 	}
 }
 

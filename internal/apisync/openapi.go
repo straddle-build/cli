@@ -118,7 +118,7 @@ func ParseSpec(data []byte) ([]Operation, error) {
 				Description: ro.Description,
 				Tags:        append([]string(nil), ro.Tags...),
 				ReadOnly:    method == "GET" || method == "HEAD",
-				Fingerprint: fingerprintOperation(method, path, raw),
+				Fingerprint: fingerprintOperation(method, path, raw, item["parameters"]),
 			}
 			for _, p := range append(pathParams, ro.Parameters...) {
 				param := Parameter(p)
@@ -175,15 +175,22 @@ func SortOperations(ops []Operation) {
 	})
 }
 
-func fingerprintOperation(method, path string, raw json.RawMessage) string {
+func fingerprintOperation(method, path string, raw, pathParameters json.RawMessage) string {
 	var v any
 	if err := json.Unmarshal(raw, &v); err != nil {
 		v = string(raw)
 	}
+	var params any
+	if len(pathParameters) > 0 {
+		if err := json.Unmarshal(pathParameters, &params); err != nil {
+			params = string(pathParameters)
+		}
+	}
 	canonical, _ := json.Marshal(map[string]any{
-		"method": strings.ToUpper(method),
-		"path":   path,
-		"op":     v,
+		"method":          strings.ToUpper(method),
+		"path":            path,
+		"path_parameters": params,
+		"op":              v,
 	})
 	sum := sha256.Sum256(canonical)
 	return hex.EncodeToString(sum[:])

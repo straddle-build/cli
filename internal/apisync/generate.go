@@ -211,7 +211,7 @@ func init() {
 	{{- else if eq .Method "DELETE" }}
 				data, _, err := c.DeleteWithParamsAndHeaders(path, params, headers)
 				if err != nil {
-					return classifyAPIError(err, flags)
+					return classifyDeleteError(err, flags)
 				}
 	{{- else if eq .Method "POST" }}
 				data, _, err := c.PostWithParamsAndHeaders(path, params, body, headers)
