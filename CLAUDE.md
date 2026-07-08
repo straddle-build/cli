@@ -47,6 +47,7 @@ gofmt -w <changed files>                               # don't gofmt the whole t
 - `internal/straddleacct/` — integration-type + `Straddle-Account-Id` gating (see below)
 - `spec.json` — the OpenAPI spec; **authoritative source for resource/response shapes**
 - `.github/workflows/api-sync.yml` - scheduled, manual, and dispatch-driven endpoint sync automation
+- `.github/dependabot.yml` - weekly Go module and GitHub Actions dependency update grouping
 
 ## Key invariant: `Straddle-Account-Id` scoping (hand-authored — don't break it)
 `internal/straddleacct/` decides when the header is sent, by integration type:
@@ -78,6 +79,8 @@ gofmt -w <changed files>                               # don't gofmt the whole t
 - `cmd/gen-endpoint` checks endpoint annotation coverage, classifies spec drift, and
   generates deterministic generic command files for supported new operations.
 - Generated endpoint files self-register through `internal/cli/generated_registry.go`.
+- Dependabot groups weekly Go module minor and patch updates, except `modernc.org/sqlite`,
+  and groups GitHub Actions updates together.
 - Product commands include `reconcile`, `pipeline`, `returns`, `review-queue`,
   `cashflow`, `expiring`, `sandbox`, `sql`, `setup`, and `use-account`.
 - Preserve the dual human and agent surfaces when changing commands; update tests

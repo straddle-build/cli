@@ -2,7 +2,7 @@ module github.com/straddle-build/cli
 
 go 1.26.3
 
-toolchain go1.26.4
+toolchain go1.26.5
 
 require (
 	github.com/pelletier/go-toml/v2 v2.2.4
