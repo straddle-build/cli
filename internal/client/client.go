@@ -78,10 +78,21 @@ func New(cfg *config.Config, timeout time.Duration, rateLimit float64) *Client {
 			// "Moved Permanently" body back to the caller.
 			return errors.New("stopped after 10 redirects")
 		}
+		// A redirect that downgrades https→http must never carry the
+		// credential: Go's header copier has already run for this hop, and
+		// net/http only considers stripping sensitive headers when the
+		// host changes — so a same-host (or subdomain) downgrade arrives
+		// here with the original Authorization already copied into req.
+		// Delete it regardless of host; plaintext gets no credential.
+		if via[0].URL.Scheme == "https" && req.URL.Scheme != "https" {
+			req.Header.Del("Authorization")
+			return nil
+		}
 		// Same-host gate mirrors Go's shouldCopyHeaderOnRedirect: a
 		// cross-domain 3xx (open redirect or partner handoff) must not
 		// receive the auth credential, even though we are inside
 		// CheckRedirect where Go's automatic stripping has already run.
+		// Same-host http→http (loopback mocks) keeps its credential.
 		if req.URL.Host == via[0].URL.Host {
 			if h, err := c.authHeader(); err == nil && h != "" {
 				req.Header.Set("Authorization", h)
@@ -193,10 +204,13 @@ func (c *Client) readCache(path string, params map[string]string) (json.RawMessa
 	return json.RawMessage(data), true
 }
 
+// writeCache persists a response body for the read-through GET cache.
+// Owner-only permissions: cached bodies routinely contain customer PII
+// and payment data.
 func (c *Client) writeCache(path string, params map[string]string, data json.RawMessage) {
-	os.MkdirAll(c.cacheDir, 0o755)
+	os.MkdirAll(c.cacheDir, 0o700)
 	cacheFile := filepath.Join(c.cacheDir, c.cacheKey(path, params)+".json")
-	os.WriteFile(cacheFile, []byte(data), 0o644)
+	os.WriteFile(cacheFile, []byte(data), 0o600)
 }
 
 // invalidateCache wholesale-removes the cache directory so the next read
@@ -504,7 +518,7 @@ func (c *Client) doInternal(method, path string, params map[string]string, body 
 			Method:     method,
 			Path:       path,
 			StatusCode: resp.StatusCode,
-			Body:       truncateBody(respBody),
+			Body:       cliutil.RedactCredentials(truncateBody(respBody)),
 		}
 
 		// Rate limited - adjust adaptive limiter and retry

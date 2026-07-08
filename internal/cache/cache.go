@@ -42,10 +42,11 @@ func (s *Store) Get(key string) (json.RawMessage, bool) {
 	return json.RawMessage(data), true
 }
 
-// Set stores a value in the cache.
+// Set stores a value in the cache. Owner-only permissions: cached values
+// carry API response data (customer PII, payment records).
 func (s *Store) Set(key string, value json.RawMessage) {
-	_ = os.MkdirAll(s.Dir, 0o755)
-	_ = os.WriteFile(s.path(key), []byte(value), 0o644)
+	_ = os.MkdirAll(s.Dir, 0o700)
+	_ = os.WriteFile(s.path(key), []byte(value), 0o600)
 }
 
 // Clear removes all cached entries.

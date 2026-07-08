@@ -72,12 +72,22 @@ func LooksLikeAuthError(msg string) bool {
 	return false
 }
 
+// credPatterns matches credential-shaped substrings (API keys, bearer
+// tokens, key=... query params) for redaction from user-visible output.
+var credPatterns = regexp.MustCompile(`(?i)(sk-[a-zA-Z0-9]{8,}|sk_live_[a-zA-Z0-9]+|Bearer\s+[a-zA-Z0-9._\-]+|key=[a-zA-Z0-9._\-]+)`)
+
+// RedactCredentials strips credential-shaped strings from s without
+// truncating it. Applied to API error bodies at the source so a hostile
+// or misconfigured server cannot reflect a credential back through CLI
+// error output.
+func RedactCredentials(s string) string {
+	return credPatterns.ReplaceAllString(s, "[REDACTED]")
+}
+
 // SanitizeErrorBody truncates and strips credential-shaped strings from error output.
 func SanitizeErrorBody(msg string) string {
 	if len(msg) > 200 {
 		msg = msg[:200] + "..."
 	}
-	credPatterns := regexp.MustCompile(`(?i)(sk-[a-zA-Z0-9]{8,}|sk_live_[a-zA-Z0-9]+|Bearer\s+[a-zA-Z0-9._\-]+|key=[a-zA-Z0-9._\-]+)`)
-	msg = credPatterns.ReplaceAllString(msg, "[REDACTED]")
-	return msg
+	return RedactCredentials(msg)
 }

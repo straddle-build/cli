@@ -165,7 +165,7 @@ func newDoctorCmd(flags *rootFlags) *cobra.Command {
 				if header == "" {
 					report["auth"] = "not configured"
 					report["auth_hint"] = "export STRADDLE_API_KEY=<your-key>"
-					report["auth_key_url"] = "https://run.pstmn.io/button.svg"
+					report["auth_key_url"] = "https://dashboard.straddle.com"
 				} else {
 					authConfigured = true
 					report["auth"] = "configured"

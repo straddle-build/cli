@@ -5,6 +5,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,6 +83,15 @@ func Load(configPath string) (*Config, error) {
 		cfg.BaseURL = v
 	}
 
+	// Refuse to send credentials over plaintext: the client attaches
+	// Authorization to whatever BaseURL resolves to, so a non-https scheme
+	// would leak the key on the wire. http stays allowed for loopback hosts
+	// only — the Printing Press verifier and tests point STRADDLE_BASE_URL
+	// at local http mock servers.
+	if err := validateBaseURL(cfg.BaseURL); err != nil {
+		return nil, err
+	}
+
 	// Endpoint template vars: resolve each {placeholder} in BaseURL or the
 	// GraphQL path against the matching env var. Populated even when values
 	// are empty so the client's buildURL helper can issue an actionable
@@ -102,6 +112,38 @@ func Load(configPath string) (*Config, error) {
 		cfg.TemplateVars["environment"] = "sandbox"
 	}
 	return cfg, nil
+}
+
+// validateBaseURL enforces the https-only transport rule for the API base
+// URL. http is tolerated solely for loopback hosts (localhost, 127.0.0.1,
+// ::1) so local mock servers and the Printing Press verifier keep working.
+// An empty BaseURL passes through: no request can be built from it, so
+// there is no credential to leak, and doctor reports it as unconfigured.
+// The scheme is checked by prefix because a templated BaseURL (e.g.
+// "https://{environment}.straddle.com") does not survive url.Parse; the
+// loopback allowance parses the URL, which is fine because loopback
+// overrides are always concrete host:port values.
+func validateBaseURL(raw string) error {
+	if raw == "" {
+		return nil
+	}
+	lower := strings.ToLower(raw)
+	if strings.HasPrefix(lower, "https://") {
+		return nil
+	}
+	err := fmt.Errorf("STRADDLE_BASE_URL must use https (got %q); http is allowed only for loopback hosts", raw)
+	if !strings.HasPrefix(lower, "http://") {
+		return err
+	}
+	u, parseErr := url.Parse(raw)
+	if parseErr != nil {
+		return err
+	}
+	switch u.Hostname() {
+	case "localhost", "127.0.0.1", "::1":
+		return nil
+	}
+	return err
 }
 
 // normalizeEndpointTemplateValue cleans up a server-URL template value the

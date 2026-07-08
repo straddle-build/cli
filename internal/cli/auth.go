@@ -39,15 +39,17 @@ func newAuthSetupCmd(_ *rootFlags) *cobra.Command {
 		Example: "  straddle-pp-cli auth setup\n  straddle-pp-cli auth setup --launch",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			w := cmd.OutOrStdout()
-			fmt.Fprintln(w, "Get a key at: https://run.pstmn.io/button.svg")
+			fmt.Fprintln(w, "Get a key at: https://dashboard.straddle.com")
 			fmt.Fprintln(w, "")
 			fmt.Fprintln(w, "Then set:")
 			fmt.Fprintln(w, "  export STRADDLE_API_KEY=\"<your-token>\"")
 			fmt.Fprintln(w, "  straddle-pp-cli auth set-token <token>")
+			fmt.Fprintln(w, "")
+			fmt.Fprintln(w, "Docs: https://docs.straddle.com/api-reference/authentication")
 			if !launch {
 				return nil
 			}
-			launchURL := "https://run.pstmn.io/button.svg"
+			launchURL := "https://dashboard.straddle.com"
 			if cliutil.IsVerifyEnv() {
 				fmt.Fprintf(w, "would launch: %s\n", launchURL)
 				return nil
