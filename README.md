@@ -14,6 +14,8 @@ Generated with [CLI Printing Press](https://github.com/mvanhorn/cli-printing-pre
 brew install straddle-build/tap/straddle
 ```
 
+> Available with the next patch release — the tap's publish credential is being provisioned. Use the shell installer below meanwhile.
+
 ### Shell installer (macOS / Linux)
 
 ```bash
@@ -28,6 +30,8 @@ Installs the latest release to `~/.local/bin` (override with `STRADDLE_INSTALL_D
 npx @straddleio/cli doctor   # run without installing
 npm i -g @straddleio/cli     # install the straddle binary globally
 ```
+
+> Publishing with the next patch release — the npm token is being provisioned. Use the shell installer above meanwhile.
 
 ### Pre-built binaries
 
