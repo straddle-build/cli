@@ -29,7 +29,9 @@ func runRootForAPITest(t *testing.T, args []string, stdin string) (string, strin
 
 func isolateAPIConfig(t *testing.T) {
 	t.Helper()
-	t.Setenv("STRADDLE_CONFIG", filepath.Join(t.TempDir(), "config.toml"))
+	configDir := t.TempDir()
+	t.Setenv("STRADDLE_CONFIG", filepath.Join(configDir, "config.toml"))
+	t.Setenv("STRADDLE_PLATFORM_CONFIG", filepath.Join(configDir, "platform.toml"))
 	t.Setenv("STRADDLE_API_KEY", "")
 	t.Setenv("STRADDLE_BASE_URL", "")
 	t.Setenv("STRADDLE_VERIFY", "")
@@ -149,6 +151,39 @@ func TestAPIPassthroughAccountFlagUsesRawPathPolicy(t *testing.T) {
 	}
 }
 
+func TestAPIPassthroughAccountFlagUsesRawPathPolicyWithQueryAndFragment(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	if err := straddleacct.SaveContext(straddleacct.Context{IntegrationType: straddleacct.TypeSaaS}); err != nil {
+		t.Fatalf("save platform context: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get(straddleacct.Header); got != "acct_flag" {
+			t.Fatalf("%s header = %q, want acct_flag", straddleacct.Header, got)
+		}
+		if r.URL.Path != "/v1/charges" {
+			t.Fatalf("path = %s, want /v1/charges", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("limit"); got != "10" {
+			t.Fatalf("limit query = %q, want 10", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"ch_query"}`))
+	}))
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	stdout, _, err := runRootForAPITest(t, []string{"--json", "--account", "acct_flag", "api", "get", "/v1/charges?limit=10#frag"}, "")
+	if err != nil {
+		t.Fatalf("api get passthrough with query path returned error: %v", err)
+	}
+	env := decodeAPIEnvelope(t, stdout)
+	if env["success"] != true {
+		t.Fatalf("success = %v, want true; envelope: %v", env["success"], env)
+	}
+}
+
 func TestAPIPassthroughStickyAccountUsesRawPathPolicy(t *testing.T) {
 	isolateAPIConfig(t)
 	t.Setenv("STRADDLE_API_KEY", "test_key")
@@ -169,6 +204,46 @@ func TestAPIPassthroughStickyAccountUsesRawPathPolicy(t *testing.T) {
 
 	if _, _, err := runRootForAPITest(t, []string{"--json", "api", "get", "/v1/charges"}, ""); err != nil {
 		t.Fatalf("api get passthrough with sticky account returned error: %v", err)
+	}
+}
+
+func TestAPIPassthroughStickyAccountUsesRawPathPolicyWithQuery(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	if err := straddleacct.SaveContext(straddleacct.Context{IntegrationType: straddleacct.TypeSaaS, CurrentAccount: "acct_sticky"}); err != nil {
+		t.Fatalf("save platform context: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get(straddleacct.Header); got != "acct_sticky" {
+			t.Fatalf("%s header = %q, want acct_sticky", straddleacct.Header, got)
+		}
+		if got := r.URL.Query().Get("limit"); got != "10" {
+			t.Fatalf("limit query = %q, want 10", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"ch_sticky_query"}`))
+	}))
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	if _, _, err := runRootForAPITest(t, []string{"--json", "api", "get", "/v1/charges?limit=10"}, ""); err != nil {
+		t.Fatalf("api get passthrough with sticky account and query path returned error: %v", err)
+	}
+}
+
+func TestAPIPassthroughRejectsReservedAccountHeader(t *testing.T) {
+	isolateAPIConfig(t)
+
+	_, _, err := runRootForAPITest(t, []string{"api", "get", "/v1/charges", "--header", "sTrAdDlE-aCcOuNt-Id=acct_override"}, "")
+	if err == nil {
+		t.Fatal("reserved account header returned nil error")
+	}
+	if got := ExitCode(err); got != 2 {
+		t.Fatalf("ExitCode(reserved account header) = %d, want 2", got)
+	}
+	if !strings.Contains(err.Error(), "use --account") {
+		t.Fatalf("reserved account header error = %q, want use --account", err.Error())
 	}
 }
 

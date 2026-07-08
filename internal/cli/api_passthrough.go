@@ -46,6 +46,9 @@ func runAPIPassthrough(cmd *cobra.Command, flags *rootFlags, method string, args
 	if err != nil {
 		return err
 	}
+	if err := validateAPIPassthroughHeaders(headers); err != nil {
+		return err
+	}
 	stdinBody, err := cmd.Flags().GetBool("stdin")
 	if err != nil {
 		return err
@@ -115,6 +118,15 @@ func parseAPIKeyValueTokens(flagName string, tokens []string) (map[string]string
 		values[key] = value
 	}
 	return values, nil
+}
+
+func validateAPIPassthroughHeaders(headers map[string]string) error {
+	for key := range headers {
+		if strings.EqualFold(strings.TrimSpace(key), straddleAccountHeader) {
+			return usageErr(fmt.Errorf("raw --header %s is reserved for account scoping; use --account <acct_id>", straddleAccountHeader))
+		}
+	}
+	return nil
 }
 
 func readAPIPassthroughBody(cmd *cobra.Command) (json.RawMessage, error) {

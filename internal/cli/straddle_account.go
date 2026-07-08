@@ -68,7 +68,17 @@ func straddleAccountPolicyTarget(cmd *cobra.Command, args []string) (string, str
 	if !ok || !strings.HasPrefix(args[1], "/") {
 		return path, method
 	}
-	return args[1], rawMethod
+	return rawAPIPathForPolicy(args[1]), rawMethod
+}
+
+func rawAPIPathForPolicy(path string) string {
+	cut := len(path)
+	for _, marker := range []string{"?", "#"} {
+		if idx := strings.Index(path, marker); idx >= 0 && idx < cut {
+			cut = idx
+		}
+	}
+	return path[:cut]
 }
 
 // accountPolicyErr turns a straddleacct.PolicyError into a usage error with a
