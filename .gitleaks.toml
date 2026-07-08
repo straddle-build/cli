@@ -1,0 +1,17 @@
+# Gitleaks config — extends the default ruleset with allowlists for
+# known non-secrets. Everything else is scanned normally (CI runs
+# `gitleaks detect --log-opts=--all` over the full history).
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation examples and synthetic test fixtures"
+paths = [
+  # Vendored OpenAPI spec: curl examples use YOUR_SECRET_API_KEY and
+  # example UUIDs — placeholders, not credentials.
+  '''spec\.json''',
+  # JWT-shape detector fixtures: real-shaped RS256 header + repeated
+  # filler chars ("Synthetic — not a credential" per the file).
+  '''internal/cliutil/jwtshape_test\.go''',
+]
