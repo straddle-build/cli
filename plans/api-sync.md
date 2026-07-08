@@ -4,7 +4,7 @@
 
 - Linear: ME-343, `api-sync: generator-backed endpoint tracking + straddle api passthrough`.
 - Companion Linear: ME-344, Scalar registry publish + repository dispatch hook.
-- Repo: `github.com/straddle-build/cli` at `~/clawd/cli`.
+- Repo: `github.com/straddle-build/cli`.
 - Current OpenAPI lockfile: `spec.json`.
 
 ## Decisions carried forward
@@ -34,7 +34,8 @@
 3. Drift automation
    - Add `.github/workflows/api-sync.yml` with `schedule`, `workflow_dispatch`, and `repository_dispatch` triggers.
    - Fetch the live spec into a temp file, normalize it, classify drift against `spec.json`, and run the generator.
-   - Open PRs for supported additions. Hold removals and changes for human review. Open issues for unsupported operation shapes.
+   - Open PRs only for supported additions when no changed, removed, or unsupported operations are present.
+   - Hold changed, removed, and unsupported operations for human review. Remote issue creation is opt-in until ME-344 finalizes dispatch and dedupe policy.
    - Leave the source URL as the interim Stainless artifact until ME-344 swaps it to Scalar.
 
 4. Companion follow-up

@@ -24,6 +24,7 @@ Hand-authored commands carry most of the operational value in this repo:
 - `expiring` — finds paykeys that need attention
 - `sandbox` — exposes deterministic sandbox outcomes
 - `setup` / `use-account` — persist integration type and active account scope
+- `api` - browses hidden API interfaces and calls raw API paths
 
 ## Demo harness
 
@@ -42,10 +43,23 @@ From `CLAUDE.md`, the expected validation loop is:
 
 - `go test ./...`
 - `go vet ./...`
+- `go run ./cmd/gen-endpoint check --spec spec.json --repo .`
 - `go build -o ./straddle ./cmd/straddle`
 - `./straddle doctor`
 
 There are package-level tests around CLI behavior, store migrations, account scoping, and the special output/rendering logic.
+
+## API sync workflow
+
+Endpoint coverage and drift are maintained by `cmd/gen-endpoint` and `.github/workflows/api-sync.yml`.
+
+Local commands:
+
+- `go run ./cmd/gen-endpoint check --spec spec.json --repo .` checks that `straddle:*` endpoint annotations cover the OpenAPI lockfile.
+- `go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --agent` classifies supported additions, changed operations, removed operations, and unsupported operation shapes.
+- `go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent` writes deterministic generic endpoint command files for supported additions.
+
+The GitHub workflow runs on a schedule, manual dispatch, and `repository_dispatch` events. It fetches the live spec from `client_payload.spec_url`, a workflow input, or `STRADDLE_API_SPEC_URL`; opens PRs only for supported additions when `API_SYNC_BOT_TOKEN` is configured; and holds changed, removed, or unsupported operations for human review. Remote issue creation is opt-in with `API_SYNC_CREATE_ISSUES=true`.
 
 ## Change warnings
 
@@ -55,6 +69,8 @@ Be careful when changing any of these areas:
 - account scoping rules
 - migration behavior in `internal/store`
 - command execution side effects
+- raw `api` passthrough behavior
+- API sync drift classification
 - demo scripts that assume specific CLI output
 
 ## Useful files
@@ -63,6 +79,9 @@ Be careful when changing any of these areas:
 - `CLAUDE.md`
 - `SKILL.md`
 - `demo/`
+- `cmd/gen-endpoint/`
+- `internal/apisync/`
+- `.github/workflows/api-sync.yml`
 - `internal/cli/root.go`
 - `internal/cli/straddle_setup.go`
 - `internal/store/store.go`

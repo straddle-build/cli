@@ -2,7 +2,7 @@
 //
 // Novel feature: identity review queue. Lists customers and paykeys sitting in
 // review status, oldest first, with age-in-queue so the KYC backlog is
-// triageable. Hand-authored; survives regen.
+// triageable.
 package cli
 
 import (

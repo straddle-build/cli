@@ -45,3 +45,15 @@ go run ./cmd/straddle <command> --dry-run --agent
 Use `--yes --no-input` only after the target, arguments, and side effects are clear.
 
 For install, auth, examples, and longer product guidance, read `README.md` and `SKILL.md`. This file intentionally stays small so repo-local agents get invariant local guidance without duplicating broader docs.
+
+## API Sync
+
+`spec.json` is the OpenAPI lockfile for this repo. Use the repo-local generator tooling for endpoint coverage and drift work:
+
+```bash
+go run ./cmd/gen-endpoint check --spec spec.json --repo .
+go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --agent
+go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent
+```
+
+Generated endpoint files self-register through `internal/cli/generated_registry.go`. Raw `straddle api <method> <path>` is the fallback for newly published endpoints before a dedicated command exists.

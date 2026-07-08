@@ -144,7 +144,7 @@ func newAuthSetTokenCmd(flags *rootFlags) *cobra.Command {
 
 			// Clear any legacy auth_header so AuthHeader() falls through to
 			// the newly-saved credential. Without this, a pre-existing
-			// auth_header value (common after regenerate) shadows the saved
+			// auth_header value from older config shadows the saved
 			// token and set-token silently has no effect. Silent clear (no
 			// log line): a masked-tail variant could leak token bytes through
 			// scripted dogfood that captures stderr.

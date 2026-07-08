@@ -1,8 +1,7 @@
 // Copyright 2026 hello-keith. Licensed under Apache-2.0. See LICENSE.
 //
-// Hand-authored novel-feature support for the Straddle CLI. Survives regen as a
-// whole file (not generator-emitted). Provides the local-store record types,
-// loaders, status helpers, and output plumbing shared by the reconcile,
+// Novel-feature support for the Straddle CLI. Provides the local-store record
+// types, loaders, status helpers, and output plumbing shared by the reconcile,
 // pipeline, returns, review-queue, cashflow, and expiring commands. All data is
 // read from the SQLite store populated by `sync`; nothing here calls the API.
 package cli

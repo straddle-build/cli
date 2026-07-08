@@ -1,9 +1,8 @@
 // Copyright 2026 hello-keith. Licensed under Apache-2.0. See LICENSE.
 //
 // Sticky platform context: the integration type and current acting account.
-// Stored in its own file rather than the generated config.toml, whose save()
-// marshals a fixed struct and would drop these keys. Hand-authored; survives
-// regen.
+// Stored in its own file rather than config.toml, whose save() marshals a fixed
+// struct and would drop these keys.
 package straddleacct
 
 import (

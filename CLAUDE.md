@@ -27,6 +27,7 @@ When working in this repository, read the OpenWiki quickstart first, then follow
 go build -o ./straddle ./cmd/straddle   # always build to ./, never /tmp
 go test ./...                                          # must be green before done
 go vet ./...
+go run ./cmd/gen-endpoint check --spec spec.json --repo .
 gofmt -w <changed files>                               # don't gofmt the whole tree blindly
 ./straddle --help
 ./straddle doctor                               # verify auth/connectivity
@@ -36,13 +37,16 @@ gofmt -w <changed files>                               # don't gofmt the whole t
 
 ## Layout
 - `cmd/straddle/` — entry point
+- `cmd/gen-endpoint/` - repo-local API sync generator, coverage checker, and drift classifier
 - `internal/cli/` — Cobra commands (one file per endpoint) + hand-authored novel commands (`straddle_*.go`)
+- `internal/apisync/` - OpenAPI parsing, command inventory, drift classification, and generic endpoint generation
 - `internal/client/` — HTTP client; applies `Config.Headers` to every request
 - `internal/config/` — `config.toml` load/save
 - `internal/store/` — SQLite store: typed tables (spec-derived columns) + generic `resources` fallback
 - `internal/cliutil/` — shared CLI helpers (sanitization, rate limiting, env probes)
 - `internal/straddleacct/` — integration-type + `Straddle-Account-Id` gating (see below)
 - `spec.json` — the OpenAPI spec; **authoritative source for resource/response shapes**
+- `.github/workflows/api-sync.yml` - scheduled, manual, and dispatch-driven endpoint sync automation
 
 ## Key invariant: `Straddle-Account-Id` scoping (hand-authored — don't break it)
 `internal/straddleacct/` decides when the header is sent, by integration type:
@@ -50,7 +54,7 @@ gofmt -w <changed files>                               # don't gofmt the whole t
 - `use-account <id>` — set the acting account (sticky); `use-account --clear` to unset.
 - `--account <id>` — per-call override on any command.
 - Policy (47/23 split derived from the spec): charges/payouts create → **required** for `saas`+`marketplace`; customers/paykeys/bridge → scoped for `saas`, **no header** for `marketplace` (platform owns); account-management ops (accounts/orgs/representatives/linked-banks/onboarding) **never** use the header (they carry the account in the body/path).
-- Both the CLI pre-run and the in-process MCP handler call `straddleacct`, so agents and humans are gated identically. Route any new account-scoped behavior through this package.
+- The CLI pre-run calls `straddleacct`, so agents and humans are gated identically. Route any new account-scoped behavior through this package.
 
 ## Output rules
 - **Agent/JSON output must stay byte-stable.** Never change it for cosmetics.
@@ -71,6 +75,9 @@ gofmt -w <changed files>                               # don't gofmt the whole t
 - `spec.json` captures the OpenAPI resource and response shapes the CLI supports.
 - Endpoint command files, store schemas, account-scoping policy, analytics workflows,
   and docs are maintained directly in this repo.
+- `cmd/gen-endpoint` checks endpoint annotation coverage, classifies spec drift, and
+  generates deterministic generic command files for supported new operations.
+- Generated endpoint files self-register through `internal/cli/generated_registry.go`.
 - Product commands include `reconcile`, `pipeline`, `returns`, `review-queue`,
   `cashflow`, `expiring`, `sandbox`, `sql`, `setup`, and `use-account`.
 - Preserve the dual human and agent surfaces when changing commands; update tests

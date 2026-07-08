@@ -2,7 +2,7 @@
 //
 // Novel feature: payment pipeline + cancel window. Groups synced payments by
 // lifecycle status and flags which are still cancelable (created/scheduled/
-// on_hold) versus locked once they reach pending. Hand-authored; survives regen.
+// on_hold) versus locked once they reach pending.
 package cli
 
 import (

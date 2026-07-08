@@ -5,9 +5,12 @@ This page is the fastest way to find the code behind a command.
 ## Primary packages
 
 - `cmd/straddle/main.go` — CLI entrypoint; hands off to the Cobra command tree.
+- `cmd/gen-endpoint/` - API sync generator, endpoint coverage checker, and drift classifier.
 - `internal/cli/root.go` — Cobra root command, persistent flags, exit behavior, and shared output rules.
 - `internal/cli/straddle_setup.go` — persisted integration type (`account`, `saas`, `marketplace`) and current embedded account helpers.
 - `internal/cli/straddle_*.go` — hand-authored analytics, workflow, and reference commands that extend the Straddle API command surface.
+- `internal/cli/generated_registry.go` - self-registration hook for generated endpoint command files.
+- `internal/apisync/` - OpenAPI loading, repo inventory, coverage checks, drift classification, and generic endpoint generation.
 - `internal/store/store.go` — SQLite store, migrations, FTS, schema versioning.
 - `internal/straddleacct/policy.go` — `Straddle-Account-Id` decision engine.
 - `internal/client/` — HTTP client and response handling.
@@ -143,7 +146,7 @@ These are the command families that make this repo more than a direct API wrappe
 - `feedback` — collect or list feedback records.
 - `tail` — stream or inspect recent event output.
 - `workflow` / `workflow archive` / `workflow status` — channel/workflow helpers.
-- `api` / `api discovery` — inspect API capabilities and discovery behavior.
+- `api` - inspect API capabilities, browse hidden interfaces, and call raw API paths.
 - `import` — import data snapshots into the local store.
 - `deliver` — route command output to alternate sinks such as files or webhooks.
 - `analytics` — umbrella entrypoint for analytics-related helpers.
@@ -156,6 +159,8 @@ These are the command families that make this repo more than a direct API wrappe
 - `build/` — build/release-related assets.
 - `spec.json` — OpenAPI source spec.
 - `manifest.json` — package manifest metadata.
+- `.github/workflows/api-sync.yml` - scheduled, manual, and dispatch-driven endpoint sync workflow.
+- `plans/api-sync.md` - implementation plan and ME-344 handoff assumptions for API sync.
 
 ## How to use this map
 

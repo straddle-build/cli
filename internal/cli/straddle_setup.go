@@ -4,8 +4,7 @@
 // switch the current acting account (`use-account`). Both persist to the
 // straddleacct platform context that drives Straddle-Account-Id gating. The CLI
 // never prompts (see Execute); the conversational walkthrough lives in the
-// companion skill, which calls `setup --type ...`. Hand-authored; survives
-// regen.
+// companion skill, which calls `setup --type ...`.
 package cli
 
 import (
