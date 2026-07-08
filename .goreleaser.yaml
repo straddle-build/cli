@@ -37,6 +37,11 @@ checksum:
 
 homebrew_casks:
   - name: straddle
+    # HOMEBREW_TAP_GITHUB_TOKEN is not set on the repo yet (fine-grained
+    # PAT for straddle-build/homebrew-tap, Contents R/W). Flip this to
+    # false once the secret lands, then tag the next patch release to
+    # publish the cask.
+    skip_upload: true
     repository:
       owner: straddle-build
       name: homebrew-tap
