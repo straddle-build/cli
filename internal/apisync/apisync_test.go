@@ -31,6 +31,26 @@ func TestCurrentSpecOperationsAreCoveredByCheckedInAnnotations(t *testing.T) {
 	}
 }
 
+func TestAPISyncWorkflowOnlyUpdatesLockfileForPureSupportedAdditions(t *testing.T) {
+	t.Parallel()
+
+	repo := testRepoRoot(t)
+	data, err := os.ReadFile(filepath.Join(repo, ".github", "workflows", "api-sync.yml"))
+	if err != nil {
+		t.Fatalf("read api sync workflow: %v", err)
+	}
+	workflow := string(data)
+	for _, want := range []string{
+		"      - name: Generate supported endpoint additions\n        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'",
+		"      - name: Update spec lockfile\n        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'",
+		`echo "- Supported additions: ${{ steps.drift.outputs.supported_additions }}"`,
+	} {
+		if !strings.Contains(workflow, want) {
+			t.Fatalf("api sync workflow missing %q", want)
+		}
+	}
+}
+
 func TestClassifyDriftReportsUnsupportedNonJSONRequestBodyAddition(t *testing.T) {
 	t.Parallel()
 
@@ -163,6 +183,35 @@ func TestParseSpecAppliesPathLevelParameters(t *testing.T) {
 	}
 	if len(ops[0].PathParameters) != 1 || ops[0].PathParameters[0].Name != "id" {
 		t.Fatalf("path parameters = %#v, want id from path item", ops[0].PathParameters)
+	}
+}
+
+func TestGenerateEndpointFileUsesEmptyObjectForNoBodyMutation(t *testing.T) {
+	t.Parallel()
+
+	file, err := apisync.GenerateEndpointFile(apisync.Operation{
+		OperationID: "ResubmitWidget",
+		Endpoint:    "widgets.resubmit",
+		Method:      "POST",
+		Path:        "/v1/widgets/{id}/resubmit",
+		PathParameters: []apisync.Parameter{
+			{Name: "id", In: "path"},
+		},
+	}, t.TempDir())
+	if err != nil {
+		t.Fatalf("GenerateEndpointFile: %v", err)
+	}
+	got := file.Content
+	for _, want := range []string{
+		"body := map[string]any{}",
+		"c.PostWithParamsAndHeaders(path, params, body, headers)",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("generated content missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "var body map[string]any") {
+		t.Fatalf("generated content should not declare a typed nil body for no-body mutations:\n%s", got)
 	}
 }
 

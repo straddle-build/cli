@@ -105,7 +105,7 @@ jobs:
           echo "human_review_count=${human_review_count}" >> "${GITHUB_OUTPUT}"
 
       - name: Generate supported endpoint additions
-        if: steps.drift.outputs.supported_additions != '0'
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
         shell: bash
         env:
           LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
@@ -123,7 +123,7 @@ jobs:
             --agent
 
       - name: Update spec lockfile
-        if: steps.drift.outputs.supported_additions != '0'
+        if: steps.drift.outputs.supported_additions != '0' && steps.drift.outputs.human_review_count == '0'
         shell: bash
         env:
           LIVE_SPEC: ${{ steps.fetch_spec.outputs.live_spec }}
@@ -166,11 +166,12 @@ jobs:
             echo "API spec drift needs human review."
             echo
             echo "Generator classification:"
+            echo "- Supported additions: ${{ steps.drift.outputs.supported_additions }}"
             echo "- Changed operations: ${{ steps.drift.outputs.changes }}"
             echo "- Removed operations: ${{ steps.drift.outputs.removals }}"
             echo "- Unsupported new operations: ${{ steps.drift.outputs.unsupported_operations }}"
             echo
-            echo "Supported additions, if any, are handled by the generated-command PR path. Do not hand-edit endpoint drift here; update cmd/gen-endpoint/internal/apisync if the classification is wrong."
+            echo "Supported additions are auto-generated only when no changed, removed, or unsupported operations are present. Do not hand-edit endpoint drift here; update cmd/gen-endpoint/internal/apisync if the classification is wrong."
             echo
             echo "\`\`\`json"
             cat "${DRIFT_JSON}"

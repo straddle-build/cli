@@ -185,8 +185,8 @@ func init() {
 				}
 	{{- end }}
 	{{- if .NeedsBody }}
+	{{- if .HasRequestBody }}
 				var body map[string]any
-{{- if .HasRequestBody }}
 			if stdinBody {
 				stdinData, err := io.ReadAll(os.Stdin)
 				if err != nil {
@@ -198,7 +198,9 @@ func init() {
 			} else {
 				body = map[string]any{}
 			}
-{{- end }}
+	{{- else }}
+				body := map[string]any{}
+	{{- end }}
 {{- end }}
 
 	{{- if eq .Method "GET" }}
