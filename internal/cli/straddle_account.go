@@ -3,14 +3,14 @@
 // Per-call Straddle-Account-Id header for Embed platform scoping.
 //
 // A platform call must name the embedded account it acts on behalf of. The
-// generated client applies cfg.Headers to every request, so injecting the
-// header through newClient reaches every endpoint command without editing any
-// generated per-command file. resolveStraddleAccount runs in the root
-// PersistentPreRunE: it decides — from the command's pp:path/pp:method and the
-// configured integration type — whether the header is required, forbidden, or
+// shared client applies cfg.Headers to every request, so injecting the
+// header through newClient reaches every endpoint command without editing each
+// per-command file. resolveStraddleAccount runs in the root PersistentPreRunE:
+// it decides, from the command's straddle:path/straddle:method annotations and
+// the configured integration type, whether the header is required, forbidden, or
 // optional, then resolves the value from --account (per-call override) or the
 // sticky current account. See https://docs.straddle.com/guides/embed/api-headers
-// and internal/straddleacct. Hand-authored; survives regen.
+// and internal/straddleacct.
 package cli
 
 import (
@@ -36,8 +36,8 @@ func resolveStraddleAccount(cmd *cobra.Command, f *rootFlags) error {
 		return err
 	}
 	decision := straddleacct.Classify(
-		cmd.Annotations["pp:path"],
-		cmd.Annotations["pp:method"],
+		cmd.Annotations["straddle:path"],
+		cmd.Annotations["straddle:method"],
 		ctx.IntegrationType,
 	)
 	value, _, rerr := straddleacct.Resolve(

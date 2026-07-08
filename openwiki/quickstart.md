@@ -31,7 +31,7 @@ The main entrypoints and packages are:
 
 ## What to know before changing code
 
-- The repository is not regenerated from the OpenAPI spec anymore; it is maintained directly.
+- The repository is maintained as a standalone Go CLI with source, docs, and release config in this repo.
 - Human CLI output and agent/JSON output are both intentional surfaces and should not drift casually.
 - `Straddle-Account-Id` behavior is business-critical: it depends on the integration type (`account`, `saas`, `marketplace`) and the operation being called.
 - The local SQLite store is part of the product, not a cache detail. Several commands assume it exists after `sync`.

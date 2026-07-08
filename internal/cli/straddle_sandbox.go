@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// pp:novel-static-reference
-//
 // Source: https://docs.straddle.com/guides/resources/sandbox-paybybank
 // These are Straddle's published sandbox simulation contract. Pass the value on
 // a create call's config.sandbox_outcome (e.g. charges/payouts create

@@ -9,8 +9,7 @@
 // not — those carry the account in the body `account_id` or path
 // `{account_id}` instead). The integration-type overlay (marketplace vs SaaS
 // for customer-owned resources) is the business rule the spec cannot encode.
-// See https://docs.straddle.com/guides/embed/api-headers. Hand-authored;
-// survives regen.
+// See https://docs.straddle.com/guides/embed/api-headers.
 package straddleacct
 
 import "strings"
@@ -74,8 +73,8 @@ var saasCreateScoped = map[string]bool{
 	"bridge":    true,
 }
 
-// ResourceFromPath extracts the resource segment from a pp:path such as
-// "/v1/charges/{id}/hold" -> "charges". Returns "" when not derivable.
+// ResourceFromPath extracts the resource segment from a straddle:path annotation
+// value such as "/v1/charges/{id}/hold" -> "charges". Returns "" when not derivable.
 func ResourceFromPath(ppPath string) string {
 	parts := strings.Split(strings.Trim(ppPath, "/"), "/")
 	for i, p := range parts {

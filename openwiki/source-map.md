@@ -7,7 +7,7 @@ This page is the fastest way to find the code behind a command.
 - `cmd/straddle/main.go` — CLI entrypoint; hands off to the Cobra command tree.
 - `internal/cli/root.go` — Cobra root command, persistent flags, exit behavior, and shared output rules.
 - `internal/cli/straddle_setup.go` — persisted integration type (`account`, `saas`, `marketplace`) and current embedded account helpers.
-- `internal/cli/straddle_*.go` — hand-authored analytics, workflow, and reference commands that extend the generated API surface.
+- `internal/cli/straddle_*.go` — hand-authored analytics, workflow, and reference commands that extend the Straddle API command surface.
 - `internal/store/store.go` — SQLite store, migrations, FTS, schema versioning.
 - `internal/straddleacct/policy.go` — `Straddle-Account-Id` decision engine.
 - `internal/client/` — HTTP client and response handling.
@@ -15,7 +15,7 @@ This page is the fastest way to find the code behind a command.
 
 ## Command groups worth knowing
 
-### Generated API families
+### API command families
 
 These command families mirror Straddle API resources. In general:
 - `list` retrieves collections
@@ -148,7 +148,7 @@ These are the command families that make this repo more than a direct API wrappe
 - `deliver` — route command output to alternate sinks such as files or webhooks.
 - `analytics` — umbrella entrypoint for analytics-related helpers.
 - `agent-context` — expose runtime context to agents.
-- `channel` and `promoted*` commands — extra workflow/reporting surfaces exposed in the generated tree.
+- `channel` and `promoted*` commands — extra workflow/reporting surfaces in the Straddle command tree.
 
 ## Supporting directories
 
@@ -156,7 +156,6 @@ These are the command families that make this repo more than a direct API wrappe
 - `build/` — build/release-related assets.
 - `spec.json` — OpenAPI source spec.
 - `manifest.json` — package manifest metadata.
-- `.printing-press*.json` — generator and patch metadata.
 
 ## How to use this map
 

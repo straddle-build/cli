@@ -4,8 +4,6 @@
 
 A full CLI for Straddle's Pay by Bank and Embed APIs that also keeps a local SQLite copy of your charges, payouts, customers, paykeys, and funding events. On top of the synced store it adds reconciliation, a cancel-window payment pipeline, return analysis, and cashflow analytics that the official stateless CLI cannot offer.
 
-Generated with [CLI Printing Press](https://github.com/mvanhorn/cli-printing-press); maintained and released from this repo.
-
 ## Install
 
 ### Homebrew (macOS)
@@ -56,8 +54,6 @@ The repo-root [`SKILL.md`](SKILL.md) teaches coding agents (Claude Code, Codex, 
 ```bash
 npx skills add straddle-build/cli
 ```
-
-The legacy `npx -y @mvanhorn/printing-press install straddle` installer also still works.
 
 ## Authentication
 
@@ -305,7 +301,7 @@ Exit codes: `0` success, `2` usage error, `3` not found, `4` auth error, `5` API
 
 ## Runtime Endpoint
 
-This CLI resolves endpoint placeholders at runtime, so one installed binary can target different tenants or API versions without regeneration.
+This CLI resolves endpoint placeholders at runtime, so one installed binary can target different tenants or API versions without rebuilding.
 
 Endpoint environment variables:
 - `STRADDLE_ENVIRONMENT` resolves `{environment}`

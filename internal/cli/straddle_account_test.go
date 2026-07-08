@@ -44,7 +44,7 @@ func newAccountTestCmd(path, method string) (*cobra.Command, *rootFlags) {
 	f := &rootFlags{}
 	cmd := &cobra.Command{
 		Use:         "x",
-		Annotations: map[string]string{"pp:path": path, "pp:method": method},
+		Annotations: map[string]string{"straddle:path": path, "straddle:method": method},
 	}
 	cmd.Flags().StringVar(&f.straddleAccount, "account", "", "")
 	return cmd, f
