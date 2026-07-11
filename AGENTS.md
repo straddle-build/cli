@@ -1,59 +1,41 @@
-# Straddle CLI Agent Guide
+# Straddle CLI
 
-This repository is the Straddle CLI (`straddle`), a standalone Go CLI maintained and released directly from this repo. Keep edits narrow and use runtime discovery for current behavior.
+This repository is the Straddle CLI (`straddle`): a standalone Go CLI for Straddle's Pay by Bank and Embed APIs, with a human surface and an agent surface (`--agent`) from one binary, plus a local SQLite mirror and settlement/return analytics. Source, docs, and release config live in this repo; treat it as the source of truth for CLI behavior. `CLAUDE.md` is a compatibility symlink to this file.
 
-## OpenWiki
+**MANDATORY** Before implementation work, agents MUST read and MUST follow both repo-root standards, `STRADDLE_STYLE.MD` and `CODING_STANDARDS.MD`.
 
-This repository has documentation located in the /openwiki directory.
+This repository has OpenWiki documentation in `/openwiki`. When working here, read `openwiki/quickstart.md` first, then follow its links to the relevant architecture, workflow, domain, operation, and testing notes.
 
-Start here:
-- [OpenWiki quickstart](openwiki/quickstart.md)
+## Instruction precedence
 
-OpenWiki includes repository overview, architecture notes, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
+1. System and user instructions.
+2. The nearest AGENTS.md to the files being changed.
+3. This root AGENTS.md.
+4. Source code, schemas, and CLI help output.
 
-When working in this repository, read the OpenWiki quickstart first, then follow its links to the relevant architecture, workflow, domain, operation, and testing notes.
+Pointers: `OPERATIONS.md` (local dev commands, release, API sync), `openwiki/quickstart.md` (architecture, domain, source maps), `README.md` and `SKILL.md` (install, auth, product usage).
 
-## Local Operating Contract
+## Working in this repo
 
-Start by asking the working-tree CLI for current runtime truth. Do not use a bare `straddle` from PATH for repo validation unless you have just rebuilt and verified that binary from this checkout:
+- Read `openwiki/domain.md` and `openwiki/data-model.md` before changing domain behavior (payments, paykeys, account scoping, the local store).
+- Run the applicable verification commands from the `OPERATIONS.md` local development table before claiming completion.
+- Prefer runtime discovery over copied command lists: `go run ./cmd/straddle which "<capability>" --json`, `go run ./cmd/straddle <command> --help`. Do not validate against a bare `straddle` from PATH unless you just rebuilt and installed it from this checkout.
+- Before running an unfamiliar command that may mutate remote state, inspect its help and prefer `--dry-run --agent`. Use `--yes --no-input` only after the target, arguments, and side effects are clear.
 
-```bash
-go run ./cmd/straddle doctor --json
-go run ./cmd/straddle agent-context --pretty
-```
+## Project invariants
 
-Use runtime discovery instead of relying on a copied command list:
+- **`Straddle-Account-Id` scoping is business-critical.** `internal/straddleacct/` decides when the header is sent, by integration type (`account`, `saas`, `marketplace`): charges/payouts create require it for `saas`+`marketplace`; customers/paykeys/bridge are scoped for `saas` and send no header for `marketplace`; account-management ops never use the header. The CLI pre-run gates agents and humans identically. Route any new account-scoped behavior through this package.
+- **Agent/JSON output must stay byte-stable.** Never change it for cosmetics. The human and agent surfaces are both intentional; preserve both when changing commands, and update tests and docs with the code.
+- `spec.json` is the OpenAPI lockfile and the authoritative source for resource and response shapes. Keep endpoint coverage and drift visible via `cmd/gen-endpoint` (see `OPERATIONS.md`).
+- The local SQLite store (`internal/store/`) is part of the product, not a cache detail. Several commands assume it exists after `sync`. Be careful with migration behavior.
+- TDD for non-trivial logic; table-driven tests with stdlib `testing`. `go test ./...` must be green before done.
+- Add only dependencies you need. Build to the repo (`bin/` or `./`), never `/tmp`. Don't `gofmt` the whole tree blindly; format only changed files.
 
-```bash
-go run ./cmd/straddle which "<capability>" --json
-go run ./cmd/straddle <command> --help
-```
+## Security
 
-Add `--agent` to command invocations for JSON, compact output, non-interactive defaults, no color, and confirmation-safe scripting:
+- Never commit credentials. API keys live in `config.toml` (managed by `straddle setup`/`auth`), not in the repo. CI runs gitleaks over full history; `.gitleaks.toml` holds the allowlist.
+- Release secrets (`HOMEBREW_TAP_GITHUB_TOKEN`, `NPM_TOKEN`, `API_SYNC_BOT_TOKEN`) exist only as GitHub Actions secrets.
 
-```bash
-go run ./cmd/straddle <command> --agent
-```
+## Generated code boundary
 
-Before running an unfamiliar command that may mutate remote state, inspect its help and prefer a dry run:
-
-```bash
-go run ./cmd/straddle <command> --help
-go run ./cmd/straddle <command> --dry-run --agent
-```
-
-Use `--yes --no-input` only after the target, arguments, and side effects are clear.
-
-For install, auth, examples, and longer product guidance, read `README.md` and `SKILL.md`. This file intentionally stays small so repo-local agents get invariant local guidance without duplicating broader docs.
-
-## API Sync
-
-`spec.json` is the OpenAPI lockfile for this repo. Use the repo-local generator tooling for endpoint coverage and drift work:
-
-```bash
-go run ./cmd/gen-endpoint check --spec spec.json --repo .
-go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --agent
-go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent
-```
-
-Generated endpoint files self-register through `internal/cli/generated_registry.go`. Raw `straddle api <method> <path>` is the fallback for newly published endpoints before a dedicated command exists.
+Generated endpoint command files self-register through `internal/cli/generated_registry.go` and are produced deterministically by `cmd/gen-endpoint generate`. Do not hand-edit generated endpoint files; change the generator or the hand-authored `straddle_*.go` commands instead. Raw `straddle api <method> <path>` is the fallback for newly published endpoints before a dedicated command exists.

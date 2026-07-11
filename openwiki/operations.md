@@ -39,7 +39,7 @@ The git history shows `demo-charge.sh` was ported from the v1 CLI and the VHS de
 
 ## Testing and validation
 
-From `CLAUDE.md`, the expected validation loop is:
+Per the root `OPERATIONS.md` local development table, the expected validation loop is:
 
 - `go test ./...`
 - `go vet ./...`
@@ -76,7 +76,8 @@ Be careful when changing any of these areas:
 ## Useful files
 
 - `README.md`
-- `CLAUDE.md`
+- `AGENTS.md`
+- `OPERATIONS.md`
 - `SKILL.md`
 - `demo/`
 - `cmd/gen-endpoint/`
