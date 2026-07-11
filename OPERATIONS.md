@@ -40,7 +40,7 @@ go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-js
 Releases are cut from `main` by tag:
 
 1. Push a `vX.Y.Z` tag.
-2. `.github/workflows/release.yml` runs tests, then GoReleaser publishes the GitHub release (6 os/arch archives + `checksums.txt`), pushes the Homebrew cask to `straddle-build/homebrew-tap`, and publishes the `@straddleio/cli` npm wrapper (skipped automatically when `NPM_TOKEN` is unset).
+2. `.github/workflows/release.yml` runs tests, then GoReleaser publishes the GitHub release (6 os/arch archives + `checksums.txt`) and publishes the `@straddleio/cli` npm wrapper (skipped automatically when `NPM_TOKEN` is unset). Homebrew cask upload is disabled by `homebrew_casks.skip_upload: true` in `.goreleaser.yaml`; adding `HOMEBREW_TAP_GITHUB_TOKEN` alone does not enable it.
 3. `install.sh` and `go install github.com/straddle-build/cli/cmd/straddle@latest` resolve the new release with no further action.
 
 Local dry run: `make release-snapshot` builds everything into `dist/` without publishing.

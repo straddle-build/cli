@@ -90,13 +90,7 @@ Be careful when changing any of these areas:
 
 ## Release process
 
-Releases are cut from `main` by tag:
-
-1. Push a `vX.Y.Z` tag.
-2. The `Release` workflow (`.github/workflows/release.yml`) runs tests, then GoReleaser publishes the GitHub release (6 os/arch archives + `checksums.txt`), pushes the Homebrew cask to `straddle-build/homebrew-tap`, and publishes the `@straddleio/cli` npm wrapper (skipped automatically when `NPM_TOKEN` is unset).
-3. `install.sh` and `go install github.com/straddle-build/cli/cmd/straddle@latest` resolve the new release with no further action.
-
-Local dry run: `make release-snapshot` builds everything into `dist/` without publishing.
+See the root `OPERATIONS.md` for the canonical release procedure and current publish targets.
 
 ## Dependency maintenance
 

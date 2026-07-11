@@ -33,7 +33,7 @@ Pointers: `OPERATIONS.md` (local dev commands, release, API sync), `openwiki/qui
 
 ## Security
 
-- Never commit credentials. API keys live in `config.toml` (managed by `straddle setup`/`auth`), not in the repo. CI runs gitleaks over full history; `.gitleaks.toml` holds the allowlist.
+- Never commit credentials. Supply an API key through `STRADDLE_API_KEY`, or save it to `config.toml` with `straddle auth set-token`. `straddle setup` saves integration context to `platform.toml`; it does not manage credentials. CI runs gitleaks over full history; `.gitleaks.toml` holds the allowlist.
 - Release secrets (`HOMEBREW_TAP_GITHUB_TOKEN`, `NPM_TOKEN`, `API_SYNC_BOT_TOKEN`) exist only as GitHub Actions secrets.
 
 ## Generated code boundary
