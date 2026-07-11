@@ -154,7 +154,7 @@ Match the live implementation in the active service because the copied implement
 
 ## Load only relevant references
 
-- **General coding questions:** Use this guide, STRADDLE_STYLE.md, repository instructions, adjacent code, and existing tests. Do not load every stack reference by default.
+- **General coding questions:** Use this guide, STRADDLE_STYLE.MD, repository instructions, adjacent code, and existing tests. Do not load every stack reference by default.
 - **C# and .NET code:** Use `straddle-engineering:coding-guide` and read its `references/csharp.md` only when the target code uses C# or .NET.
 - **CleanCQRS architecture:** Read `references/code-style.md` and `references/examples.md` from that skill only after repository evidence confirms that CleanCQRS applies.
 - **Cosmos or event sourcing:** Read `references/cosmos.md` from that skill only when the production scope gate in this guide is satisfied.
