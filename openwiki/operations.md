@@ -39,13 +39,7 @@ The git history shows `demo-charge.sh` was ported from the v1 CLI and the VHS de
 
 ## Testing and validation
 
-Per the root `OPERATIONS.md` local development table, the expected validation loop is:
-
-- `go test ./...`
-- `go vet ./...`
-- `go run ./cmd/gen-endpoint check --spec spec.json --repo .`
-- `go build -o ./straddle ./cmd/straddle`
-- `./straddle doctor`
+Use the [root local development table](../OPERATIONS.md#local-development) as the single source of truth for validation commands.
 
 There are package-level tests around CLI behavior, store migrations, account scoping, and the special output/rendering logic.
 
