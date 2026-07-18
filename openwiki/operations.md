@@ -45,15 +45,7 @@ There are package-level tests around CLI behavior, store migrations, account sco
 
 ## API sync workflow
 
-Endpoint coverage and drift are maintained by `cmd/gen-endpoint` and `.github/workflows/api-sync.yml`.
-
-Local commands:
-
-- `go run ./cmd/gen-endpoint check --spec spec.json --repo .` checks that `straddle:*` endpoint annotations cover the OpenAPI lockfile.
-- `go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --agent` classifies supported additions, changed operations, removed operations, and unsupported operation shapes.
-- `go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent` writes deterministic generic endpoint command files for supported additions.
-
-The GitHub workflow runs on a schedule, manual dispatch, and `repository_dispatch` events. It fetches the live spec from `client_payload.spec_url`, a workflow input, or `STRADDLE_API_SPEC_URL`; opens PRs only for supported additions when `API_SYNC_BOT_TOKEN` is configured; and holds changed, removed, or unsupported operations for human review. Remote issue creation is opt-in with `API_SYNC_CREATE_ISSUES=true`.
+See the [root API sync operations section](../OPERATIONS.md#api-sync) for the canonical commands, workflow behavior, remote-mutation guards, auto-merge queueing, and review routing.
 
 ## Change warnings
 

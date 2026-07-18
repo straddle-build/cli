@@ -192,6 +192,7 @@ jobs:
           echo "issue_body=${issue_body}" >> "${GITHUB_OUTPUT}"
 
       - name: Open supported-additions PR
+        id: generated_pr
         if: steps.generated_diff.outputs.has_changes == 'true' && env.DRY_RUN != 'true' && env.HAS_API_SYNC_BOT_TOKEN == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
@@ -209,6 +210,17 @@ jobs:
             - Generate command: `go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent`
 
             Token note: this PR is created with `API_SYNC_BOT_TOKEN` because the default `GITHUB_TOKEN` does not trigger normal PR CI for bot-authored PRs.
+
+      - name: Queue generated PR for auto-merge
+        if: steps.generated_pr.outputs.pull-request-number != '' && env.DRY_RUN != 'true' && env.HAS_API_SYNC_BOT_TOKEN == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.API_SYNC_BOT_TOKEN }}
+          PR_NUMBER: ${{ steps.generated_pr.outputs.pull-request-number }}
+          PR_HEAD_SHA: ${{ steps.generated_pr.outputs.pull-request-head-sha }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${PR_NUMBER}" --auto --squash --delete-branch --match-head-commit "${PR_HEAD_SHA}"
 
       - name: Report pending PR creation
         if: steps.generated_diff.outputs.has_changes == 'true' && (env.DRY_RUN == 'true' || env.HAS_API_SYNC_BOT_TOKEN != 'true')

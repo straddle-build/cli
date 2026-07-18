@@ -33,7 +33,7 @@ go run ./cmd/gen-endpoint drift --base spec.json --head <live-spec> --repo . --a
 go run ./cmd/gen-endpoint generate --spec <live-spec> --repo . --drift <drift-json> --supported-additions --agent
 ```
 
-`.github/workflows/api-sync.yml` runs on a schedule, manual dispatch, and `repository_dispatch`. It fetches the live spec from `client_payload.spec_url`, a workflow input, or `STRADDLE_API_SPEC_URL`; opens PRs only for supported additions when `API_SYNC_BOT_TOKEN` is configured; and holds changed, removed, or unsupported operations for human review. Remote issue creation is opt-in via `API_SYNC_CREATE_ISSUES=true`.
+`.github/workflows/api-sync.yml` runs on a schedule, manual dispatch, and `repository_dispatch`. It fetches the live spec from `client_payload.spec_url`, a workflow input, or `STRADDLE_API_SPEC_URL`. When a run contains only supported additions, it creates a PR only when `API_SYNC_BOT_TOKEN` is configured and dry-run is disabled, then queues that PR for GitHub auto-merge with squash and branch deletion after required checks and reviews pass. The queue command is pinned to the generated PR head SHA. Dry runs and runs without the bot token report the generated diff without remote PR or issue mutation. Changed, removed, or unsupported operations remain for human review. Configure `API_SYNC_BOT_TOKEN` as a fine-grained PAT or GitHub App token with contents and pull-request write access; the workflow does not use the default `GITHUB_TOKEN` for bot-authored PR CI. Remote issue creation is opt-in via `API_SYNC_CREATE_ISSUES=true`.
 
 ## Release
 
