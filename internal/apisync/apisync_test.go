@@ -54,6 +54,30 @@ func TestAPISyncWorkflowOnlyUpdatesLockfileForPureSupportedAdditions(t *testing.
 	}
 }
 
+func TestAPISyncWorkflowQueuesGeneratedPullRequestForAutoMerge(t *testing.T) {
+	t.Parallel()
+
+	repo := testRepoRoot(t)
+	data, err := os.ReadFile(filepath.Join(repo, ".github", "workflows", "api-sync.yml"))
+	if err != nil {
+		t.Fatalf("read api sync workflow: %v", err)
+	}
+	workflow := string(data)
+	for _, want := range []string{
+		"id: generated_pr",
+		"      - name: Queue generated PR for auto-merge",
+		"if: steps.generated_pr.outputs.pull-request-number != '' && env.DRY_RUN != 'true' && env.HAS_API_SYNC_BOT_TOKEN == 'true'",
+		"GH_TOKEN: ${{ secrets.API_SYNC_BOT_TOKEN }}",
+		"PR_NUMBER: ${{ steps.generated_pr.outputs.pull-request-number }}",
+		"PR_HEAD_SHA: ${{ steps.generated_pr.outputs.pull-request-head-sha }}",
+		"gh pr merge \"${PR_NUMBER}\" --auto --squash --delete-branch --match-head-commit \"${PR_HEAD_SHA}\"",
+	} {
+		if !strings.Contains(workflow, want) {
+			t.Fatalf("api sync workflow missing %q", want)
+		}
+	}
+}
+
 func TestClassifyDriftReportsUnsupportedNonJSONRequestBodyAddition(t *testing.T) {
 	t.Parallel()
 
