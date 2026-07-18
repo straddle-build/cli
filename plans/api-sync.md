@@ -34,8 +34,7 @@
 3. Drift automation
    - Add `.github/workflows/api-sync.yml` with `schedule`, `workflow_dispatch`, and `repository_dispatch` triggers.
    - Fetch the live spec into a temp file, normalize it, classify drift against `spec.json`, and run the generator.
-   - Open PRs only for supported additions when no changed, removed, or unsupported operations are present.
-   - Hold changed, removed, and unsupported operations for human review. Remote issue creation is opt-in until ME-344 finalizes dispatch and dedupe policy.
+   - Use the supported-addition PR, auto-merge, human-review, and remote issue-creation contract documented in [OPERATIONS.md](../OPERATIONS.md#api-sync).
    - Leave the source URL as the interim Stainless artifact until ME-344 swaps it to Scalar.
 
 4. Companion follow-up
