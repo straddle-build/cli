@@ -544,6 +544,9 @@ func replacePathParam(path, name, value string) string {
 func paginatedGet(c interface {
 	GetWithHeaders(path string, params map[string]string, headers map[string]string) (json.RawMessage, error)
 }, path string, params map[string]string, headers map[string]string, fetchAll bool, cursorParam, nextCursorPath, hasMoreField string) (json.RawMessage, error) {
+	// Keep string filters lossless: literal "0" and "false" can be valid values.
+	// Only known typed defaults are omitted, and the cursor stays explicit so a
+	// zero-valued first cursor is not dropped.
 	paginatedTypedDefaultValues := map[string]string{
 		"page_number":       "0",
 		"page_size":         "0",
