@@ -111,12 +111,14 @@ func newAccountsCreateCmd(flags *rootFlags) *cobra.Command {
 						}
 						if bodyBusinessProfileAddressLine1 != "" {
 							nestedBusinessProfileAddress["line1"] = bodyBusinessProfileAddressLine1
+							nestedBusinessProfileAddress["address1"] = bodyBusinessProfileAddressLine1
 						}
 						if bodyBusinessProfileAddressLine2 != "" {
 							nestedBusinessProfileAddress["line2"] = bodyBusinessProfileAddressLine2
 						}
 						if bodyBusinessProfileAddressPostalCode != "" {
 							nestedBusinessProfileAddress["postal_code"] = bodyBusinessProfileAddressPostalCode
+							nestedBusinessProfileAddress["zip"] = bodyBusinessProfileAddressPostalCode
 						}
 						if bodyBusinessProfileAddressState != "" {
 							nestedBusinessProfileAddress["state"] = bodyBusinessProfileAddressState
