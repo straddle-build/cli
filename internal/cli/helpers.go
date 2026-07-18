@@ -544,16 +544,26 @@ func replacePathParam(path, name, value string) string {
 func paginatedGet(c interface {
 	GetWithHeaders(path string, params map[string]string, headers map[string]string) (json.RawMessage, error)
 }, path string, params map[string]string, headers map[string]string, fetchAll bool, cursorParam, nextCursorPath, hasMoreField string) (json.RawMessage, error) {
-	// Cursor params are exempt from the "0"/"false" strip: offset-paginated
-	// APIs send offset=0 on the first page.
+	paginatedTypedDefaultValues := map[string]string{
+		"page_number":       "0",
+		"page_size":         "0",
+		"default_page_size": "0",
+		"min_amount":        "0",
+		"max_amount":        "0",
+		"include_metadata":  "false",
+		"unblock_eligible":  "false",
+	}
 	clean := map[string]string{}
 	for k, v := range params {
 		if v == "" {
 			continue
 		}
-		if k == cursorParam || (v != "0" && v != "false") {
-			clean[k] = v
+		if k != cursorParam {
+			if defaultValue, ok := paginatedTypedDefaultValues[k]; ok && v == defaultValue {
+				continue
+			}
 		}
+		clean[k] = v
 	}
 
 	if !fetchAll {

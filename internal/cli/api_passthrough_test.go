@@ -125,10 +125,11 @@ func TestAPIPassthroughGETWithParamsHeadersAndSelect(t *testing.T) {
 
 func TestListFilterFlagsPassThrough(t *testing.T) {
 	tests := []struct {
-		name  string
-		args  []string
-		path  string
-		query map[string]string
+		name   string
+		args   []string
+		path   string
+		query  map[string]string
+		absent []string
 	}{
 		{
 			name:  "accounts external ID",
@@ -137,10 +138,23 @@ func TestListFilterFlagsPassThrough(t *testing.T) {
 			query: map[string]string{"external_id": "account_external_123"},
 		},
 		{
-			name:  "paykeys creation range",
-			args:  []string{"paykeys", "list", "--created-from", "2026-07-01T00:00:00Z", "--created-to", "2026-07-18T00:00:00Z"},
-			path:  "/v1/paykeys",
-			query: map[string]string{"created_from": "2026-07-01T00:00:00Z", "created_to": "2026-07-18T00:00:00Z"},
+			name:  "accounts external ID zero",
+			args:  []string{"accounts", "list", "--external-id", "0"},
+			path:  "/v1/accounts",
+			query: map[string]string{"external_id": "0"},
+		},
+		{
+			name:  "accounts external ID false",
+			args:  []string{"accounts", "list", "--external-id", "false"},
+			path:  "/v1/accounts",
+			query: map[string]string{"external_id": "false"},
+		},
+		{
+			name:   "paykeys creation range",
+			args:   []string{"paykeys", "list", "--created-from", "2026-07-01T00:00:00Z", "--created-to", "2026-07-18T00:00:00Z"},
+			path:   "/v1/paykeys",
+			query:  map[string]string{"created_from": "2026-07-01T00:00:00Z", "created_to": "2026-07-18T00:00:00Z"},
+			absent: []string{"unblock_eligible"},
 		},
 	}
 
@@ -159,6 +173,11 @@ func TestListFilterFlagsPassThrough(t *testing.T) {
 				for name, want := range tt.query {
 					if got := r.URL.Query().Get(name); got != want {
 						t.Fatalf("query %s = %q, want %q", name, got, want)
+					}
+				}
+				for _, name := range tt.absent {
+					if _, ok := r.URL.Query()[name]; ok {
+						t.Fatalf("query %s should be omitted", name)
 					}
 				}
 				w.Header().Set("Content-Type", "application/json")
