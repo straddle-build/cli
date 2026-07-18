@@ -123,6 +123,77 @@ func TestAPIPassthroughGETWithParamsHeadersAndSelect(t *testing.T) {
 	}
 }
 
+func TestListFilterFlagsPassThrough(t *testing.T) {
+	tests := []struct {
+		name   string
+		args   []string
+		path   string
+		query  map[string]string
+		absent []string
+	}{
+		{
+			name:  "accounts external ID",
+			args:  []string{"accounts", "list", "--external-id", "account_external_123"},
+			path:  "/v1/accounts",
+			query: map[string]string{"external_id": "account_external_123"},
+		},
+		{
+			name:  "accounts external ID zero",
+			args:  []string{"accounts", "list", "--external-id", "0"},
+			path:  "/v1/accounts",
+			query: map[string]string{"external_id": "0"},
+		},
+		{
+			name:  "accounts external ID false",
+			args:  []string{"accounts", "list", "--external-id", "false"},
+			path:  "/v1/accounts",
+			query: map[string]string{"external_id": "false"},
+		},
+		{
+			name:   "paykeys creation range",
+			args:   []string{"paykeys", "list", "--created-from", "2026-07-01T00:00:00Z", "--created-to", "2026-07-18T00:00:00Z"},
+			path:   "/v1/paykeys",
+			query:  map[string]string{"created_from": "2026-07-01T00:00:00Z", "created_to": "2026-07-18T00:00:00Z"},
+			absent: []string{"unblock_eligible"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isolateAPIConfig(t)
+			t.Setenv("STRADDLE_API_KEY", "test_key")
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Fatalf("method = %s, want GET", r.Method)
+				}
+				if r.URL.Path != tt.path {
+					t.Fatalf("path = %s, want %s", r.URL.Path, tt.path)
+				}
+				for name, want := range tt.query {
+					if got := r.URL.Query().Get(name); got != want {
+						t.Fatalf("query %s = %q, want %q", name, got, want)
+					}
+				}
+				for _, name := range tt.absent {
+					if _, ok := r.URL.Query()[name]; ok {
+						t.Fatalf("query %s should be omitted", name)
+					}
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`[]`))
+			}))
+			defer server.Close()
+			t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+			args := append([]string{"--json", "--data-source", "live", "--no-cache"}, tt.args...)
+			if _, _, err := runRootForAPITest(t, args, ""); err != nil {
+				t.Fatalf("%s returned error: %v", strings.Join(tt.args, " "), err)
+			}
+		})
+	}
+}
+
 func TestAPIPassthroughAccountFlagUsesRawPathPolicy(t *testing.T) {
 	isolateAPIConfig(t)
 	t.Setenv("STRADDLE_API_KEY", "test_key")

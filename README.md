@@ -183,7 +183,7 @@ Accounts represent businesses using Straddle through your platform. Each account
 
 - **`straddle accounts create`** - Creates a new account associated with your Straddle platform integration. This endpoint allows you to set up an account with specified details, including business information and access levels.
 - **`straddle accounts get`** - Retrieves the details of an account that has previously been created. Supply the unique account ID that was returned from your previous request, and Straddle will return the corresponding account information.
-- **`straddle accounts list`** - Returns a list of accounts associated with your Straddle platform integration. The accounts are returned sorted by creation date, with the most recently created accounts appearing first. This endpoint supports advanced sorting and filtering options.
+- **`straddle accounts list`** - Returns a list of accounts associated with your Straddle platform integration. The accounts are returned sorted by creation date, with the most recently created accounts appearing first. This endpoint supports advanced sorting and filtering options, including `--external-id` to filter by your external ID.
 - **`straddle accounts update`** - Updates an existing account's information. This endpoint allows you to update various account details during onboarding or after the account has been created.
 
 ### bridge
@@ -251,7 +251,7 @@ Organizations are a powerful feature in Straddle that allow you to manage multip
 Paykeys are secure tokens that link verified customer identities to their bank accounts. Each Paykey includes built-in balance checking, fraud detection through LSTM machine learning models, and can be reused for subscriptions and recurring payments without storing sensitive data. Paykeys eliminate fraud by ensuring the person initiating payment owns the funding account.
 
 - **`straddle paykeys get`** - Retrieves the details of an existing paykey. Supply the unique paykey `id` and Straddle will return the corresponding paykey record , including the `paykey` token value and masked bank account details.
-- **`straddle paykeys list`** - Returns a list of paykeys associated with a Straddle account. This endpoint supports advanced sorting and filtering options.
+- **`straddle paykeys list`** - Returns a list of paykeys associated with a Straddle account. This endpoint supports advanced sorting and filtering options, including `--created-from` and `--created-to` to filter by creation date.
 
 ### payments
 
