@@ -20,6 +20,8 @@ func newPaykeysListCmd(flags *rootFlags) *cobra.Command {
 	var flagSource string
 	var flagUnblockEligible bool
 	var flagSearchText string
+	var flagCreatedFrom string
+	var flagCreatedTo string
 	var flagAll bool
 
 	cmd := &cobra.Command{
@@ -70,6 +72,8 @@ func newPaykeysListCmd(flags *rootFlags) *cobra.Command {
 				"source":           fmt.Sprintf("%v", flagSource),
 				"unblock_eligible": fmt.Sprintf("%v", flagUnblockEligible),
 				"search_text":      fmt.Sprintf("%v", flagSearchText),
+				"created_from":     fmt.Sprintf("%v", flagCreatedFrom),
+				"created_to":       fmt.Sprintf("%v", flagCreatedTo),
 			}, nil, flagAll, "page_number", "", "")
 			if err != nil {
 				return classifyAPIError(err, flags)
@@ -130,6 +134,8 @@ func newPaykeysListCmd(flags *rootFlags) *cobra.Command {
 	cmd.Flags().StringVar(&flagSource, "source", "", "Filter paykeys by their source.")
 	cmd.Flags().BoolVar(&flagUnblockEligible, "unblock-eligible", false, "Filter paykeys by unblock eligibility. When true, returns only blocked paykeys eligible for client-initiated...")
 	cmd.Flags().StringVar(&flagSearchText, "search-text", "", "General search term to filter paykeys.")
+	cmd.Flags().StringVar(&flagCreatedFrom, "created-from", "", "Start date for filtering by creation date.")
+	cmd.Flags().StringVar(&flagCreatedTo, "created-to", "", "End date for filtering by creation date.")
 	cmd.Flags().BoolVar(&flagAll, "all", false, "Fetch all pages")
 
 	return cmd

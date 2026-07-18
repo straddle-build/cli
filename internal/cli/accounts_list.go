@@ -18,6 +18,7 @@ func newAccountsListCmd(flags *rootFlags) *cobra.Command {
 	var flagSearchText string
 	var flagStatus string
 	var flagType string
+	var flagExternalId string
 	var flagAll bool
 
 	cmd := &cobra.Command{
@@ -79,6 +80,7 @@ func newAccountsListCmd(flags *rootFlags) *cobra.Command {
 				"search_text": fmt.Sprintf("%v", flagSearchText),
 				"status":      fmt.Sprintf("%v", flagStatus),
 				"type":        fmt.Sprintf("%v", flagType),
+				"external_id": fmt.Sprintf("%v", flagExternalId),
 			}, nil, flagAll, "page_number", "", "")
 			if err != nil {
 				return classifyAPIError(err, flags)
@@ -137,6 +139,7 @@ func newAccountsListCmd(flags *rootFlags) *cobra.Command {
 	cmd.Flags().StringVar(&flagSearchText, "search-text", "", "Search text")
 	cmd.Flags().StringVar(&flagStatus, "status", "", "Status (one of: created, onboarding, active, rejected, inactive)")
 	cmd.Flags().StringVar(&flagType, "type", "", "Type (one of: business)")
+	cmd.Flags().StringVar(&flagExternalId, "external-id", "", "Filter accounts by their external ID.")
 	cmd.Flags().BoolVar(&flagAll, "all", false, "Fetch all pages")
 
 	return cmd
