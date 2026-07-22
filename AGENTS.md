@@ -2,7 +2,7 @@
 
 This repository is the Straddle CLI (`straddle`): a standalone Go CLI for Straddle's Pay by Bank and Embed APIs, with a human surface and an agent surface (`--agent`) from one binary, plus a local SQLite mirror and settlement/return analytics. Source, docs, and release config live in this repo; treat it as the source of truth for CLI behavior. `CLAUDE.md` is a compatibility symlink to this file.
 
-**MANDATORY** Before implementation work, agents MUST read and MUST follow both repo-root standards, `STRADDLE_STYLE.MD` and `CODING_STANDARDS.MD`.
+**MANDATORY** Before implementation work, agents MUST read and MUST follow both repo-root standards, `STRADDLE_STYLE.md` and `CODING_STANDARDS.md`.
 
 This repository has OpenWiki documentation in `/openwiki`. When working here, read `openwiki/quickstart.md` first, then follow its links to the relevant architecture, workflow, domain, operation, and testing notes.
 

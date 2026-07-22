@@ -1,4 +1,4 @@
-# CODING_STANDARDS.MD
+# CODING_STANDARDS
 
 > **Purpose:** Define what good coding work looks like across Straddle repositories, languages, and frameworks.
 >
@@ -16,7 +16,7 @@ Read this reference after confirming the target repository. Apply its developmen
 
 # Coding guide: What good looks like
 
-This guide defines the behavior every coding agent must demonstrate. The core principles and TDD sequence apply across languages and frameworks. The active repository determines the architecture, syntax, tools, and implementation details. Repository-local instructions and existing code define how to apply these rules. They do not make TDD optional.
+This guide defines the behavior every coding agent must demonstrate. The core principles apply across languages and frameworks. The active repository determines the architecture, syntax, tools, implementation details, and appropriate development sequence. Apply the quality bar proportionally to the change.
 
 Good work answers three questions:
 
@@ -36,29 +36,28 @@ Before changing code:
 
 Do not introduce a structure because this guide mentions it. Confirm that the repository already uses it. Never select stack-specific rules from keywords alone.
 
-## Follow red-green-refactor
+## Prove behavior with tests
 
-Test-driven development is required for every feature, bug fix, and executable behavior change:
+Meaningful executable behavior changes require automated tests when practical. A reproducible bug fix should normally include a regression test. Pure refactors start from passing tests and preserve observable behavior.
 
-1. **RED:** Write one focused test that proves the intended behavior. Run it and confirm that it fails for the expected reason. Do not write production code for that behavior until the test fails.
-2. **GREEN:** Write the minimum production code that makes the test pass. Do not add speculative behavior.
-3. **REFACTOR:** Assess names, structure, duplicated knowledge, and clarity. Refactor only when it improves the code. Keep all tests passing.
+Write tests before, during, or immediately after implementation, whichever produces the clearest and most reliable result. Red-green-refactor is useful when it sharpens the design or proves a regression, but its chronology is not itself a quality gate.
 
-A pure refactor starts from a passing state and keeps behavior unchanged. Do not invent a failing behavior test when no behavior should change.
+A useful test must:
 
-Commit history must preserve the progression:
+1. State the promised behavior in domain or user terms.
+2. Exercise the lowest stable boundary that can prove that behavior.
+3. Fail if the behavior is absent or the reported defect returns.
+4. Assert observable outcomes and important externally visible side effects, including prohibited outcomes when relevant.
+5. Survive behavior-preserving changes to internal structure.
 
-- `RED`: Commit the failing test before production code. Only that test should fail; existing checks must pass.
-- `GREEN`: Commit the minimum implementation that makes all tests pass.
-- `REFACTOR`: Commit behavior-neutral cleanup only when it improves the code.
-- Keep each phase in its own commit. Do not create an empty `REFACTOR` commit.
+Ask what valid implementation defect or counterexample would make the test fail. A test that proves only a mock interaction, private call order, copied implementation logic, or incidental structure does not provide meaningful behavioral coverage.
 
-If a true RED step is impossible, stop and name the exact tooling or observability limitation. Do not silently bypass the sequence.
+Commit one coherent, passing change per verified slice. Do not require separate failing-test, implementation, and refactor commits. Do not commit a knowingly failing state unless the repository or user explicitly requires that history.
 
 ## Apply the core principles
 
 - **Prove behavior through a stable boundary.** Test observable outcomes and contracts. Avoid assertions against private structure or incidental call order.
-- **Keep the change small.** Implement only the behavior demanded by the failing test and repository contract. Do not add speculative capabilities.
+- **Keep the change small.** Implement only the behavior demanded by the repository contract and its behavioral tests. Do not add speculative capabilities.
 - **Respect established boundaries.** Put business behavior behind the application or domain boundary used by the repository. Keep transport and integration code thin.
 - **Run validation before dependent behavior.** Validate external input, shared messages, and business constraints before other behavior uses them. Declaring rules is not enough. Verify that the real execution path runs them.
 - **Make dependencies visible.** Pass dependencies through the language’s normal construction or composition mechanism. Do not hide them in global state.
@@ -69,7 +68,7 @@ If a true RED step is impossible, stop and name the exact tooling or observabili
 - **Isolate test data.** Create fresh, deterministic data for each test. Do not use shared mutable test state.
 - **Write code that explains itself.** Use precise names and small units. Comments explain non-obvious reasons, constraints, compatibility requirements, or safety context. They do not narrate the code.
 - **Share code only when the reason is shared.** Combine code only when it represents the same concept and must change for the same reason. If the relationship is uncertain, keep the code separate.
-- **Finish without warnings.** Resolve every warning or diagnostic from repository-required compiler, type, nullability, lint, and static-analysis checks.
+- **Finish without introducing warnings.** Resolve diagnostics caused by the change and pass repository-required compiler, type, nullability, lint, and static-analysis checks. Report unrelated pre-existing failures without expanding the task to fix them.
 
 ## Apply general principles or Straddle .NET rules
 
@@ -121,21 +120,22 @@ Match the live implementation in the active service because the copied implement
 
 ## Pass the quality gates
 
-### RED gate
+### Behavior-test gate
 
-- The intended behavior and observable outcome are explicit.
-- The new test fails for the intended missing behavior, not because its setup is broken.
-- The test verifies behavior, not implementation details.
-- No production behavior exists before the failing proof.
+- The promised behavior and observable outcome are explicit.
+- Tests exercise the lowest stable boundary that proves the claim.
+- The relevant test would fail if the behavior were absent or the reported defect returned.
+- Assertions cover observable outcomes rather than internal interactions.
+- Valid, invalid, boundary, failure, and prohibited outcomes are covered when relevant.
 
-### GREEN gate
+### Implementation gate
 
-- The new test and all repository-required checks pass.
+- Relevant tests and repository-required checks pass.
 - The implementation is the minimum needed for the behavior.
 - No unrelated cleanup, speculative abstraction, or public API expansion is mixed in.
 - Validation and failure behavior are explicit at trust boundaries.
 
-### REFACTOR gate
+### Simplification gate
 
 - Refactoring was deliberately assessed.
 - Any cleanup preserves observable behavior and public contracts.
@@ -149,14 +149,14 @@ Match the live implementation in the active service because the copied implement
 - Test data is isolated and deterministic.
 - The change follows the live repository’s architecture and conventions.
 - The diff contains no unrelated changes.
-- Commit history shows separate `RED` and `GREEN` commits, plus `REFACTOR` when cleanup adds value.
+- Commits are coherent and passing at their intended handoff points.
 - The handoff states what changed and what evidence proves it.
 
 ## Load only relevant references
 
-- **General coding questions:** Use this guide, STRADDLE_STYLE.MD, repository instructions, adjacent code, and existing tests. Do not load every stack reference by default.
+- **General coding questions:** Use this guide, STRADDLE_STYLE.md, repository instructions, adjacent code, and existing tests. Do not load every stack reference by default.
 - **C# and .NET code:** Use `straddle-engineering:coding-guide` and read its `references/csharp.md` only when the target code uses C# or .NET.
 - **CleanCQRS architecture:** Read `references/code-style.md` and `references/examples.md` from that skill only after repository evidence confirms that CleanCQRS applies.
 - **Cosmos or event sourcing:** Read `references/cosmos.md` from that skill only when the production scope gate in this guide is satisfied.
 - **Other languages:** Use this guide, repository instructions, build configuration, adjacent code, and existing tests. Do not load C# or Cosmos references.
-- **Test-framework questions:** Use the testing skill. This guide owns the development sequence and quality bar. The testing skill owns framework mechanics and infrastructure.
+- **Test-framework questions:** Use the testing skill. This guide owns the behavioral quality bar. The testing skill owns framework mechanics and infrastructure.
