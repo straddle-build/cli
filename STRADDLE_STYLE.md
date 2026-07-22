@@ -1,4 +1,4 @@
-# STRADDLE_STYLE.MD
+# STRADDLE_STYLE
 
 ## Purpose
 
@@ -80,7 +80,7 @@ As the change develops:
 
 Treat a smell as a prompt to investigate, not proof that the code is wrong. Name the concrete cost before changing the design. If the proposed fix introduces more coupling, indirection, or speculative structure than it removes, keep the simpler design.
 
-Before handoff, inspect the complete change with `code-review-and-quality`. Resolve smells introduced by the change or explain why the current design is intentional. Do not expand the task into unrelated cleanup.
+For meaningful executable-code changes, inspect the complete change with `code-review-and-quality`, resolve accepted findings, then run `code-simplification`. Review and simplification should be read-only when delegated; the implementer owns every accepted edit and final verification. `NO_CHANGE` is a valid simplification result. Small documentation, metadata, configuration, or mechanical changes need only focused self-review. Never expand either pass into unrelated cleanup.
 
 ## Optimize for change
 
@@ -321,17 +321,21 @@ Apply design principles flexibly. Single responsibility matters, but named princ
 
 Tests prove what the system does. They should survive changes to internal structure.
 
+- State the promised behavior in domain or user terms.
 - Test observable outcomes and stable contracts.
 - Avoid assertions against private methods or incidental call order.
 - Use the smallest test layer that proves the behavior.
 - Do not duplicate the same confidence at several layers without a reason.
 - Use isolated, deterministic test data.
 - Test valid, invalid, boundary, and failure scenarios.
+- Test important prohibited outcomes when their absence is part of the contract.
 - Treat tests as executable documentation.
 
 Prefer unit tests for isolated behavior, integration tests for collaboration between real components, and end-to-end tests for important cross-system flows. Choose the layer based on the claim being proved, not a fixed quota.
 
 A harmless refactor should not break behavior tests. If it does, the tests may depend too heavily on implementation details.
+
+For each important claim, ask what valid implementation defect or counterexample would make the test fail. A test is not useful merely because the current implementation passes it. It must fail when the promised behavior is removed or the reported defect returns. Tests that only verify mocks, private call order, copied production logic, or incidental structure do not prove the behavior.
 
 ## Ship small, accurate changes
 
