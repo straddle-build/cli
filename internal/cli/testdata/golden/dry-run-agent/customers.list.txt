@@ -14,11 +14,12 @@ stdout:
   }
 }
 >>>
-stderr_bytes: 130
+stderr_bytes: 147
 stderr:
 <<<
 GET http://golden.test/v1/customers
-  ?page_number=0
+  ?page_number=1
+  &page_size=100
   &sort_order=asc
   Authorization: ****_key
 
@@ -41,11 +42,12 @@ stdout:
   }
 }
 >>>
-stderr_bytes: 130
+stderr_bytes: 147
 stderr:
 <<<
 GET http://golden.test/v1/customers
-  ?page_number=0
+  ?page_number=1
+  &page_size=100
   &sort_order=asc
   Authorization: ****_key
 
