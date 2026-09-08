@@ -2,40 +2,17 @@
 exit_code: 0
 error_class: none
 error: <nil>
-stdout_bytes: 643
+stdout_bytes: 296
 stdout:
 <<<
-{
-  "data": [
-    {
-      "amount": 1250,
-      "currency": "USD",
-      "external_id": "550e8400-e29b-41d4-a716-446655440000",
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "status": "created"
-    },
-    {
-      "amount": 1250,
-      "currency": "USD",
-      "external_id": "550e8400-e29b-41d4-a716-446655440001",
-      "id": "550e8400-e29b-41d4-a716-446655440001",
-      "status": "created"
-    }
-  ],
-  "meta": {
-    "api_request_id": "550e8400-e29b-41d4-a716-446655440000",
-    "api_request_timestamp": "2026-01-15T12:00:00Z",
-    "max_page_size": 1,
-    "page_number": 1,
-    "page_size": 1
-  },
-  "response_type": "object"
-}
+ID                                    EXTERNAL_ID                           STATUS   AMOUNT  CURRENCY
+550e8400-e29b-41d4-a716-446655440000  550e8400-e29b-41d4-a716-446655440000  created  1250    USD
+550e8400-e29b-41d4-a716-446655440001  550e8400-e29b-41d4-a716-446655440001  created  1250    USD
 >>>
 stderr_bytes: 17
 stderr:
 <<<
-1 results (live)
+2 results (live)
 >>>
 
 === http-422 ===

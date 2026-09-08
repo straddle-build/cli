@@ -2,42 +2,35 @@
 exit_code: 0
 error_class: none
 error: <nil>
-stdout_bytes: 847
+stdout_bytes: 621
 stdout:
 <<<
 {
-  "data": {
-    "charges": {
-      "daily_amount": 1250,
-      "funding_time": "example",
-      "linked_bank_account_id": "550e8400-e29b-41d4-a716-446655440000",
-      "max_amount": 1250,
-      "monthly_amount": 1250
-    },
-    "configuration": {
-      "allow_customer_identity_skip": true,
-      "allow_data_unmask": true,
-      "allow_duplicate_email": true,
-      "allow_paykey_verification_skip": true
-    },
-    "consent_types": {
-      "internet": "active",
-      "signed_agreement": "active"
-    },
-    "customer_types": {
-      "businesses": "active",
-      "individuals": "active"
-    },
-    "payment_types": {
-      "charges": "active",
-      "payouts": "active"
-    }
+  "charges": {
+    "daily_amount": 1250,
+    "funding_time": "example",
+    "linked_bank_account_id": "550e8400-e29b-41d4-a716-446655440000",
+    "max_amount": 1250,
+    "monthly_amount": 1250
   },
-  "meta": {
-    "api_request_id": "550e8400-e29b-41d4-a716-446655440000",
-    "api_request_timestamp": "2026-01-15T12:00:00Z"
+  "configuration": {
+    "allow_customer_identity_skip": true,
+    "allow_data_unmask": true,
+    "allow_duplicate_email": true,
+    "allow_paykey_verification_skip": true
   },
-  "response_type": "object"
+  "consent_types": {
+    "internet": "active",
+    "signed_agreement": "active"
+  },
+  "customer_types": {
+    "businesses": "active",
+    "individuals": "active"
+  },
+  "payment_types": {
+    "charges": "active",
+    "payouts": "active"
+  }
 }
 >>>
 stderr_bytes: 17

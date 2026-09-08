@@ -37,9 +37,13 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 			if err != nil {
 				return classifyAPIError(err, flags)
 			}
-			// Unwrap API response envelopes (e.g. {"status":"success","data":[...]})
-			// so output helpers see the inner data, not the wrapper.
-			data = extractResponseData(data)
+			// Unwrap the Straddle response envelope ({meta[, response_type], data})
+			// for HUMAN display only so the inner resource/array renders instead of
+			// the wrapper. Machine output (JSON/csv/plain/quiet/select) keeps the
+			// full envelope (see `data` below) so meta (api_request_id, pagination)
+			// stays accessible to consumers — see unwrapSingleKeyArray's multi-key
+			// pass-through policy.
+			humanData := extractResponseData(data)
 
 			// Print provenance to stderr for human-facing output only.
 			// Machine-format flags (--json, --csv, --compact, --quiet, --plain,
@@ -48,9 +52,9 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 			// SYNC: keep this gate aligned with command_endpoint.go.tmpl.
 			if wantsHumanTable(cmd.OutOrStdout(), flags) {
 				var countItems []json.RawMessage
-				if json.Unmarshal(data, &countItems) != nil {
+				if json.Unmarshal(humanData, &countItems) != nil {
 					// Single object, not an array
-					countItems = []json.RawMessage{data}
+					countItems = []json.RawMessage{humanData}
 				}
 				printProvenance(cmd, len(countItems), prov)
 			}
@@ -74,7 +78,7 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 			}
 			if wantsHumanTable(cmd.OutOrStdout(), flags) {
 				var items []map[string]any
-				if json.Unmarshal(data, &items) == nil && len(items) > 0 {
+				if json.Unmarshal(humanData, &items) == nil && len(items) > 0 {
 					if err := printAutoTable(cmd.OutOrStdout(), items); err != nil {
 						return err
 					}
@@ -84,7 +88,15 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 					return nil
 				}
 			}
-			return printOutputWithFlags(cmd.OutOrStdout(), data, flags)
+			// Human-terminal fall-through (table declined, e.g. a single-object
+			// response) renders the unwrapped payload so the inner resource is
+			// shown; machine fall-through (csv/plain/quiet/select) keeps the full
+			// envelope for the reasons above.
+			displayData := data
+			if wantsHumanTable(cmd.OutOrStdout(), flags) {
+				displayData = humanData
+			}
+			return printOutputWithFlags(cmd.OutOrStdout(), displayData, flags)
 		},
 	}
 
