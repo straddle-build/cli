@@ -370,3 +370,97 @@ func TestAPIPassthroughMalformedTokensAreUsageErrors(t *testing.T) {
 		t.Fatalf("malformed --header error = %q, want invalid --header", err.Error())
 	}
 }
+
+const apiPartialFailureBody = `{"partialFailureError":{"message":"two ops failed","code":3},"results":[{"resourceName":"widgets/w_1"},{"resourceName":"widgets/w_2"}]}`
+
+func newPartialFailureServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(apiPartialFailureBody))
+	}))
+}
+
+// TestAPIPassthroughPartialFailureAllowEmitsWarningExits0 verifies the raw
+// `api <method>` passthrough honors the --allow-partial-failure contract: a
+// 2xx response carrying a partialFailureError body produces a stderr warning
+// and a 0 exit code, with the JSON envelope reporting success=false and a
+// populated partial_failure field.
+func TestAPIPassthroughPartialFailureAllowEmitsWarningExits0(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	server := newPartialFailureServer(t)
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	cmd := RootCmd()
+	var stdout bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetIn(strings.NewReader("{}"))
+	cmd.SetArgs([]string{"--json", "--allow-partial-failure", "api", "post", "/v1/widgets", "--stdin"})
+
+	// No t.Parallel(): captureStderr swaps the process-global os.Stderr.
+	var execErr error
+	stderr := captureStderr(t, func() {
+		execErr = cmd.Execute()
+	})
+	if execErr != nil {
+		t.Fatalf("api post --allow-partial-failure returned error: %v", execErr)
+	}
+	if !strings.Contains(stderr, "warning: partial failure detected in raw API response: two ops failed") {
+		t.Fatalf("stderr missing partial-failure warning; got:\n%s", stderr)
+	}
+	if !strings.Contains(stderr, "succeeded: 2 operation(s)") {
+		t.Fatalf("stderr missing succeeded count; got:\n%s", stderr)
+	}
+	env := decodeAPIEnvelope(t, stdout.String())
+	if env["success"] != false {
+		t.Fatalf("success = %v, want false; envelope: %v", env["success"], env)
+	}
+	if env["partial_failure"] == nil {
+		t.Fatalf("partial_failure missing from envelope: %v", env)
+	}
+}
+
+// TestAPIPassthroughPartialFailureWithoutFlagEmitsWarningExits6 verifies that
+// without --allow-partial-failure the same partial-failure body still emits the
+// stderr warning (unconditionally on detection) and exits non-zero (exit 6),
+// while the envelope still reports success=false.
+func TestAPIPassthroughPartialFailureWithoutFlagEmitsWarningExits6(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	server := newPartialFailureServer(t)
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	cmd := RootCmd()
+	var stdout bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetIn(strings.NewReader("{}"))
+	cmd.SetArgs([]string{"--json", "api", "post", "/v1/widgets", "--stdin"})
+
+	// No t.Parallel(): captureStderr swaps the process-global os.Stderr.
+	var execErr error
+	stderr := captureStderr(t, func() {
+		execErr = cmd.Execute()
+	})
+	if execErr == nil {
+		t.Fatal("api post without --allow-partial-failure returned nil, want partial-failure error")
+	}
+	if got := ExitCode(execErr); got != 6 {
+		t.Fatalf("ExitCode = %d, want 6; err=%v", got, execErr)
+	}
+	if !strings.Contains(stderr, "warning: partial failure detected in raw API response: two ops failed") {
+		t.Fatalf("stderr missing partial-failure warning; got:\n%s", stderr)
+	}
+	if !strings.Contains(stderr, "succeeded: 2 operation(s)") {
+		t.Fatalf("stderr missing succeeded count; got:\n%s", stderr)
+	}
+	env := decodeAPIEnvelope(t, stdout.String())
+	if env["success"] != false {
+		t.Fatalf("success = %v, want false; envelope: %v", env["success"], env)
+	}
+	if env["partial_failure"] == nil {
+		t.Fatalf("partial_failure missing from envelope: %v", env)
+	}
+}

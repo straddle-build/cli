@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -81,6 +82,12 @@ func runAPIPassthrough(cmd *cobra.Command, flags *rootFlags, method string, args
 	var partialFailure *partialFailureReport
 	if method != "GET" && !flags.dryRun && status >= 200 && status < 300 {
 		partialFailure = detectPartialFailure(data)
+		if partialFailure != nil {
+			fmt.Fprintf(os.Stderr, "warning: partial failure detected in %s response: %s\n", "raw API", partialFailure.Message)
+			if len(partialFailure.ResourceNames) > 0 {
+				fmt.Fprintf(os.Stderr, "         succeeded: %d operation(s)\n", len(partialFailure.ResourceNames))
+			}
+		}
 	}
 
 	if shouldPrintAPIPassthroughEnvelope(cmd, flags) {
@@ -167,7 +174,7 @@ func printAPIPassthroughEnvelope(cmd *cobra.Command, flags *rootFlags, method, p
 	envelope := map[string]any{
 		"method":  method,
 		"path":    path,
-		"success": status == 0 || (status >= 200 && status < 300 && (partialFailure == nil || flags.allowPartialFailure)),
+		"success": status == 0 || (status >= 200 && status < 300 && partialFailure == nil),
 	}
 	if status != 0 {
 		envelope["status"] = status
