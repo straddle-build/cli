@@ -60,7 +60,14 @@ native streaming instead of polling.`,
 			}
 			c.NoCache = true
 
-			path := "/" + resource
+			// Reuse sync's resource->path table so the request targets the
+			// versioned, underscored endpoint the API actually exposes
+			// (e.g. "funding-events" -> "/v1/funding_events") instead of the
+			// unversioned, hyphenated path "/" + resource would produce.
+			path, err := syncResourcePath(resource)
+			if err != nil {
+				return fmt.Errorf("unknown tail resource %q: %w", resource, err)
+			}
 
 			sig := make(chan os.Signal, 1)
 			signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
@@ -98,26 +105,16 @@ native streaming instead of polling.`,
 	return cmd
 }
 
-// tailKnownResources returns the resource names this CLI exposes, so the
-// no-arg JSON help envelope can list them without depending on sync's
-// defaultSyncResources (which only exists when sync is generated).
+// tailKnownResources returns the resource names tail can stream: the
+// resources with a flat GET list endpoint. This is exactly sync's
+// defaultSyncResources, which is also the set syncResourcePath maps to a
+// "/v1/<resource>" path (with the hyphen->underscore translation baked in).
+// Resources that require path parameters or have no flat list endpoint
+// (account-settings, bridge, charges, funding-event-payments, payouts,
+// reports) are omitted because tail cannot stream them — advertising them
+// would produce silent "poll failed" warnings with no events.
 func tailKnownResources() []string {
-	return []string{
-		"account-settings",
-		"accounts",
-		"bridge",
-		"charges",
-		"customers",
-		"funding-event-payments",
-		"funding-events",
-		"linked-bank-accounts",
-		"organizations",
-		"paykeys",
-		"payments",
-		"payouts",
-		"reports",
-		"representatives",
-	}
+	return defaultSyncResources()
 }
 
 func fetchAndEmit(c interface {
