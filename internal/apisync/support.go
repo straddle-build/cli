@@ -32,7 +32,11 @@ func UnsupportedReasons(op Operation) []string {
 		default:
 			reasons = append(reasons, "unsupported parameter location "+param.In+" for "+param.Name)
 		}
-		if param.SchemaType != "" && param.SchemaType != "string" && param.SchemaType != "integer" && param.SchemaType != "number" && param.SchemaType != "boolean" && param.SchemaType != "array" {
+		allowedSchemaTypes := map[string]bool{"string": true, "integer": true, "number": true, "boolean": true}
+		if param.In == "query" {
+			allowedSchemaTypes["array"] = true
+		}
+		if param.SchemaType != "" && !allowedSchemaTypes[param.SchemaType] {
 			reasons = append(reasons, fmt.Sprintf("%s parameter %q uses unsupported schema type %s", param.In, param.Name, param.SchemaType))
 		}
 		if param.Style != "" {

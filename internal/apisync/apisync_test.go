@@ -764,6 +764,125 @@ func TestUnsupportedReasonsRejectsReservedGeneratedFlagNames(t *testing.T) {
 	}
 }
 
+func TestUnsupportedReasonsScopesArraySchemaTypeToQuery(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		op            apisync.Operation
+		wantReason    string
+		wantSupported bool
+	}{
+		{
+			name: "array path parameter is unsupported",
+			op: apisync.Operation{
+				OperationID: "ListWidgetsByTags",
+				Endpoint:    "widgets.list-widgets-by-tags",
+				Method:      "GET",
+				Path:        "/v1/widgets/{tags}",
+				PathParameters: []apisync.Parameter{
+					{Name: "tags", In: "path", SchemaType: "array"},
+				},
+			},
+			wantReason: `path parameter "tags" uses unsupported schema type array`,
+		},
+		{
+			name: "array query parameter remains supported",
+			op: apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list-widgets",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				QueryParameters: []apisync.Parameter{
+					{Name: "status", In: "query", SchemaType: "array"},
+				},
+			},
+			wantSupported: true,
+		},
+		{
+			name: "array header parameter is unsupported at the gate",
+			op: apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list-widgets",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				HeaderParameters: []apisync.Parameter{
+					{Name: "X-Tags", In: "header", SchemaType: "array"},
+				},
+			},
+			wantReason: `header parameter "X-Tags" uses unsupported schema type array`,
+		},
+		{
+			name: "scalar string path parameter remains supported",
+			op: apisync.Operation{
+				OperationID: "GetWidget",
+				Endpoint:    "widgets.get-widget",
+				Method:      "GET",
+				Path:        "/v1/widgets/{id}",
+				PathParameters: []apisync.Parameter{
+					{Name: "id", In: "path", SchemaType: "string"},
+				},
+			},
+			wantSupported: true,
+		},
+		{
+			name: "scalar integer query parameter remains supported",
+			op: apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list-widgets",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				QueryParameters: []apisync.Parameter{
+					{Name: "limit", In: "query", SchemaType: "integer"},
+				},
+			},
+			wantSupported: true,
+		},
+		{
+			name: "scalar string header parameter remains supported",
+			op: apisync.Operation{
+				OperationID: "ListWidgets",
+				Endpoint:    "widgets.list-widgets",
+				Method:      "GET",
+				Path:        "/v1/widgets",
+				HeaderParameters: []apisync.Parameter{
+					{Name: "Request-Id", In: "header", SchemaType: "string"},
+				},
+			},
+			wantSupported: true,
+		},
+		{
+			name: "non-array non-scalar path parameter is unsupported",
+			op: apisync.Operation{
+				OperationID: "GetWidget",
+				Endpoint:    "widgets.get-widget",
+				Method:      "GET",
+				Path:        "/v1/widgets/{filter}",
+				PathParameters: []apisync.Parameter{
+					{Name: "filter", In: "path", SchemaType: "object"},
+				},
+			},
+			wantReason: `path parameter "filter" uses unsupported schema type object`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			reasons := apisync.UnsupportedReasons(tc.op)
+			if tc.wantSupported {
+				if len(reasons) != 0 {
+					t.Fatalf("UnsupportedReasons = %#v, want no reasons", reasons)
+				}
+				return
+			}
+			if !hasReasonContaining(reasons, tc.wantReason) {
+				t.Fatalf("UnsupportedReasons = %#v, want reason containing %q", reasons, tc.wantReason)
+			}
+		})
+	}
+}
+
 func TestDriftSpecsRoutesGeneratedParameterCollisionsToUnsupported(t *testing.T) {
 	t.Parallel()
 
