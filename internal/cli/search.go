@@ -110,27 +110,11 @@ In local mode: searches locally synced data only.`,
 			var results []json.RawMessage
 			switch resourceType {
 			case "":
-				// Search every FTS-enabled source — typed per-resource tables
-				// AND the generic resources_fts — and dedup by raw JSON so a
-				// row indexed in multiple FTS sources appears once. Without
-				// the generic-search call, rows that landed in resources_fts
-				// but not in any typed FTS table (e.g., a resource whose sync
-				// populated only the generic index) silently return zero.
-				seen := make(map[string]bool)
-				_ = seen // prevent unused error when no FTS tables exist
-				{
-					partial, searchErr := db.Search(query, limit)
-					if searchErr != nil {
-						return fmt.Errorf("search resources_fts failed: %w", searchErr)
-					}
-					for _, r := range partial {
-						key := string(r)
-						if !seen[key] {
-							seen[key] = true
-							results = append(results, r)
-						}
-					}
+				partial, searchErr := db.Search(query, limit)
+				if searchErr != nil {
+					return fmt.Errorf("search resources_fts failed: %w", searchErr)
 				}
+				results = append(results, partial...)
 			default:
 				// Unrecognized type — fall back to generic search
 				results, err = db.Search(query, limit)
