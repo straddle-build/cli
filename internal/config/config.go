@@ -215,5 +215,16 @@ func (c *Config) save() error {
 	if err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
 	}
-	return os.WriteFile(c.Path, data, 0o600)
+	if err := os.WriteFile(c.Path, data, 0o600); err != nil {
+		return err
+	}
+	// WriteFile only applies the mode on file *creation*; on truncation of
+	// a pre-existing file (e.g. an operator-placed 0644 config at this path
+	// via STRADDLE_CONFIG/--config) the loose mode is retained. The config
+	// file carries the API token, so enforce owner-only — mirroring the
+	// Chmod defense for the SQLite store added in a8545d0.
+	if err := os.Chmod(c.Path, 0o600); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("restricting config permissions: %w", err)
+	}
+	return nil
 }
