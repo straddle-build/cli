@@ -656,7 +656,7 @@ command straddle paykeys review update
   --help type=bool default="false" usage="help for update"
   --idempotency-key type=string default="" usage="Optional client-generated key for an idempotent request."
   --request-id type=string default="" usage="Optional client-generated identifier for tracing one request."
-  --status type=string default="" usage="Status"
+  --status type=string default="" usage="Status (one of: active, rejected)"
   --stdin type=bool default="false" usage="Read request body as JSON from stdin"
 command straddle paykeys unblock
   --help type=bool default="false" usage="help for unblock"

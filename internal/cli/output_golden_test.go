@@ -244,7 +244,7 @@ var goldenInvocations = map[string][]string{
 	"reveal.get":             {goldenUUID},
 	"review.get":             {goldenUUID},
 	"review.get-customer":    {goldenUUID},
-	"review.update":          {goldenUUID, "--status=verified"},
+	"review.update":          {goldenUUID, "--status=active"},
 	"review.update-customer": {goldenUUID},
 	"simulate.create":        {goldenUUID},
 	"unblock.update":         {goldenUUID},

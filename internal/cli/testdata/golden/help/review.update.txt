@@ -11,7 +11,7 @@ Flags:
   -h, --help                     help for update
       --idempotency-key string   Optional client-generated key for an idempotent request.
       --request-id string        Optional client-generated identifier for tracing one request.
-      --status string            Status
+      --status string            Status (one of: active, rejected)
       --stdin                    Read request body as JSON from stdin
 
 Global Flags:
