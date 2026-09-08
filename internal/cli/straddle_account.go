@@ -37,6 +37,24 @@ func resolveStraddleAccount(cmd *cobra.Command, f *rootFlags, args []string) err
 	if err != nil {
 		return err
 	}
+	// `straddle api` with anything other than exactly `<HTTP_METHOD> /path`
+	// is a local-only browse (listing interfaces or an interface's methods):
+	// it makes no network call, so account-scope policy has nothing to gate.
+	// Skip Classify/Resolve (and therefore skip rejecting an explicit
+	// --account on these forms), matching the sticky/profile behavior that
+	// already passes silently. See api_discovery.go's RunE for the same
+	// reshape: a recognized HTTP method dispatches to runAPIPassthrough,
+	// everything else prints from the in-memory cobra tree.
+	if cmd.Name() == "api" {
+		if len(args) != 2 {
+			f.straddleAccountResolved = ""
+			return nil
+		}
+		if _, ok := normalizeRawAPIMethod(args[0]); !ok || !strings.HasPrefix(args[1], "/") {
+			f.straddleAccountResolved = ""
+			return nil
+		}
+	}
 	path, method, acceptsHeader := straddleAccountPolicyTarget(cmd, args)
 	decision := straddleacct.Classify(
 		path,
