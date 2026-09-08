@@ -324,4 +324,3 @@ func rawOperationMap(operations []Operation) map[string]Operation {
 	}
 	return mapped
 }
-
