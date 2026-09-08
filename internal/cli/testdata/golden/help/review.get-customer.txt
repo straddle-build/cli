@@ -4,7 +4,7 @@ Usage:
   straddle customers review get-customer <id> [flags]
 
 Aliases:
-  get-customer, get-customer, get
+  get-customer, get
 
 Examples:
   straddle customers review get-customer 550e8400-e29b-41d4-a716-446655440000
