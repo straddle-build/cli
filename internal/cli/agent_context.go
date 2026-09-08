@@ -21,13 +21,12 @@ const agentContextSchemaVersion = "4"
 // (2026-04-13 Wrangler post): agents can introspect the live CLI without
 // parsing --help or reading source.
 type agentContext struct {
-	SchemaVersion              string                 `json:"schema_version"`
-	CLI                        agentContextCLI        `json:"cli"`
-	Auth                       agentContextAuth       `json:"auth"`
-	Discovery                  *agentContextDiscovery `json:"discovery,omitempty"`
-	Commands                   []agentContextCommand  `json:"commands"`
-	AvailableProfiles          []string               `json:"available_profiles"`
-	FeedbackEndpointConfigured bool                   `json:"feedback_endpoint_configured"`
+	SchemaVersion              string                `json:"schema_version"`
+	CLI                        agentContextCLI       `json:"cli"`
+	Auth                       agentContextAuth      `json:"auth"`
+	Commands                   []agentContextCommand `json:"commands"`
+	AvailableProfiles          []string              `json:"available_profiles"`
+	FeedbackEndpointConfigured bool                  `json:"feedback_endpoint_configured"`
 }
 
 type agentContextCLI struct {
@@ -47,20 +46,6 @@ type agentContextAuthEnvVar struct {
 	Required    bool   `json:"required"`
 	Sensitive   bool   `json:"sensitive"`
 	Description string `json:"description,omitempty"`
-}
-
-type agentContextDiscovery struct {
-	Source            string   `json:"source"`
-	TargetURL         string   `json:"target_url,omitempty"`
-	EntryCount        int      `json:"entry_count,omitempty"`
-	APIEntryCount     int      `json:"api_entry_count,omitempty"`
-	Reachability      string   `json:"reachability,omitempty"`
-	Protocols         []string `json:"protocols,omitempty"`
-	AuthCandidates    []string `json:"auth_candidates,omitempty"`
-	Protections       []string `json:"protections,omitempty"`
-	GenerationHints   []string `json:"generation_hints,omitempty"`
-	Warnings          []string `json:"warnings,omitempty"`
-	CandidateCommands []string `json:"candidate_commands,omitempty"`
 }
 
 type agentContextCommand struct {
@@ -130,15 +115,10 @@ func buildAgentContext(rootCmd *cobra.Command) agentContext {
 			Mode:    authMode,
 			EnvVars: envVars,
 		},
-		Discovery:                  buildAgentDiscoveryContext(),
 		Commands:                   collectAgentCommands(rootCmd),
 		AvailableProfiles:          profiles,
 		FeedbackEndpointConfigured: FeedbackEndpointConfigured(),
 	}
-}
-
-func buildAgentDiscoveryContext() *agentContextDiscovery {
-	return nil
 }
 
 // collectAgentCommands walks the cobra tree from the given command and
