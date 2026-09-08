@@ -1099,8 +1099,14 @@ func (s *Store) Get(resourceType, id string) (json.RawMessage, error) {
 }
 
 func (s *Store) List(resourceType string, limit int) ([]json.RawMessage, error) {
+	// limit <= 0 means "no limit": return every synced row for the resource
+	// type. SQLite treats a negative LIMIT expression as no upper bound, so
+	// binding -1 keeps the parameterized query shape while honoring the
+	// documented contract of resolveLocal/runGroupBy's List(rt, 0) calls.
+	// The previous `limit = 200` default here silently truncated local/offline
+	// reads (and auto-mode API-unreachable fallbacks) to the 200 newest rows.
 	if limit <= 0 {
-		limit = 200
+		limit = -1
 	}
 	rows, err := s.db.Query(
 		`SELECT data FROM resources WHERE resource_type = ? ORDER BY updated_at DESC LIMIT ?`,
