@@ -118,6 +118,18 @@ func ApplyProfileToFlags(cmd *cobra.Command, profile *Profile) error {
 		if err := flag.Value.Set(value); err != nil {
 			return fmt.Errorf("applying profile value %s=%q: %w", name, value, err)
 		}
+		// resolveStraddleAccount reads cmd.Flags().Changed("account") to decide
+		// whether --account was supplied; flag.Value.Set (unlike FlagSet.Set)
+		// does not set Flag.Changed, so a profile-supplied account would be
+		// silently dropped by Resolve. Mark it Changed so the profile value is
+		// honored as an explicit per-call override. See root.go PersistentPreRunE
+		// ("runs after profile application so a profile-set --account is honored")
+		// and straddleacct.Resolve ("The per-call flag overrides the sticky account
+		// whenever the flag was supplied"). Scoped to account to avoid altering
+		// other Changed-gated consumers (e.g. the --agent default block).
+		if flag.Name == "account" {
+			flag.Changed = true
+		}
 	}
 	return nil
 }
