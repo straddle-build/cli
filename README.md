@@ -301,6 +301,9 @@ straddle accounts list
 # JSON for scripting and agents
 straddle accounts list --json
 
+# Compact machine output, including for analytics in a terminal
+straddle cashflow --compact
+
 # Filter to specific fields
 straddle accounts list --json --select id,name,status
 
@@ -310,6 +313,8 @@ straddle accounts list --dry-run
 # Agent mode — JSON + compact + no prompts in one flag
 straddle accounts list --agent
 ```
+
+Machine-format flags such as `--json` and `--compact` produce JSON even when stdout is a terminal. They also take precedence over `--human-friendly` when both are set.
 
 ## Agent Usage
 
