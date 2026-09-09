@@ -42,11 +42,85 @@ func stripLeadingSQLNoiseCLI(query string) string {
 // validateReadOnlySQL allows only SELECT / WITH queries, enforcing the
 // CLI's read-only SQL boundary.
 func validateReadOnlySQL(query string) error {
+	if count := countSQLStatements(query); count != 1 {
+		return fmt.Errorf("only one read-only SQL statement is allowed")
+	}
 	upper := strings.ToUpper(stripLeadingSQLNoiseCLI(query))
 	if !strings.HasPrefix(upper, "SELECT") && !strings.HasPrefix(upper, "WITH") {
 		return fmt.Errorf("only read-only SELECT/WITH queries are allowed")
 	}
 	return nil
+}
+
+func countSQLStatements(query string) int {
+	count := 0
+	hasToken := false
+	for i := 0; i < len(query); {
+		switch query[i] {
+		case ' ', '\t', '\r', '\n', ';':
+			if query[i] == ';' && hasToken {
+				count++
+				hasToken = false
+			}
+			i++
+		case '-', '/':
+			if i+1 < len(query) && query[i] == '-' && query[i+1] == '-' {
+				i += 2
+				for i < len(query) && query[i] != '\n' {
+					i++
+				}
+				continue
+			}
+			if i+1 < len(query) && query[i] == '/' && query[i+1] == '*' {
+				i += 2
+				for i+1 < len(query) && (query[i] != '*' || query[i+1] != '/') {
+					i++
+				}
+				if i+1 < len(query) {
+					i += 2
+				}
+				continue
+			}
+			hasToken = true
+			i++
+		case '\'', '"', '`':
+			quote := query[i]
+			hasToken = true
+			i++
+			for i < len(query) {
+				if query[i] == quote {
+					i++
+					if i < len(query) && query[i] == quote {
+						i++
+						continue
+					}
+					break
+				}
+				i++
+			}
+		case '[':
+			hasToken = true
+			i++
+			for i < len(query) {
+				if query[i] == ']' {
+					i++
+					if i < len(query) && query[i] == ']' {
+						i++
+						continue
+					}
+					break
+				}
+				i++
+			}
+		default:
+			hasToken = true
+			i++
+		}
+	}
+	if hasToken {
+		count++
+	}
+	return count
 }
 
 func newSQLCmd(flags *rootFlags) *cobra.Command {
