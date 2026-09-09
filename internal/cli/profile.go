@@ -99,7 +99,7 @@ func ApplyProfileToFlags(cmd *cobra.Command, profile *Profile) error {
 	// Reserved flags that never come from a profile - they control profile
 	// resolution itself or are dangerous to overlay.
 	reserved := map[string]bool{
-		"profile": true, "config": true, "help": true,
+		"profile": true, "config": true, "help": true, "yes": true,
 	}
 	for name, value := range profile.Values {
 		if reserved[name] {
@@ -195,7 +195,7 @@ present (other than --profile and --config).`,
 			}
 			values := map[string]string{}
 			// Walk inherited + local flags, capture only those the user set.
-			skip := map[string]bool{"profile": true, "config": true, "help": true, "description": true}
+			skip := map[string]bool{"profile": true, "config": true, "help": true, "description": true, "yes": true}
 			visit := func(fl *pflag.Flag) {
 				if fl.Changed && !skip[fl.Name] {
 					values[fl.Name] = fl.Value.String()
