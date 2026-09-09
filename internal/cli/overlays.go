@@ -11,12 +11,13 @@ import (
 var endpointOverlays = map[string]func(*cobra.Command){}
 
 type flagOverlay struct {
-	name       string
-	usage      string
-	defaultSet bool
-	defaultVal string
-	enumSet    bool
-	enum       []string
+	name            string
+	usage           string
+	defaultSet      bool
+	defaultVal      string
+	requireExplicit bool
+	enumSet         bool
+	enum            []string
 }
 
 type commandOverlay struct {
@@ -52,6 +53,12 @@ func registerCommandOverlay(endpoint string, overlay commandOverlay) {
 					panic(fmt.Sprintf("endpoint overlay %q sets invalid default for --%s: %v", endpoint, change.name, err))
 				}
 				flag.DefValue = change.defaultVal
+			}
+			if change.requireExplicit {
+				if flag.Annotations == nil {
+					flag.Annotations = map[string][]string{}
+				}
+				flag.Annotations["straddle:explicit"] = []string{"true"}
 			}
 			if change.enumSet {
 				if len(change.enum) == 0 {

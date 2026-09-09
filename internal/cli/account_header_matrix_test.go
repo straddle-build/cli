@@ -85,7 +85,11 @@ func TestAccountHeaderMatrix(t *testing.T) {
 				withAccount := decision == straddleacct.Require || decision == straddleacct.Allow
 				args := accountHeaderMatrixArgs(prefix, argumentSet, withAccount)
 				recorder.reset()
-				_, stderr, err := runRootForAPITest(t, args, "{}")
+				body := "{}"
+				if registered.Endpoint == "customers.update" {
+					body = `{"status":"review"}`
+				}
+				_, stderr, err := runRootForAPITest(t, args, body)
 				if err != nil {
 					t.Fatalf("execute %s: %v\nstderr: %s", strings.Join(args, " "), err, stderr)
 				}

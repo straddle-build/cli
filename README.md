@@ -222,7 +222,7 @@ Customers represent the end users who send or receive payments through your inte
 - **`straddle customers delete`** - Permanently removes a customer record from Straddle. This action cannot be undone and should only be used to satisfy regulatory requirements or for privacy compliance.
 - **`straddle customers get`** - Retrieves the details of an existing customer. Supply the unique customer ID that was returned from your 'create customer' request, and Straddle will return the corresponding customer information.
 - **`straddle customers list`** - Lists or searches customers connected to your account. All supported query parameters are optional. If none are provided, the response will include all customers connected to your account. This endpoint supports advanced sorting and filtering options.
-- **`straddle customers update`** - Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII, and metadata.
+- **`straddle customers update`** - Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII, and metadata. Pass `--status` explicitly, or include `status` in the `--stdin` JSON body, even with `--dry-run`. Read the existing customer first when you intend to preserve its status.
 
 ### funding-event-payments
 

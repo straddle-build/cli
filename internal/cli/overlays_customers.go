@@ -86,7 +86,7 @@ func init() {
 	registerCommandOverlay("customers.update", commandOverlay{
 		short:   "Updates an existing customer's information. This endpoint allows you to modify the customer's contact details, PII,...",
 		long:    "",
-		example: "  straddle customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com",
+		example: "  straddle customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com --status review",
 		flags: []flagOverlay{
 			{name: "address-address1", usage: "Primary address line (e.g., street, PO Box)."},
 			{name: "address-address2", usage: "Secondary address line (e.g., apartment, suite, unit, or building)."},
@@ -98,7 +98,7 @@ func init() {
 			{name: "metadata", usage: "Up to 20 additional user-defined key-value pairs. Useful for storing additional information about the customer in a..."},
 			{name: "name", usage: "The customer's full name or business name."},
 			{name: "phone", usage: "The customer's phone number in E.164 format."},
-			{name: "status", usage: "Status"},
+			{name: "status", usage: "Customer status (required explicitly, including with --stdin)", defaultSet: true, defaultVal: "", requireExplicit: true},
 			{name: "stdin", usage: "Read request body as JSON from stdin"},
 		},
 		resource: "customers",

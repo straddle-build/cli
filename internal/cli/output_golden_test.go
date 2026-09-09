@@ -168,6 +168,7 @@ var goldenInvocations = map[string][]string{
 		"--email=golden@example.com",
 		"--name=Golden Customer",
 		"--phone=+15555550100",
+		"--status=verified",
 	},
 	"funding-event-payments.get": {goldenUUID},
 	"funding-events.create":      {"--funding-event-job-type=charges"},

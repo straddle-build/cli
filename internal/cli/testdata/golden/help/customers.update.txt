@@ -4,7 +4,7 @@ Usage:
   straddle customers update <id> [flags]
 
 Examples:
-  straddle customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com
+  straddle customers update 550e8400-e29b-41d4-a716-446655440000 --email user@example.com --status review
 
 Flags:
       --address-address1 string     Primary address line (e.g., street, PO Box).
@@ -23,7 +23,7 @@ Flags:
       --name string                 The customer's full name or business name.
       --phone string                The customer's phone number in E.164 format.
       --request-id string           Optional client-generated identifier for tracing one request.
-      --status string               Status (default "verified")
+      --status string               Customer status (required explicitly, including with --stdin)
       --stdin                       Read request body as JSON from stdin
 
 Global Flags:

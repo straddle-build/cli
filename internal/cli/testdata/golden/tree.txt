@@ -442,7 +442,7 @@ command straddle customers update
   --name type=string default="" usage="The customer's full name or business name."
   --phone type=string default="" usage="The customer's phone number in E.164 format."
   --request-id type=string default="" usage="Optional client-generated identifier for tracing one request."
-  --status type=string default="verified" usage="Status"
+  --status type=string default="" usage="Customer status (required explicitly, including with --stdin)"
   --stdin type=bool default="false" usage="Read request body as JSON from stdin"
 command straddle doctor
   --fail-on type=string default="" usage="Exit non-zero when a health level is reached: stale, error. Default is never."
