@@ -369,7 +369,7 @@ straddle profile show briefing
 straddle profile delete briefing --yes
 ```
 
-Explicit flags always win over profile values; profile values win over defaults. `agent-context` lists all available profiles under `available_profiles` so introspecting agents discover them at runtime.
+Explicit flags always win over profile values; profile values win over defaults. Profiles never save or apply `--agent` or `--yes`, so pass either flag explicitly when needed. `agent-context` lists all available profiles under `available_profiles` so introspecting agents discover them at runtime.
 
 ## Exit Codes
 
