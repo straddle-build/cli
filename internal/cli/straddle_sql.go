@@ -44,8 +44,8 @@ func stripLeadingSQLNoiseCLI(query string) string {
 	}
 }
 
-// validateReadOnlySQL allows exactly one SELECT statement, optionally with a
-// leading WITH clause, enforcing the CLI's read-only SQL boundary.
+// validateReadOnlySQL allows exactly one statement beginning with SELECT or
+// WITH. The read-only database connection rejects mutations admitted by WITH.
 func validateReadOnlySQL(query string) error {
 	if count := countSQLStatements(query); count != 1 {
 		return fmt.Errorf("only one read-only SQL statement is allowed")
