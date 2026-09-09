@@ -328,7 +328,7 @@ func newDoctorCmd(flags *rootFlags) *cobra.Command {
 					// probe ran. Informational, not a warning; a clean config
 					// shouldn't render yellow WARN in CI dashboards.
 					indicator = yellow("INFO")
-				case strings.Contains(s, "error") || strings.Contains(s, "not configured") || strings.Contains(s, "unreachable") || strings.Contains(s, "invalid") || strings.Contains(s, "missing"):
+				case doctorValueIsError(s):
 					indicator = red("FAIL")
 				case s == "not required":
 					// Public APIs: no auth needed is a healthy state, not a warning.
@@ -365,6 +365,21 @@ func newDoctorCmd(flags *rootFlags) *cobra.Command {
 	return cmd
 }
 
+// doctorValueIsError reports whether a doctor report string value represents
+// a failure-classified state. It is the single source of truth shared by the
+// human renderer's red FAIL indicator (see newDoctorCmd) and the --fail-on
+// exit gate (see doctorExitForFailOn), so the colored output and the exit
+// code cannot diverge on what counts as an error.
+//
+// "not configured" is included because a CLI with no base URL or no auth
+// cannot function — the renderer already paints these states red, and the
+// exit gate must honor the same contract for CI consumers relying on the
+// exit code. This closed a latent bug where `straddle doctor --fail-on=error`
+// printed `FAIL API: not configured ...` yet exited 0.
+func doctorValueIsError(s string) bool {
+	return strings.Contains(s, "error") || strings.Contains(s, "not configured") || strings.Contains(s, "unreachable") || strings.Contains(s, "invalid") || strings.Contains(s, "missing")
+}
+
 // doctorExitForFailOn returns a non-nil error when the report's worst
 // status meets or exceeds the --fail-on threshold. "error" always trips
 // when any section reports an error; "stale" also trips when the cache
@@ -378,7 +393,7 @@ func doctorExitForFailOn(failOn string, report map[string]any) error {
 	for _, v := range report {
 		s, ok := v.(string)
 		if ok {
-			if strings.Contains(s, "error") || strings.Contains(s, "unreachable") || strings.Contains(s, "invalid") || strings.Contains(s, "missing") {
+			if doctorValueIsError(s) {
 				worstError = true
 			}
 		}
