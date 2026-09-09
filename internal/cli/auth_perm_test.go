@@ -41,7 +41,7 @@ func assertConfigMode0600(t *testing.T, path, step string) {
 // TestSetTokenWorldReadableConfigFile pins the CLI-level security
 // boundary that a8545d0 raised for other credential-bearing artifacts:
 // `auth set-token <token>` and `auth logout` persist credentials (or
-// clear them) through Config.save(), which calls os.WriteFile with 0600.
+// clear them) through Config.save().
 // WriteFile's perm argument is only applied on file *creation*; on
 // truncation of a pre-existing file the mode is silently retained, so a
 // 0644 config file placed out-of-band at a custom path (via STRADDLE_CONFIG
@@ -49,9 +49,9 @@ func assertConfigMode0600(t *testing.T, path, step string) {
 // set-token, leaking the saved API token to every local user.
 //
 // Pre-fix this test fails: save() left the pre-existing 0644 mode in place.
-// Post-fix save() Chmods the file to 0600 after WriteFile, so both the
+// Post-fix save() atomically replaces the file with a 0600 file, so both the
 // credential-write (set-token) and credential-clear (logout) paths tighten
-// the file regardless of how it was originally permissioned.
+// it without exposing the new contents through the old inode.
 func TestSetTokenWorldReadableConfigFile(t *testing.T) {
 	t.Setenv("STRADDLE_API_KEY", "")
 	t.Setenv("STRADDLE_BASE_URL", "")
@@ -61,7 +61,7 @@ func TestSetTokenWorldReadableConfigFile(t *testing.T) {
 		dir := t.TempDir()
 		path := filepath.Join(dir, "team-config.toml")
 		// Operator pre-placed the config file out-of-band at a custom path
-		// (the only route to a 0644 config — the CLI's own first save is 0600).
+		// (the only route to a 0644 config; the CLI's own first save is 0600).
 		writeFileLoose(t, path, `base_url = "https://sandbox.straddle.com"`+"\n", 0o644)
 
 		cmd := newAuthSetTokenCmd(&rootFlags{configPath: path})
@@ -105,7 +105,7 @@ func TestSetTokenWorldReadableConfigFile(t *testing.T) {
 		assertConfigMode0600(t, path, "after logout")
 
 		// The credential must actually have been cleared (feature regression
-		// guard) — and the cleared content must not remain world-readable.
+		// guard), and the cleared content must not remain world-readable.
 		data, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("reading cleared config: %v", err)
@@ -144,8 +144,7 @@ func TestSetTokenWorldReadableConfigFile(t *testing.T) {
 
 	t.Run("fresh default-path create is 0600 (regression guard)", func(t *testing.T) {
 		// The CLI's own first save into a non-existent path must still
-		// produce 0600 — the new Chmod must not loosen the default-path
-		// behavior, and WriteFile's perm=0600 must remain in effect.
+		// atomically install a 0600 file.
 		dir := t.TempDir()
 		path := filepath.Join(dir, "nested", "deep", "config.toml")
 		cmd := newAuthSetTokenCmd(&rootFlags{configPath: path})

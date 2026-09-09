@@ -14,7 +14,7 @@ import (
 // writeFileLoose creates path with the given (loose) mode, simulating an
 // operator placing a config file out-of-band (touch / cp / scp / a dotfile
 // templating tool) before the CLI ever writes to it. The CLI itself never
-// produces a file looser than 0600 — this helper is the only route to that
+// produces a file looser than 0600; this helper is the only route to that
 // precondition.
 func writeFileLoose(t *testing.T, path, content string, mode os.FileMode) {
 	t.Helper()
@@ -48,8 +48,8 @@ func assertMode0600(t *testing.T, path, step string) {
 // silently dropped when the target file already exists (it truncates
 // instead of creating), so a pre-existing 0644 config file placed
 // out-of-band at the config path keeps those permissions after a save.
-// The config file carries the API token, so save() must Chmod it to 0600
-// explicitly. Mirrors the Chmod defense for the SQLite store in store.go.
+// The config file carries the API token, so save() must replace it atomically
+// with a 0600 file instead of exposing the new token through the old inode.
 func TestSave_TightensPreExistingLooseFile(t *testing.T) {
 	cases := []struct {
 		name string
@@ -103,9 +103,8 @@ func TestSave_TightensPreExistingLooseFile(t *testing.T) {
 }
 
 // TestSave_FreshCreateIs0600 guards the default happy path (regression
-// guard): when the config file does not already exist, save() creates it
-// with 0600 via WriteFile's perm argument as before, and the new Chmod is
-// a no-op on the same mode. The first-save path must not regress.
+// guard): when the config file does not already exist, save() atomically
+// installs a 0600 file. The first-save path must not regress.
 func TestSave_FreshCreateIs0600(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "nested", "config.toml")
