@@ -15,8 +15,8 @@ Flags:
       --external-id external_id   Filter by your system's external_id.
   -h, --help                      help for list
       --name name                 Filter customers by name (partial match).
-      --page-number int           Page number for paginated results. Starts at 1.
-      --page-size int             Number of results per page. Maximum: 1000.
+      --page-number int           Page number for paginated results. Starts at 1. (default 1)
+      --page-size int             Number of results per page. Maximum: 1000. (default 100)
       --request-id string         Optional client-generated identifier for tracing one request.
       --search-text string        General search term to filter customers.
       --sort-by string            Sort by (one of: name, created_at)

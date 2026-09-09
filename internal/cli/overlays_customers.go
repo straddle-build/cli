@@ -56,8 +56,8 @@ func init() {
 		long:    "",
 		example: "  straddle customers list",
 		flags: []flagOverlay{
-			{name: "page-number", usage: "Page number for paginated results. Starts at 1.", defaultSet: true, defaultVal: "0"},
-			{name: "page-size", usage: "Number of results per page. Maximum: 1000.", defaultSet: true, defaultVal: "0"},
+			{name: "page-number", usage: "Page number for paginated results. Starts at 1."},
+			{name: "page-size", usage: "Number of results per page. Maximum: 1000."},
 			{name: "sort-by", usage: "Sort by (one of: name, created_at)", enumSet: true, enum: []string{"name", "created_at"}},
 			{name: "sort-order", usage: "Sort order (one of: asc, desc)", enumSet: true, enum: []string{"asc", "desc"}},
 			{name: "status", usage: "Filter customers by their current `status`.", defaultSet: true, defaultVal: ""},
