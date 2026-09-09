@@ -90,7 +90,7 @@ func readOnlySQLVerb(query string) string {
 		case '\'', '"', '`':
 			rest = skipSQLQuoted(rest, rest[0])
 		case '[':
-			rest = skipSQLQuoted(rest, ']')
+			rest = skipSQLBracketIdentifier(rest)
 		default:
 			var next string
 			word, next = nextSQLWord(rest)
@@ -110,7 +110,7 @@ func readOnlySQLVerb(query string) string {
 func nextSQLWord(query string) (string, string) {
 	query = strings.TrimLeft(query, " \t\r\n")
 	i := 0
-	for i < len(query) && ((query[i] >= 'a' && query[i] <= 'z') || (query[i] >= 'A' && query[i] <= 'Z') || query[i] == '_') {
+	for i < len(query) && ((query[i] >= 'a' && query[i] <= 'z') || (query[i] >= 'A' && query[i] <= 'Z') || (query[i] >= '0' && query[i] <= '9') || query[i] == '_' || query[i] == '$') {
 		i++
 	}
 	if i == 0 {
@@ -133,6 +133,14 @@ func skipSQLQuoted(query string, quote byte) string {
 		query = query[1:]
 	}
 	return query
+}
+
+func skipSQLBracketIdentifier(query string) string {
+	query = query[1:]
+	if idx := strings.IndexByte(query, ']'); idx >= 0 {
+		return query[idx+1:]
+	}
+	return ""
 }
 
 func countSQLStatements(query string) int {
@@ -161,6 +169,8 @@ func countSQLStatements(query string) int {
 				}
 				if i+1 < len(query) {
 					i += 2
+				} else {
+					i = len(query)
 				}
 				continue
 			}
@@ -187,10 +197,6 @@ func countSQLStatements(query string) int {
 			for i < len(query) {
 				if query[i] == ']' {
 					i++
-					if i < len(query) && query[i] == ']' {
-						i++
-						continue
-					}
 					break
 				}
 				i++
