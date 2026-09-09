@@ -328,6 +328,70 @@ paths:
 				}
 			},
 		},
+		{
+			name: "array path parameter is unsupported",
+			spec: `
+openapi: 3.1.0
+paths:
+  /v1/widgets/{tags}:
+    get:
+      operationId: listWidgetsByTags
+      tags: [widgets]
+      parameters:
+        - name: tags
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+`,
+			want: func(t *testing.T, surfaces []surface.Surface, unsupported []UnsupportedOperation) {
+				t.Helper()
+				if len(unsupported) != 1 {
+					t.Fatalf("unsupported = %#v, want one array-path operation", unsupported)
+				}
+				if unsupported[0].Operation.Key != "GET /v1/widgets/{tags}" {
+					t.Fatalf("unsupported key = %q, want GET /v1/widgets/{tags}", unsupported[0].Operation.Key)
+				}
+				if !surfaceReasonContains(unsupported[0].Reasons, `path parameter "tags" uses unsupported schema type array`) {
+					t.Fatalf("reasons = %#v, want array path schema-type reason", unsupported[0].Reasons)
+				}
+			},
+		},
+		{
+			name: "array query parameter remains supported end to end",
+			spec: `
+openapi: 3.1.0
+paths:
+  /v1/widgets:
+    get:
+      operationId: listWidgets
+      tags: [widgets]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+`,
+			want: func(t *testing.T, surfaces []surface.Surface, unsupported []UnsupportedOperation) {
+				t.Helper()
+				got := requireSingleSupportedSurface(t, surfaces, unsupported)
+				requireFlag(t, got, surface.Flag{
+					Name:    "status",
+					In:      surface.InQuery,
+					Key:     "status",
+					Kind:    surface.KindString,
+					Array:   true,
+					Style:   surface.StyleForm,
+					Explode: true,
+				})
+			},
+		},
 	}
 
 	for _, test := range tests {
