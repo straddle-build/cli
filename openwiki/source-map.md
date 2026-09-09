@@ -140,7 +140,7 @@ These are the command families that make this repo more than a direct API wrappe
 - `sandbox` — print deterministic sandbox outcomes and test bank details.
 - `setup` — set the integration type that controls `Straddle-Account-Id` scoping.
 - `use-account` — set or clear the current embedded account for platform calls.
-- `sql` — run read-only SQL against the local SQLite database.
+- `sql`: run read-only queries against the local SQLite database. See `straddle sql --help` for the accepted query shape.
 - `which` — resolve a natural-language capability query to the best matching command.
 - `auth` — manage saved authentication state.
 - `profile` — save, load, list, show, and delete local CLI profiles.

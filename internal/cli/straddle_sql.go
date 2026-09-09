@@ -19,7 +19,12 @@ import (
 // parses as the first keyword.
 func stripLeadingSQLNoiseCLI(query string) string {
 	for {
-		query = strings.TrimLeft(query, " \t\r\n;")
+		before := query
+		query = strings.TrimPrefix(query, "\ufeff")
+		query = strings.TrimLeft(query, " \t\n\f\r;")
+		if query != before {
+			continue
+		}
 		switch {
 		case strings.HasPrefix(query, "--"):
 			if idx := strings.IndexByte(query, '\n'); idx >= 0 {
@@ -39,14 +44,90 @@ func stripLeadingSQLNoiseCLI(query string) string {
 	}
 }
 
-// validateReadOnlySQL allows only SELECT / WITH queries, enforcing the
-// CLI's read-only SQL boundary.
+// validateReadOnlySQL allows exactly one statement beginning with SELECT or
+// WITH. The read-only database connection rejects mutations admitted by WITH.
 func validateReadOnlySQL(query string) error {
+	if count := countSQLStatements(query); count != 1 {
+		return fmt.Errorf("only one read-only SQL statement is allowed")
+	}
 	upper := strings.ToUpper(stripLeadingSQLNoiseCLI(query))
 	if !strings.HasPrefix(upper, "SELECT") && !strings.HasPrefix(upper, "WITH") {
 		return fmt.Errorf("only read-only SELECT/WITH queries are allowed")
 	}
 	return nil
+}
+
+func countSQLStatements(query string) int {
+	count := 0
+	hasToken := false
+	for i := 0; i < len(query); {
+		if strings.HasPrefix(query[i:], "\ufeff") {
+			i += len("\ufeff")
+			continue
+		}
+		switch query[i] {
+		case ' ', '\t', '\n', '\f', '\r', ';':
+			if query[i] == ';' && hasToken {
+				count++
+				hasToken = false
+			}
+			i++
+		case '-', '/':
+			if i+1 < len(query) && query[i] == '-' && query[i+1] == '-' {
+				i += 2
+				for i < len(query) && query[i] != '\n' {
+					i++
+				}
+				continue
+			}
+			if i+1 < len(query) && query[i] == '/' && query[i+1] == '*' {
+				i += 2
+				for i+1 < len(query) && (query[i] != '*' || query[i+1] != '/') {
+					i++
+				}
+				if i+1 < len(query) {
+					i += 2
+				} else {
+					i = len(query)
+				}
+				continue
+			}
+			hasToken = true
+			i++
+		case '\'', '"', '`':
+			quote := query[i]
+			hasToken = true
+			i++
+			for i < len(query) {
+				if query[i] == quote {
+					i++
+					if i < len(query) && query[i] == quote {
+						i++
+						continue
+					}
+					break
+				}
+				i++
+			}
+		case '[':
+			hasToken = true
+			i++
+			for i < len(query) {
+				if query[i] == ']' {
+					i++
+					break
+				}
+				i++
+			}
+		default:
+			hasToken = true
+			i++
+		}
+	}
+	if hasToken {
+		count++
+	}
+	return count
 }
 
 func newSQLCmd(flags *rootFlags) *cobra.Command {
@@ -56,12 +137,14 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 		Use:         "sql [query]",
 		Short:       "Run read-only SQL against the local synced SQLite store",
 		Annotations: map[string]string{"mcp:read-only": "true"},
-		Long: "Run an ad-hoc read-only SQL query (SELECT or WITH ... SELECT) against the\n" +
-			"local SQLite store populated by sync. Tables match resource names:\n" +
+		Long: "Run exactly one SQL statement beginning with SELECT or WITH against\n" +
+			"the local SQLite store populated by sync. Tables match resource names:\n" +
 			"payments, customers, paykeys, funding_events, accounts, organizations,\n" +
 			"representatives, linked_bank_accounts. The JSON resource body is in the\n" +
-			"`data` column (use json_extract(data, '$.field')). Read-only: only\n" +
-			"SELECT/WITH are accepted.",
+			"`data` column (use json_extract(data, '$.field')). Additional statements\n" +
+			"are rejected before execution. The store is opened read-only, so SQLite\n" +
+			"rejects mutations. Semicolons in literals, quoted identifiers, and comments\n" +
+			"remain part of the statement.",
 		Example: "  straddle sql \"SELECT json_extract(data,'\\$.status') AS status, COUNT(*) n FROM payments GROUP BY status\" --json\n" +
 			"  straddle sql \"SELECT id, json_extract(data,'\\$.amount') AS amount FROM payments ORDER BY amount DESC LIMIT 10\"",
 		RunE: func(cmd *cobra.Command, args []string) error {
