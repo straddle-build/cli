@@ -27,6 +27,15 @@ type profileStore struct {
 	Profiles map[string]Profile `json:"profiles"`
 }
 
+func isReservedProfileFlag(name string) bool {
+	switch name {
+	case "agent", "config", "help", "profile", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
 func profileStorePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -98,11 +107,8 @@ func ApplyProfileToFlags(cmd *cobra.Command, profile *Profile) error {
 	}
 	// Reserved flags that never come from a profile - they control profile
 	// resolution itself or are dangerous to overlay.
-	reserved := map[string]bool{
-		"profile": true, "config": true, "help": true, "yes": true,
-	}
 	for name, value := range profile.Values {
-		if reserved[name] {
+		if isReservedProfileFlag(name) {
 			continue
 		}
 		flag := cmd.Flags().Lookup(name)
@@ -195,9 +201,8 @@ present (other than --profile and --config).`,
 			}
 			values := map[string]string{}
 			// Walk inherited + local flags, capture only those the user set.
-			skip := map[string]bool{"profile": true, "config": true, "help": true, "description": true, "yes": true}
 			visit := func(fl *pflag.Flag) {
-				if fl.Changed && !skip[fl.Name] {
+				if fl.Changed && fl.Name != "description" && !isReservedProfileFlag(fl.Name) {
 					values[fl.Name] = fl.Value.String()
 				}
 			}
