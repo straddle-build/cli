@@ -4,6 +4,7 @@ package cli
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -90,16 +91,12 @@ func deliverFile(path string, body []byte) error {
 	return nil
 }
 
-func deliverWebhook(url string, body []byte, compact bool) error {
-	contentType := "application/json"
-	if compact {
-		contentType = "application/x-ndjson"
-	}
+func deliverWebhook(url string, body []byte, _ bool) error {
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("building webhook request: %w", err)
 	}
-	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Content-Type", deliveryContentType(body))
 	req.Header.Set("User-Agent", client.UserAgent(Version(), "deliver"))
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
@@ -112,4 +109,20 @@ func deliverWebhook(url string, body []byte, compact bool) error {
 		return fmt.Errorf("webhook returned %s", resp.Status)
 	}
 	return nil
+}
+
+func deliveryContentType(body []byte) string {
+	if json.Valid(body) {
+		return "application/json"
+	}
+	trimmed := bytes.TrimSpace(body)
+	if len(trimmed) == 0 {
+		return "text/plain; charset=utf-8"
+	}
+	for line := range bytes.Lines(trimmed) {
+		if !json.Valid(line) {
+			return "text/plain; charset=utf-8"
+		}
+	}
+	return "application/x-ndjson"
 }
