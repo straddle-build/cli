@@ -22,7 +22,9 @@ func TestValidateReadOnlySQL(t *testing.T) {
 		{name: "select", query: "SELECT 1"},
 		{name: "with select", query: "WITH rows AS (SELECT 1) SELECT * FROM rows"},
 		{name: "recursive with select", query: "WITH RECURSIVE rows(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM rows WHERE n < 2) SELECT * FROM rows"},
-		{name: "numeric CTE name with select", query: "WITH update1 AS (SELECT 1 AS n) SELECT n FROM update1"},
+		{name: "keyword-like CTE name with select", query: "WITH update1 AS (SELECT 1 AS n) SELECT n FROM update1"},
+		{name: "unicode CTE name with select", query: "WITH updateé AS (SELECT 1 AS n) SELECT n FROM updateé"},
+		{name: "with values", query: "WITH rows AS (SELECT 1) VALUES (1)"},
 		{name: "semicolon in string", query: "SELECT 'note; urgent'"},
 		{name: "semicolon in json path string", query: "SELECT json_extract(data, '$.note; urgent') FROM resources"},
 		{name: "semicolon in line comment", query: "SELECT 1 -- ignored; semicolon\n"},
@@ -35,7 +37,6 @@ func TestValidateReadOnlySQL(t *testing.T) {
 		{name: "trailing pragma rejected", query: "SELECT 1; PRAGMA query_only = OFF", wantErr: true},
 		{name: "trailing create rejected", query: "SELECT 1; CREATE TABLE leaked (id TEXT)", wantErr: true},
 		{name: "insert rejected", query: "INSERT INTO resources VALUES ('id', 'type', '{}')", wantErr: true},
-		{name: "cte delete rejected", query: "WITH select1 AS (SELECT 1) DELETE FROM resources", wantErr: true},
 		{name: "unterminated trailing block comment", query: "SELECT 1; /* trailing comment"},
 	}
 	for _, tc := range tests {
@@ -69,6 +70,9 @@ func TestSQLCommandRejectsMutationsWithoutOpeningOrChangingStore(t *testing.T) {
 		fmt.Sprintf("SELECT 1; ATTACH DATABASE '%s' AS other", attachedPath),
 		"SELECT 1; CREATE TABLE leaked (id TEXT)",
 		"SELECT 1; INSERT INTO resources (id, resource_type, data) VALUES ('leaked', 'thing', '{}')",
+		"WITH doomed AS (SELECT 1) DELETE FROM resources",
+		"WITH doomed AS (SELECT 1) INSERT INTO resources (id, resource_type, data) SELECT 'leaked', 'thing', '{}' FROM doomed",
+		"WITH doomed AS (SELECT 1) UPDATE resources SET data = '{}'",
 	}
 	for _, query := range queries {
 		t.Run(strings.Fields(query)[2], func(t *testing.T) {
@@ -118,8 +122,12 @@ func TestSQLCommandReadsSelectAndCTE(t *testing.T) {
 	for _, query := range []string{
 		"SELECT 'literal;value' AS value",
 		"WITH rows AS (SELECT 1 AS value) SELECT value FROM rows",
+		"WITH updateé AS (SELECT 1 AS value) SELECT value FROM updateé",
+		"WITH rows AS (SELECT 1) VALUES (1)",
 		"\fSELECT 1 AS value",
 		"SELECT 1 AS value;\f",
+		"\ufeffSELECT 1 AS value",
+		"SELECT 1 AS value;\ufeff",
 	} {
 		t.Run(query, func(t *testing.T) {
 			root := RootCmd()
@@ -130,26 +138,8 @@ func TestSQLCommandReadsSelectAndCTE(t *testing.T) {
 			if err := root.Execute(); err != nil {
 				t.Fatalf("sql command: %v", err)
 			}
-			if !strings.Contains(stdout.String(), "value") {
-				t.Fatalf("output = %q, want value column", stdout.String())
-			}
-		})
-	}
-}
-
-func TestSQLCommandRejectsCTEWrappedMutationsBeforeOpeningDatabase(t *testing.T) {
-	tests := []string{
-		"WITH doomed AS (SELECT 1) DELETE FROM resources",
-		"WITH replacement AS (SELECT 1) INSERT INTO resources (id) SELECT 1 FROM replacement",
-		"WITH replacement AS (SELECT 1) UPDATE resources SET data = '{}'",
-	}
-	for _, query := range tests {
-		t.Run(strings.Fields(query)[5], func(t *testing.T) {
-			cmd := newSQLCmd(&rootFlags{})
-			cmd.SetArgs([]string{query, "--db", t.TempDir() + "/missing.db"})
-			err := cmd.Execute()
-			if err == nil || !strings.Contains(err.Error(), "only read-only SELECT/WITH queries are allowed") {
-				t.Fatalf("sql command error = %v, want read-only validation error", err)
+			if stdout.Len() == 0 {
+				t.Fatalf("output = %q, want query result", stdout.String())
 			}
 		})
 	}

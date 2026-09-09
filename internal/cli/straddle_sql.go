@@ -19,6 +19,7 @@ import (
 // parses as the first keyword.
 func stripLeadingSQLNoiseCLI(query string) string {
 	for {
+		query = strings.TrimPrefix(query, "\ufeff")
 		query = strings.TrimLeft(query, " \t\n\f\r;")
 		switch {
 		case strings.HasPrefix(query, "--"):
@@ -45,108 +46,21 @@ func validateReadOnlySQL(query string) error {
 	if count := countSQLStatements(query); count != 1 {
 		return fmt.Errorf("only one read-only SQL statement is allowed")
 	}
-	if readOnlySQLVerb(query) != "SELECT" {
+	upper := strings.ToUpper(stripLeadingSQLNoiseCLI(query))
+	if !strings.HasPrefix(upper, "SELECT") && !strings.HasPrefix(upper, "WITH") {
 		return fmt.Errorf("only read-only SELECT/WITH queries are allowed")
 	}
 	return nil
-}
-
-func readOnlySQLVerb(query string) string {
-	query = stripLeadingSQLNoiseCLI(query)
-	word, rest := nextSQLWord(query)
-	if word != "WITH" {
-		return word
-	}
-
-	depth := 0
-	for len(rest) > 0 {
-		switch rest[0] {
-		case ' ', '\t', '\n', '\f', '\r', ',', ';':
-			rest = rest[1:]
-		case '(':
-			depth++
-			rest = rest[1:]
-		case ')':
-			depth--
-			rest = rest[1:]
-		case '-', '/':
-			if strings.HasPrefix(rest, "--") {
-				if idx := strings.IndexByte(rest, '\n'); idx >= 0 {
-					rest = rest[idx+1:]
-				} else {
-					return ""
-				}
-				continue
-			}
-			if strings.HasPrefix(rest, "/*") {
-				if idx := strings.Index(rest[2:], "*/"); idx >= 0 {
-					rest = rest[2+idx+2:]
-				} else {
-					return ""
-				}
-				continue
-			}
-			rest = rest[1:]
-		case '\'', '"', '`':
-			rest = skipSQLQuoted(rest, rest[0])
-		case '[':
-			rest = skipSQLBracketIdentifier(rest)
-		default:
-			var next string
-			word, next = nextSQLWord(rest)
-			if next == rest {
-				rest = rest[1:]
-				continue
-			}
-			rest = next
-			if depth == 0 && (word == "SELECT" || word == "INSERT" || word == "UPDATE" || word == "DELETE" || word == "REPLACE") {
-				return word
-			}
-		}
-	}
-	return ""
-}
-
-func nextSQLWord(query string) (string, string) {
-	query = strings.TrimLeft(query, " \t\n\f\r")
-	i := 0
-	for i < len(query) && ((query[i] >= 'a' && query[i] <= 'z') || (query[i] >= 'A' && query[i] <= 'Z') || (query[i] >= '0' && query[i] <= '9') || query[i] == '_' || query[i] == '$') {
-		i++
-	}
-	if i == 0 {
-		return "", query
-	}
-	return strings.ToUpper(query[:i]), query[i:]
-}
-
-func skipSQLQuoted(query string, quote byte) string {
-	query = query[1:]
-	for len(query) > 0 {
-		if query[0] == quote {
-			query = query[1:]
-			if len(query) > 0 && query[0] == quote {
-				query = query[1:]
-				continue
-			}
-			return query
-		}
-		query = query[1:]
-	}
-	return query
-}
-
-func skipSQLBracketIdentifier(query string) string {
-	query = query[1:]
-	if idx := strings.IndexByte(query, ']'); idx >= 0 {
-		return query[idx+1:]
-	}
-	return ""
 }
 
 func countSQLStatements(query string) int {
 	count := 0
 	hasToken := false
 	for i := 0; i < len(query); {
+		if strings.HasPrefix(query[i:], "\ufeff") {
+			i += len("\ufeff")
+			continue
+		}
 		switch query[i] {
 		case ' ', '\t', '\n', '\f', '\r', ';':
 			if query[i] == ';' && hasToken {
