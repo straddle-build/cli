@@ -196,13 +196,35 @@ func TestClient_GETCacheKeyIncludesConfigHeaders(t *testing.T) {
 	}
 }
 
-func TestClient_GETCacheKeyIncludesAllTemplateVars(t *testing.T) {
-	cfg := &config.Config{BaseURL: "https://{tenant}.example.com/{region}", TemplateVars: map[string]string{"tenant": "one", "region": "us"}}
-	c := New(cfg, time.Second, 0)
-	first := c.cacheKey("/resource", nil, nil)
-	cfg.TemplateVars["tenant"] = "two"
-	second := c.cacheKey("/resource", nil, nil)
-	if first == second {
-		t.Fatal("cache key did not change when arbitrary template variable changed")
+func TestClient_GETCacheDistinguishesAmbiguousTemplateVars(t *testing.T) {
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"path":%q}`, r.URL.Path)
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		BaseURL:      server.URL + "/{x}",
+		TemplateVars: map[string]string{"x": "a|template_var:y=b"},
+	}
+	client := New(cfg, time.Second, 0)
+	client.cacheDir = t.TempDir()
+
+	first, err := client.Get("", nil)
+	if err != nil {
+		t.Fatalf("first Get: %v", err)
+	}
+	cfg.TemplateVars = map[string]string{"x": "a", "y": "b"}
+	second, err := client.Get("", nil)
+	if err != nil {
+		t.Fatalf("second Get: %v", err)
+	}
+	if string(first) == string(second) {
+		t.Fatalf("responses share a cache entry: %s", second)
+	}
+	if requests != 2 {
+		t.Fatalf("requests = %d, want 2 distinct cache entries", requests)
 	}
 }

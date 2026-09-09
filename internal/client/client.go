@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -227,18 +228,31 @@ func (c *Client) cacheKey(path string, params map[string]string, headers map[str
 	// flipping a value back to unset misses the warm cache and surfaces
 	// the actionable error from buildURL instead of returning stale data.
 	if c.Config != nil {
-		varNames := make([]string, 0, len(c.Config.TemplateVars))
-		for name := range c.Config.TemplateVars {
-			varNames = append(varNames, name)
-		}
-		sort.Strings(varNames)
-		for _, name := range varNames {
-			key += "|template_var:" + name + "=" + c.Config.TemplateVars[name]
-		}
+		key += "|template_vars=" + templateVarsCacheKey(c.Config.TemplateVars)
 	}
 	key += normalizedHeaderKey("request_headers", headers)
 	h := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(h[:8])
+}
+
+func templateVarsCacheKey(vars map[string]string) string {
+	names := make([]string, 0, len(vars))
+	for name := range vars {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var canonical strings.Builder
+	for _, name := range names {
+		value := vars[name]
+		canonical.WriteString(strconv.Itoa(len(name)))
+		canonical.WriteByte(':')
+		canonical.WriteString(name)
+		canonical.WriteString(strconv.Itoa(len(value)))
+		canonical.WriteByte(':')
+		canonical.WriteString(value)
+	}
+	hash := sha256.Sum256([]byte(canonical.String()))
+	return hex.EncodeToString(hash[:])
 }
 
 func normalizedHeaderKey(prefix string, headers map[string]string) string {
