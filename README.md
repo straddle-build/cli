@@ -61,6 +61,8 @@ Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `str
 
 Get your API key from the [Straddle dashboard](https://dashboard.straddle.com) (Developer → API Keys); see the [authentication docs](https://docs.straddle.com/api-reference/authentication) for details.
 
+`auth set-token` replaces the credentials saved in the config file. An exported `STRADDLE_API_KEY` still overrides the saved token, but is never copied to disk by this command. After unsetting it, requests use the saved token.
+
 ## Quick Start
 
 ```bash

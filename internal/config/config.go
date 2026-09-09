@@ -25,6 +25,9 @@ type Config struct {
 	ClientSecret   string            `toml:"client_secret"`
 	Path           string            `toml:"-"`
 	StraddleApiKey string            `toml:"api_key"`
+	// Keep the environment override separate from legacy file credentials so
+	// saving a token cannot persist a runtime-only key.
+	envAPIKey string
 	// TemplateVars holds the runtime values for {placeholder} markers in
 	// BaseURL and the request path (e.g. Shopify's {shop}/{version}). Populated
 	// at Load() time from env vars; consumed by the client's buildURL helper.
@@ -58,7 +61,7 @@ func Load(configPath string) (*Config, error) {
 
 	// Env var overrides
 	if v := os.Getenv("STRADDLE_API_KEY"); v != "" {
-		cfg.StraddleApiKey = v
+		cfg.envAPIKey = v
 		cfg.AuthSource = "env:STRADDLE_API_KEY"
 	}
 
@@ -169,8 +172,12 @@ func (c *Config) AuthHeader() string {
 		return c.AuthHeaderVal
 	}
 	// Env-var token wins over file-stored AccessToken (env > config convention).
-	if c.StraddleApiKey != "" {
+	if c.envAPIKey != "" {
 		c.AuthSource = "env:STRADDLE_API_KEY"
+		return "Bearer " + c.envAPIKey
+	}
+	if c.StraddleApiKey != "" {
+		c.AuthSource = "config"
 		return "Bearer " + c.StraddleApiKey
 	}
 	if c.AccessToken != "" {
@@ -181,6 +188,10 @@ func (c *Config) AuthHeader() string {
 }
 
 func (c *Config) SaveTokens(clientID, clientSecret, accessToken, refreshToken string, expiry time.Time) error {
+	// Explicit token replacement supersedes older file formats, while the
+	// environment override continues to apply only to this loaded config.
+	c.AuthHeaderVal = ""
+	c.StraddleApiKey = ""
 	c.ClientID = clientID
 	c.ClientSecret = clientSecret
 	c.AccessToken = accessToken
@@ -203,6 +214,7 @@ func (c *Config) ClearTokens() error {
 	c.ClientID = ""
 	c.ClientSecret = ""
 	c.StraddleApiKey = ""
+	c.envAPIKey = ""
 	return c.save()
 }
 
