@@ -213,8 +213,8 @@ func requestBodySchema(body *rawRequestBody) (json.RawMessage, bool) {
 	}
 	sort.Strings(mediaTypes)
 	for _, mediaType := range mediaTypes {
-		base := strings.ToLower(strings.TrimSpace(strings.Split(mediaType, ";")[0]))
-		if strings.HasSuffix(base, "+json") {
+		base := strings.ToLower(strings.TrimSpace(strings.SplitN(mediaType, ";", 2)[0]))
+		if base == "application/json" || strings.HasSuffix(base, "+json") {
 			return body.Content[mediaType].Schema, true
 		}
 	}

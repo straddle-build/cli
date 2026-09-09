@@ -1181,3 +1181,10 @@ func hasReasonContaining(reasons []string, want string) bool {
 	}
 	return false
 }
+
+func TestUnsupportedReasonsAcceptsParameterizedJSONMediaType(t *testing.T) {
+	op := apisync.Operation{OperationID: "CreateWidget", Method: "POST", Path: "/v1/widgets", RequestBodyRequired: true, RequestBodyMediaTypes: []string{"application/json; charset=utf-8"}}
+	if reasons := apisync.UnsupportedReasons(op); len(reasons) != 0 {
+		t.Fatalf("reasons = %#v", reasons)
+	}
+}
