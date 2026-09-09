@@ -257,6 +257,10 @@ straddle api get /v1/charges --param limit=10 --agent
 
 Use raw `api` passthrough when the API has an endpoint before this CLI has a dedicated friendly command.
 
+### Fetch all pages
+
+Use `--all` on paginated list commands. See the authoritative [pagination behavior and failure guarantees](README.md#pagination) before relying on a complete result set.
+
 ## Auth Setup
 
 Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `straddle auth set-token`; set `STRADDLE_ENVIRONMENT=sandbox|production` when you need a non-default environment. Sandbox keys only work against `sandbox.straddle.com` and production keys only work against `production.straddle.com`. The default environment is sandbox so you never hit live money movement by accident. Platform (Embed) integrators declare an integration type once and the CLI then scopes calls to the right embedded account automatically. Platform ID, Organization ID, and Account ID are three different identifiers, do not interchange them.
