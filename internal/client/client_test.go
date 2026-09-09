@@ -4,10 +4,44 @@ package client
 
 import (
 	"bytes"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
+	"testing/synctest"
+	"time"
 	"unicode/utf8"
+
+	"github.com/straddle-build/straddle-cli/internal/config"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestClient_FinalRateLimitResponseAdjustsSharedRate(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		client := New(&config.Config{BaseURL: "https://api.example.com"}, time.Second, 8)
+		client.NoCache = true
+		client.HTTPClient.Transport = roundTripFunc(func(*http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusTooManyRequests,
+				Header:     http.Header{"Retry-After": []string{"1"}},
+				Body:       io.NopCloser(strings.NewReader(`{"error":"slow down"}`)),
+			}, nil
+		})
+
+		_, err := client.Get("/limited", nil)
+		if err == nil {
+			t.Fatal("Get() error = nil, want exhausted HTTP 429 error")
+		}
+		if got := client.RateLimit(); got != 0.5 {
+			t.Fatalf("rate after four HTTP 429 responses = %v, want 0.5", got)
+		}
+	})
+}
 
 func TestTruncateBody(t *testing.T) {
 	t.Parallel()

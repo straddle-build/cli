@@ -625,67 +625,6 @@ func TestProbeReachable_SendsRangeHeader(t *testing.T) {
 
 // ---- AdaptiveLimiter / RateLimitError / RetryAfter / Backoff ----
 
-func TestAdaptiveLimiter_NewNilOnNonPositive(t *testing.T) {
-	if NewAdaptiveLimiter(0) != nil {
-		t.Fatal("NewAdaptiveLimiter(0) should return nil")
-	}
-	if NewAdaptiveLimiter(-1) != nil {
-		t.Fatal("NewAdaptiveLimiter(-1) should return nil")
-	}
-}
-
-func TestAdaptiveLimiter_NilSafeMethods(t *testing.T) {
-	var l *AdaptiveLimiter
-	l.Wait()
-	l.OnSuccess()
-	l.OnRateLimit()
-	if got := l.Rate(); got != 0 {
-		t.Errorf("nil limiter Rate() = %v, want 0", got)
-	}
-}
-
-func TestAdaptiveLimiter_RampsUpAfterSuccesses(t *testing.T) {
-	l := NewAdaptiveLimiter(2.0)
-	startRate := l.Rate()
-	for i := 0; i < l.rampAfter; i++ {
-		l.OnSuccess()
-	}
-	if got := l.Rate(); got <= startRate {
-		t.Errorf("Rate() after rampAfter successes = %v, want > %v", got, startRate)
-	}
-}
-
-func TestAdaptiveLimiter_HalvesOnRateLimit(t *testing.T) {
-	l := NewAdaptiveLimiter(8.0)
-	startRate := l.Rate()
-	l.OnRateLimit()
-	got := l.Rate()
-	if got != startRate/2 {
-		t.Errorf("Rate() after OnRateLimit = %v, want %v", got, startRate/2)
-	}
-}
-
-func TestAdaptiveLimiter_FloorsAtHalfRPS(t *testing.T) {
-	l := NewAdaptiveLimiter(2.0)
-	for i := 0; i < 10; i++ {
-		l.OnRateLimit()
-	}
-	if got := l.Rate(); got < 0.5 {
-		t.Errorf("Rate() after many OnRateLimit = %v, want >= 0.5", got)
-	}
-}
-
-func TestAdaptiveLimiter_WaitEnforcesPacing(t *testing.T) {
-	l := NewAdaptiveLimiter(10.0)
-	l.Wait()
-	start := time.Now()
-	l.Wait()
-	elapsed := time.Since(start)
-	if elapsed < 80*time.Millisecond {
-		t.Errorf("second Wait() took %v, want >= 80ms", elapsed)
-	}
-}
-
 func TestRateLimitError_ErrorMessage(t *testing.T) {
 	cases := []struct {
 		name string

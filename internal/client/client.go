@@ -610,8 +610,11 @@ func (c *Client) doInternalWithValues(method, path string, params map[string]str
 		}
 
 		// Rate limited - adjust adaptive limiter and retry
-		if resp.StatusCode == 429 && attempt < maxRetries {
+		if resp.StatusCode == 429 {
 			c.limiter.OnRateLimit()
+			if attempt >= maxRetries {
+				return nil, resp.StatusCode, apiErr
+			}
 			wait := cliutil.RetryAfter(resp)
 			fmt.Fprintf(os.Stderr, "rate limited, waiting %s (attempt %d/%d, rate adjusted to %.1f req/s)\n", wait, attempt+1, maxRetries, c.limiter.Rate())
 			time.Sleep(wait)

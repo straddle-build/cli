@@ -12,47 +12,75 @@ import (
 	"time"
 )
 
-// AdaptiveLimiter paces outbound requests with adaptive ceiling discovery.
-// Starts at a floor rate, ramps up after consecutive successes, halves on 429
-// and records a ceiling. Per-session only — not persisted. Methods are safe
-// to call on a nil receiver.
+// AdaptiveLimiter shares one request pace across callers. It backs off on 429
+// and recovers after consecutive successes, never exceeding the configured rate.
+// Per-session only, not persisted. Methods are safe to call on a nil receiver.
 type AdaptiveLimiter struct {
+	admission   chan struct{} // serialize admissions without blocking rate feedback
 	mu          sync.Mutex
 	rate        float64
-	floor       float64
+	maximum     float64
 	ceiling     float64
 	successes   int
 	rampAfter   int
 	lastRequest time.Time // zero-value: first Wait() returns immediately
 }
 
-// NewAdaptiveLimiter returns a limiter starting at ratePerSec, or nil when
-// rate-limiting should be disabled. Methods on the nil limiter no-op.
+// NewAdaptiveLimiter returns a limiter starting at ratePerSec. Nonpositive
+// values return nil for compatibility and disable limiting. Methods on the
+// nil limiter no-op.
 func NewAdaptiveLimiter(ratePerSec float64) *AdaptiveLimiter {
 	if ratePerSec <= 0 {
 		return nil
 	}
 	return &AdaptiveLimiter{
+		admission: make(chan struct{}, 1),
 		rate:      ratePerSec,
-		floor:     ratePerSec,
+		maximum:   ratePerSec,
 		rampAfter: 10,
 	}
+}
+
+// ValidateRateLimit checks the CLI-facing rate limit before a client is built.
+// Zero disables limiting; positive intervals must fit in time.Duration and
+// retain at least one nanosecond of resolution.
+func ValidateRateLimit(ratePerSec float64) error {
+	if ratePerSec < 0 {
+		return fmt.Errorf("rate limit must be non-negative")
+	}
+	if ratePerSec == 0 {
+		return nil
+	}
+	if math.IsNaN(ratePerSec) || math.IsInf(ratePerSec, 0) {
+		return fmt.Errorf("rate limit must be finite")
+	}
+	interval := float64(time.Second) / ratePerSec
+	maxDuration := float64(time.Duration(1<<63 - 1))
+	if interval < 1 || interval >= maxDuration {
+		return fmt.Errorf("rate limit is outside the representable pacing range")
+	}
+	return nil
 }
 
 func (l *AdaptiveLimiter) Wait() {
 	if l == nil {
 		return
 	}
-	l.mu.Lock()
-	delay := time.Duration(float64(time.Second) / l.rate)
-	elapsed := time.Since(l.lastRequest)
-	l.mu.Unlock()
-	if elapsed < delay {
-		time.Sleep(delay - elapsed)
+	l.admission <- struct{}{}
+	defer func() { <-l.admission }()
+	for {
+		l.mu.Lock()
+		delay := time.Duration(math.Ceil(float64(time.Second) / l.rate))
+		remaining := delay - time.Since(l.lastRequest)
+		if l.lastRequest.IsZero() || remaining <= 0 {
+			l.lastRequest = time.Now()
+			l.mu.Unlock()
+			return
+		}
+		l.mu.Unlock()
+		time.Sleep(remaining)
+		// Recheck the current rate: a 429 may have extended the wait.
 	}
-	l.mu.Lock()
-	l.lastRequest = time.Now()
-	l.mu.Unlock()
 }
 
 func (l *AdaptiveLimiter) OnSuccess() {
@@ -67,7 +95,7 @@ func (l *AdaptiveLimiter) OnSuccess() {
 		if l.ceiling > 0 && newRate > l.ceiling*0.9 {
 			newRate = l.ceiling * 0.9
 		}
-		l.rate = newRate
+		l.rate = min(l.maximum, max(l.rate, newRate))
 		l.successes = 0
 	}
 }
@@ -79,10 +107,7 @@ func (l *AdaptiveLimiter) OnRateLimit() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.ceiling = l.rate
-	l.rate = l.rate / 2
-	if l.rate < 0.5 {
-		l.rate = 0.5
-	}
+	l.rate = min(l.rate, max(0.5, l.rate/2))
 	l.successes = 0
 }
 
