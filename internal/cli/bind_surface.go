@@ -91,6 +91,9 @@ func bindSurface(cmd *cobra.Command, flags *rootFlags, s surface.Surface) func(a
 		}
 
 		for _, binding := range bindings {
+			if err := binding.validateExplicitInput(cmd, req.Body, readStdin); err != nil {
+				return req, usageErr(err)
+			}
 			definition := binding.definition
 			if readStdin && definition.In == surface.InBody || !binding.included(cmd) {
 				continue
