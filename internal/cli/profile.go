@@ -27,6 +27,15 @@ type profileStore struct {
 	Profiles map[string]Profile `json:"profiles"`
 }
 
+func isReservedProfileFlag(name string) bool {
+	switch name {
+	case "agent", "config", "help", "profile", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
 func profileStorePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -98,11 +107,8 @@ func ApplyProfileToFlags(cmd *cobra.Command, profile *Profile) error {
 	}
 	// Reserved flags that never come from a profile - they control profile
 	// resolution itself or are dangerous to overlay.
-	reserved := map[string]bool{
-		"profile": true, "config": true, "help": true,
-	}
 	for name, value := range profile.Values {
-		if reserved[name] {
+		if isReservedProfileFlag(name) {
 			continue
 		}
 		flag := cmd.Flags().Lookup(name)
@@ -178,13 +184,14 @@ func newProfileSaveCmd(flags *rootFlags) *cobra.Command {
 	var description string
 	cmd := &cobra.Command{
 		Use:   "save <name> [--<flag> <value> ...]",
-		Short: "Save the current invocation's non-default flags as a named profile",
-		Long: `Captures every flag explicitly set on the invocation and stores
-them under <name>. To update an existing profile, run save again; the
+		Short: "Save the current invocation's explicitly set flags as a named profile",
+		Long: `Captures each reusable flag explicitly set on the invocation and
+stores it under <name>. Profiles never store --agent, --config, --help,
+--profile, or --yes. To update an existing profile, run save again; the
 entry is replaced.
 
-To avoid creating empty profiles, at least one non-default flag must be
-present (other than --profile and --config).`,
+To avoid creating empty profiles, explicitly set at least one reusable
+flag.`,
 		Example: `  straddle profile save my-defaults --json --compact
   straddle profile save tonight-defaults --region US`,
 		Args: cobra.ExactArgs(1),
@@ -195,9 +202,8 @@ present (other than --profile and --config).`,
 			}
 			values := map[string]string{}
 			// Walk inherited + local flags, capture only those the user set.
-			skip := map[string]bool{"profile": true, "config": true, "help": true, "description": true}
 			visit := func(fl *pflag.Flag) {
-				if fl.Changed && !skip[fl.Name] {
+				if fl.Changed && fl.Name != "description" && !isReservedProfileFlag(fl.Name) {
 					values[fl.Name] = fl.Value.String()
 				}
 			}
