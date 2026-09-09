@@ -353,7 +353,7 @@ Every command accepts `--deliver <sink>`. The output goes to the named sink in a
 |------|--------|
 | `stdout` | Default; write to stdout only |
 | `file:<path>` | Atomically write output to `<path>` (tmp + rename) |
-| `webhook:<url>` | POST the output body to the URL (`application/json` or `application/x-ndjson` when `--compact`) |
+| `webhook:<url>` | POST the unchanged output body to the URL. Content-Type follows its framing: `application/json`, `application/x-ndjson`, or `text/plain; charset=utf-8`; `--compact` does not select the media type. |
 
 Unknown schemes are refused with a structured error naming the supported set. Webhook failures return non-zero and log the URL + HTTP status on stderr.
 
