@@ -263,11 +263,11 @@ func daysUntil(ts string, now time.Time) (int, bool) {
 	return int(math.Floor(parsed.Sub(now).Hours() / 24)), true
 }
 
-// straddleWantsJSON decides between machine output (JSON/CSV/--select/agent/
+// straddleWantsJSON decides between machine output (JSON/compact/CSV/--select/agent/
 // piped) and a human table. Mirrors the generated commands' output gating so
 // novel commands behave identically under --agent and in pipes.
 func straddleWantsJSON(cmd *cobra.Command, flags *rootFlags) bool {
-	if flags.asJSON || flags.agent || flags.csv || flags.quiet || flags.plain || flags.selectFields != "" {
+	if flags.asJSON || flags.compact || flags.agent || flags.csv || flags.quiet || flags.plain || flags.selectFields != "" {
 		return true
 	}
 	return !isTerminal(cmd.OutOrStdout()) && !humanFriendly
