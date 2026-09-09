@@ -184,13 +184,14 @@ func newProfileSaveCmd(flags *rootFlags) *cobra.Command {
 	var description string
 	cmd := &cobra.Command{
 		Use:   "save <name> [--<flag> <value> ...]",
-		Short: "Save the current invocation's non-default flags as a named profile",
-		Long: `Captures every flag explicitly set on the invocation and stores
-them under <name>. To update an existing profile, run save again; the
+		Short: "Save the current invocation's explicitly set flags as a named profile",
+		Long: `Captures each reusable flag explicitly set on the invocation and
+stores it under <name>. Profiles never store --agent, --config, --help,
+--profile, or --yes. To update an existing profile, run save again; the
 entry is replaced.
 
-To avoid creating empty profiles, at least one non-default flag must be
-present (other than --profile and --config).`,
+To avoid creating empty profiles, explicitly set at least one reusable
+flag.`,
 		Example: `  straddle profile save my-defaults --json --compact
   straddle profile save tonight-defaults --region US`,
 		Args: cobra.ExactArgs(1),
