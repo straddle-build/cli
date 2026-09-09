@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/straddle-build/straddle-cli/internal/client"
 )
 
 // DeliverSink describes where command output should be routed when
@@ -98,10 +100,10 @@ func deliverWebhook(url string, body []byte, compact bool) error {
 		return fmt.Errorf("building webhook request: %w", err)
 	}
 	req.Header.Set("Content-Type", contentType)
-	req.Header.Set("User-Agent", "github.com/straddle-build/straddle-cli/deliver")
+	req.Header.Set("User-Agent", client.UserAgent(Version(), "deliver"))
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("posting to webhook: %w", err)
 	}
