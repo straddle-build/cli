@@ -63,7 +63,9 @@ Get your API key from the [Straddle dashboard](https://dashboard.straddle.com) (
 
 ## Quick Start
 
-Paginated list commands return one page by default and warn when the response totals show more pages. Add `--all` to fetch every remaining page from `--page-number` (page 1 by default). The command preserves filters and account scoping across requests and fails if a later page fails or the response metadata proves records are missing. A read is limited to 10,000 pages; increase `--page-size` or narrow the filters for larger datasets.
+### Pagination
+
+List commands return one page by default and warn when response totals show more pages. Add `--all` to fetch every remaining result. For numbered Pay by Bank and Embed endpoints, the read starts at `--page-number` (page 1 by default), preserves repeated filters and account scoping on every request, and stops after a short page when Embed omits its nullable totals. If the CLI cannot prove the read is complete because a later request fails or pagination is missing, inconsistent, or does not advance, it fails without returning partial results as success. Numbered reads are limited to 10,000 pages; increase `--page-size` or narrow the filters for larger datasets.
 
 ```bash
 # Confirm STRADDLE_API_KEY is set and the chosen environment is reachable before anything else.

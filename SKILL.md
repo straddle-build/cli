@@ -259,7 +259,7 @@ Use raw `api` passthrough when the API has an endpoint before this CLI has a ded
 
 ### Fetch all pages
 
-For paginated list commands, use `--all` to fetch every remaining page from `--page-number` (page 1 by default). Without it, totals indicating more pages produce a truncation warning. Later-page errors or inconsistent pagination fail the command without returning partial results as success. Reads are limited to 10,000 pages; increase `--page-size` or narrow filters if needed.
+Use `--all` on paginated list commands. See the authoritative [pagination behavior and failure guarantees](README.md#pagination) before relying on a complete result set.
 
 ## Auth Setup
 
