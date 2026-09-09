@@ -263,6 +263,8 @@ Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `str
 
 Run `straddle doctor` to verify setup.
 
+For credential replacement and precedence behavior, see [Authentication](README.md#authentication).
+
 ## Platform scoping (Embed)
 
 If you build on Embed, declare your integration type once; the CLI then sends the `Straddle-Account-Id` header only where it belongs and refuses to misattribute a payment.
