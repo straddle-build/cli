@@ -3,8 +3,10 @@
 package config
 
 import (
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -128,6 +130,75 @@ func TestSave_Already0600Stays0600(t *testing.T) {
 		t.Fatalf("SaveTokens: %v", err)
 	}
 	assertMode0600(t, path, "re-save")
+}
+
+func TestSave_DoesNotExposeRotatedTokenToExistingReader(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.toml")
+	writeFileLoose(t, path, "api_key = 'old-secret'\n", 0o644)
+
+	reader, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open existing config: %v", err)
+	}
+	defer reader.Close()
+
+	cfg := &Config{Path: path}
+	if err := cfg.SaveTokens("", "", "new-secret", "", time.Time{}); err != nil {
+		t.Fatalf("SaveTokens: %v", err)
+	}
+	if _, err := reader.Seek(0, 0); err != nil {
+		t.Fatalf("rewind existing reader: %v", err)
+	}
+	oldView, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatalf("read existing reader: %v", err)
+	}
+	if strings.Contains(string(oldView), "new-secret") {
+		t.Fatalf("existing reader observed rotated secret: %q", oldView)
+	}
+	if !strings.Contains(string(oldView), "old-secret") {
+		t.Fatalf("existing reader no longer sees its original file: %q", oldView)
+	}
+
+	newView, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read replacement config: %v", err)
+	}
+	if !strings.Contains(string(newView), "new-secret") {
+		t.Fatalf("replacement config omitted rotated secret: %q", newView)
+	}
+	assertMode0600(t, path, "after atomic replacement")
+}
+
+func TestSave_PreservesExistingConfigSymlink(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.toml")
+	path := filepath.Join(dir, "config.toml")
+	writeFileLoose(t, target, "api_key = 'old-secret'\n", 0o644)
+	if err := os.Symlink(target, path); err != nil {
+		t.Fatalf("create config symlink: %v", err)
+	}
+
+	cfg := &Config{Path: path}
+	if err := cfg.SaveTokens("", "", "new-secret", "", time.Time{}); err != nil {
+		t.Fatalf("SaveTokens through symlink: %v", err)
+	}
+	info, err := os.Lstat(path)
+	if err != nil {
+		t.Fatalf("stat config symlink: %v", err)
+	}
+	if info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("config path was replaced instead of preserving symlink: mode=%v", info.Mode())
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read config through symlink: %v", err)
+	}
+	if !strings.Contains(string(data), "new-secret") {
+		t.Fatalf("symlink target omitted rotated secret: %q", data)
+	}
+	assertMode0600(t, target, "symlink target after replacement")
 }
 
 // TestSave_PersistsTokenContent confirms the permission hardening did not
