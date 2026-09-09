@@ -73,7 +73,7 @@ func LooksLikeAuthError(msg string) bool {
 
 // credPatterns matches credential-shaped substrings (API keys, bearer
 // tokens, key=... query params) for redaction from user-visible output.
-var credPatterns = regexp.MustCompile(`(?i)(sk-[a-zA-Z0-9]{8,}|sk_live_[a-zA-Z0-9]+|Bearer\s+[a-zA-Z0-9._+/=-]+|key=[a-zA-Z0-9._+/=-]+)`)
+var credPatterns = regexp.MustCompile(`(?i)(sk-[a-zA-Z0-9]{8,}|sk_live_[a-zA-Z0-9]+|Bearer\s+[a-zA-Z0-9._+/=-]+|key=(?:[a-zA-Z0-9._+/=-]|%[0-9a-f]{2})+)`)
 
 // RedactCredentials strips credential-shaped strings from s without
 // truncating it. Applied to API error bodies at the source so a hostile
