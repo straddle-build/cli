@@ -23,7 +23,7 @@ func newImportCmd(flags *rootFlags) *cobra.Command {
 		Short: "Import data from JSONL file via API create/upsert calls",
 		Long: `Import data from a JSONL file by issuing POST requests for each record.
 Each line must be a valid JSON object. Failed records are logged to stderr
-but do not stop the import.`,
+but do not stop the import. Dry-run JSON summaries include dry_run: true.`,
 		Example: `  # Import from a JSONL file
   straddle import <resource> --input data.jsonl
 
@@ -86,13 +86,16 @@ but do not stop the import.`,
 				return fmt.Errorf("reading input: %w", err)
 			}
 
-			// JSON envelope: {succeeded, failed, skipped}.
 			if flags.asJSON {
-				return printJSONFiltered(cmd.OutOrStdout(), map[string]any{
+				result := map[string]any{
 					"succeeded": success,
 					"failed":    failed,
 					"skipped":   skipped,
-				}, flags)
+				}
+				if dryRun {
+					result["dry_run"] = true
+				}
+				return printJSONFiltered(cmd.OutOrStdout(), result, flags)
 			}
 			fmt.Fprintf(os.Stderr, "Import complete: %d succeeded, %d failed, %d skipped\n", success, failed, skipped)
 			return nil
