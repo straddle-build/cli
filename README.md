@@ -85,6 +85,8 @@ straddle pipeline --cancelable --json
 
 ```
 
+`--rate-limit` sets the maximum requests per second shared by concurrent calls. The limiter slows down after HTTP 429 responses and recovers without exceeding that maximum. Use `0` to disable it. Negative, non-finite, or unrepresentable pacing values are rejected before any request.
+
 ## Unique Features
 
 These capabilities aren't available in any other tool for this API.

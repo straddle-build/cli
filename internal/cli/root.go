@@ -14,6 +14,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/straddle-build/straddle-cli/internal/client"
+	"github.com/straddle-build/straddle-cli/internal/cliutil"
 	"github.com/straddle-build/straddle-cli/internal/config"
 )
 
@@ -241,6 +242,9 @@ See README.md or the bundled SKILL.md for recipes.`,
 			if err := ApplyProfileToFlags(cmd, profile); err != nil {
 				return err
 			}
+		}
+		if err := cliutil.ValidateRateLimit(flags.rateLimit); err != nil {
+			return usageErr(err)
 		}
 		if flags.agent {
 			if !cmd.Flags().Changed("json") {
