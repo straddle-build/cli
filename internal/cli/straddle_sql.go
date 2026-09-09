@@ -133,14 +133,14 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 		Use:         "sql [query]",
 		Short:       "Run read-only SQL against the local synced SQLite store",
 		Annotations: map[string]string{"mcp:read-only": "true"},
-		Long: "Run exactly one read-only SQL statement (SELECT or WITH ... SELECT) against\n" +
+		Long: "Run exactly one SQL statement beginning with SELECT or WITH against\n" +
 			"the local SQLite store populated by sync. Tables match resource names:\n" +
 			"payments, customers, paykeys, funding_events, accounts, organizations,\n" +
 			"representatives, linked_bank_accounts. The JSON resource body is in the\n" +
-			"`data` column (use json_extract(data, '$.field')). A WITH clause must end\n" +
-			"in SELECT. Additional statements and all mutations are rejected before\n" +
-			"SQLite executes them; semicolons in literals, quoted identifiers, and\n" +
-			"comments remain part of the statement.",
+			"`data` column (use json_extract(data, '$.field')). Additional statements\n" +
+			"are rejected before execution. The store is opened read-only, so SQLite\n" +
+			"rejects mutations. Semicolons in literals, quoted identifiers, and comments\n" +
+			"remain part of the statement.",
 		Example: "  straddle sql \"SELECT json_extract(data,'\\$.status') AS status, COUNT(*) n FROM payments GROUP BY status\" --json\n" +
 			"  straddle sql \"SELECT id, json_extract(data,'\\$.amount') AS amount FROM payments ORDER BY amount DESC LIMIT 10\"",
 		RunE: func(cmd *cobra.Command, args []string) error {
