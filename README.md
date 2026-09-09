@@ -342,6 +342,9 @@ Config file: `~/.config/straddle/config.toml`
 
 Static request headers can be configured under `headers`; per-command header overrides take precedence.
 
+API requests send `User-Agent: straddle-cli/<version>` by default. To replace the default, set `User-Agent` under `headers` or pass a per-command override.
+Webhook deliveries use `straddle-cli/<version> (deliver)`, and feedback submissions use `straddle-cli/<version> (feedback)`.
+
 Environment variables:
 
 | Name | Kind | Required | Description |

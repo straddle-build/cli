@@ -333,6 +333,7 @@ func (f *rootFlags) newClient() (*client.Client, error) {
 	}
 	applyStraddleAccount(cfg, f)
 	c := client.New(cfg, f.timeout, f.rateLimit)
+	c.Version = Version()
 	c.DryRun = f.dryRun
 	c.NoCache = f.noCache
 	return c, nil

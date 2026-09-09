@@ -26,14 +26,36 @@ import (
 
 const BinaryResponseHeader = "X-Straddle-Binary-Response"
 
+// userAgentProduct is the product token sent on every outbound request.
+// The Straddle API parses User-Agent as an RFC 9110 product list and
+// answers HTTP 500 to module-path style values such as
+// "github.com/org/repo/v1", so every value must come from UserAgent.
+const userAgentProduct = "straddle-cli"
+
+// UserAgent formats the CLI's User-Agent header: the product token, the
+// CLI version when known, and an optional parenthesised comment naming
+// the subsystem (deliver, feedback) that sent the request.
+func UserAgent(version, comment string) string {
+	value := userAgentProduct
+	if version != "" {
+		value += "/" + version
+	}
+	if comment != "" {
+		value += " (" + comment + ")"
+	}
+	return value
+}
+
 type Client struct {
 	BaseURL    string
 	Config     *config.Config
 	HTTPClient *http.Client
 	DryRun     bool
 	NoCache    bool
-	cacheDir   string
-	limiter    *cliutil.AdaptiveLimiter
+	// Version is the CLI version reported in the User-Agent header.
+	Version  string
+	cacheDir string
+	limiter  *cliutil.AdaptiveLimiter
 }
 
 // APIError carries HTTP status information for structured exit codes.
@@ -523,7 +545,7 @@ func (c *Client) doInternalWithValues(method, path string, params map[string]str
 			req.Header.Del(BinaryResponseHeader)
 		}
 		if req.Header.Get("User-Agent") == "" {
-			req.Header.Set("User-Agent", "github.com/straddle-build/straddle-cli/v1")
+			req.Header.Set("User-Agent", UserAgent(c.Version, ""))
 		}
 		// Go's net/http omits Accept by default; browsers, curl, and other
 		// stdlibs always send it. Fingerprint-checking WAFs (Imperva, Akamai,

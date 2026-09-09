@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/straddle-build/straddle-cli/internal/client"
 )
 
 // FeedbackEntry is one line in the local feedback ledger. Every run of
@@ -80,9 +81,9 @@ func postFeedback(url string, entry FeedbackEntry) error {
 		return fmt.Errorf("building feedback request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "github.com/straddle-build/straddle-cli/feedback")
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Do(req)
+	req.Header.Set("User-Agent", client.UserAgent(Version(), "feedback"))
+	httpClient := &http.Client{Timeout: 15 * time.Second}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("posting feedback: %w", err)
 	}
