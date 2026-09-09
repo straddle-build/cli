@@ -1129,17 +1129,30 @@ func (s *Store) List(resourceType string, limit int) ([]json.RawMessage, error) 
 }
 
 func (s *Store) Search(query string, limit int) ([]json.RawMessage, error) {
+	return s.search(query, "", limit)
+}
+
+// SearchTyped performs full-text search restricted to one stored resource type.
+// The type is bound as a query parameter so arbitrary input cannot alter SQL.
+func (s *Store) SearchTyped(resourceType, query string, limit int) ([]json.RawMessage, error) {
+	return s.search(query, resourceType, limit)
+}
+
+func (s *Store) search(query, resourceType string, limit int) ([]json.RawMessage, error) {
 	if limit <= 0 {
 		limit = 50
 	}
-	rows, err := s.db.Query(
-		`SELECT r.data FROM resources r
-		 JOIN resources_fts f ON r.id = f.id AND r.resource_type = f.resource_type
-		 WHERE resources_fts MATCH ?
-		 ORDER BY rank
-		 LIMIT ?`,
-		query, limit,
-	)
+	statement := `SELECT r.data FROM resources r
+		JOIN resources_fts f ON r.id = f.id AND r.resource_type = f.resource_type
+		WHERE resources_fts MATCH ?`
+	args := []any{query}
+	if resourceType != "" {
+		statement += ` AND r.resource_type = ?`
+		args = append(args, resourceType)
+	}
+	statement += ` ORDER BY rank LIMIT ?`
+	args = append(args, limit)
+	rows, err := s.db.Query(statement, args...)
 	if err != nil {
 		return nil, err
 	}
