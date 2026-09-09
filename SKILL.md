@@ -263,7 +263,7 @@ Straddle uses a Bearer JWT API key. Set `STRADDLE_API_KEY` or save one with `str
 
 Run `straddle doctor` to verify setup.
 
-`auth set-token` replaces the credentials saved in the config file. An exported `STRADDLE_API_KEY` still overrides the saved token, but is never copied to disk by this command. After unsetting it, requests use the saved token.
+For credential replacement and precedence behavior, see [Authentication](README.md#authentication).
 
 ## Platform scoping (Embed)
 
