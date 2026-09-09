@@ -236,6 +236,22 @@ func writeThroughCache(ctx context.Context, resourceType string, data json.RawMe
 			// field alongside real data (e.g. {"id":"order","items":[],
 			// "status":"pending"}) must still cache as a single row.
 			if items == nil && len(envelope) > 0 {
+				// Detail responses use the same meta/data envelope as lists, but
+				// carry one object under data. Persist the resource object so its
+				// identifier can be indexed for offline lookup.
+				if raw, ok := envelope["data"]; ok {
+					// Unmasked and reveal routes are deliberately excluded from
+					// the local FTS mirror. Keep their sensitive detail payloads
+					// out of this write-through path.
+					if resourceType == "unmasked" || resourceType == "reveal" {
+						return
+					}
+					var object map[string]json.RawMessage
+					if json.Unmarshal(raw, &object) == nil && object != nil {
+						_, _, _ = db.UpsertBatch(resourceType, []json.RawMessage{raw})
+						return
+					}
+				}
 				looksLikeListEnvelope := false
 				hasListWrapperArray := false
 				for _, key := range []string{"results", "data", "items"} {
