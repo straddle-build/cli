@@ -72,7 +72,7 @@ func IsSupported(op Operation) bool {
 
 func hasJSONMediaType(mediaTypes []string) bool {
 	for _, mediaType := range mediaTypes {
-		mediaType = strings.ToLower(strings.TrimSpace(mediaType))
+		mediaType = strings.ToLower(strings.TrimSpace(strings.SplitN(mediaType, ";", 2)[0]))
 		if mediaType == "application/json" || strings.HasSuffix(mediaType, "+json") {
 			return true
 		}
