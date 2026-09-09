@@ -65,6 +65,19 @@ and full resync. After archiving, use 'search' for instant full-text search.`,
 				}
 			}
 
+			// syncResource treats !humanFriendly as machine mode and emits NDJSON
+			// progress events straight to os.Stdout, but humanFriendly defaults to
+			// false for color-safety and only --human-friendly sets it. Archive's
+			// own output is a summary (human text or a single JSON object), not an
+			// event stream, so a bare `workflow archive` would leak machine events
+			// onto stdout and collide with the --agent JSON summary. Force
+			// humanFriendly on for the duration of the sync loop so progress and
+			// warnings route to stderr as readable prose, keeping archive's stdout
+			// clean for its own summary. `sync` is unaffected (separate RunE).
+			prevHumanFriendly := humanFriendly
+			humanFriendly = true
+			defer func() { humanFriendly = prevHumanFriendly }()
+
 			for _, resource := range resources {
 				res := syncResource(c, s, resource, "", full, 100, false, nil)
 				if res.Err != nil {
