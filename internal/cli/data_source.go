@@ -201,6 +201,18 @@ var listEnvelopeMetadataKeys = map[string]bool{
 // explicit syncs. Unmasked and revealed responses are excluded because they contain
 // sensitive data. The function ignores local write failures because the live API
 // request already succeeded.
+func isObjectResponseEnvelope(envelope map[string]json.RawMessage) bool {
+	if _, ok := envelope["meta"]; !ok {
+		return false
+	}
+	responseType, ok := envelope["response_type"]
+	if !ok || string(responseType) == "null" {
+		return false
+	}
+	var object map[string]json.RawMessage
+	return json.Unmarshal(envelope["data"], &object) == nil && object != nil
+}
+
 func writeThroughCache(ctx context.Context, resourceType string, data json.RawMessage) {
 	if resourceType == "unmask" || resourceType == "unmasked" || resourceType == "reveal" {
 		return
@@ -245,12 +257,9 @@ func writeThroughCache(ctx context.Context, resourceType string, data json.RawMe
 				// Detail responses use the same meta/data envelope as lists, but
 				// carry one object under data. Persist the resource object so its
 				// identifier can be indexed for offline lookup.
-				if raw, ok := envelope["data"]; ok {
-					var object map[string]json.RawMessage
-					if json.Unmarshal(raw, &object) == nil && object != nil {
-						_, _, _ = db.UpsertBatch(resourceType, []json.RawMessage{raw})
-						return
-					}
+				if isObjectResponseEnvelope(envelope) {
+					_, _, _ = db.UpsertBatch(resourceType, []json.RawMessage{envelope["data"]})
+					return
 				}
 				looksLikeListEnvelope := false
 				hasListWrapperArray := false
