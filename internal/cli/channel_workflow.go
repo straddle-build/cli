@@ -4,6 +4,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,7 +32,9 @@ func newWorkflowArchiveCmd(flags *rootFlags) *cobra.Command {
 		Short: "Sync all resources to local store for offline access and search",
 		Long: `Archive fetches all syncable resources from the API and stores them in a
 local SQLite database. Supports incremental sync (only new data since last run)
-and full resync. After archiving, use 'search' for instant full-text search.`,
+and full resync. After archiving, use 'search' for instant full-text search.
+Resource failures retain successfully archived data and the summary, but return
+a nonzero exit status. Access warnings remain nonfatal.`,
 		Example: `  # Archive all resources
   straddle workflow archive
 
@@ -55,6 +58,8 @@ and full resync. After archiving, use 'search' for instant full-text search.`,
 
 			resources := []string{"accounts", "customers", "funding-events", "linked-bank-accounts", "organizations", "paykeys", "payments", "representatives"}
 			totalSynced := 0
+			resourcesSynced := 0
+			var resourceErrors []error
 
 			// --full clears the cursor here because syncResource reads
 			// existingCursor unconditionally; its full param only gates the
@@ -80,7 +85,9 @@ and full resync. After archiving, use 'search' for instant full-text search.`,
 
 			for _, resource := range resources {
 				res := syncResource(c, s, resource, "", full, 100, false, nil)
+				totalSynced += res.Count
 				if res.Err != nil {
+					resourceErrors = append(resourceErrors, res.Err)
 					fmt.Fprintf(cmd.ErrOrStderr(), "  %s: error: %v\n", resource, res.Err)
 					continue
 				}
@@ -88,22 +95,28 @@ and full resync. After archiving, use 'search' for instant full-text search.`,
 					fmt.Fprintf(cmd.ErrOrStderr(), "  %s: warning: %v\n", resource, res.Warn)
 					continue
 				}
-				totalSynced += res.Count
+				resourcesSynced++
 				fmt.Fprintf(cmd.ErrOrStderr(), "  %s: %d synced\n", resource, res.Count)
 			}
 
 			if flags.asJSON {
 				enc := json.NewEncoder(cmd.OutOrStdout())
 				enc.SetIndent("", "  ")
-				return enc.Encode(map[string]any{
-					"resources_synced": len(resources),
+				if err := enc.Encode(map[string]any{
+					"resources_synced": resourcesSynced,
 					"total_items":      totalSynced,
 					"store_path":       dbPath,
 					"timestamp":        time.Now().UTC().Format(time.RFC3339),
-				})
+				}); err != nil {
+					return err
+				}
+			} else {
+				fmt.Fprintf(cmd.OutOrStdout(), "Archived %d items across %d resources to %s\n", totalSynced, resourcesSynced, dbPath)
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Archived %d items across %d resources to %s\n", totalSynced, len(resources), dbPath)
+			if len(resourceErrors) > 0 {
+				return fmt.Errorf("archive failed for %d of %d resources: %w", len(resourceErrors), len(resources), errors.Join(resourceErrors...))
+			}
 			return nil
 		},
 	}
