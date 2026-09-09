@@ -17,13 +17,13 @@ stdout:
   "success": false
 }
 >>>
-stderr_bytes: 178
+stderr_bytes: 176
 stderr:
 <<<
 PATCH http://golden.test/v1/paykeys/550e8400-e29b-41d4-a716-446655440000/review
   Body:
 {
-    "status": "verified"
+    "status": "active"
   }
   Authorization: ****_key
 
@@ -49,13 +49,13 @@ stdout:
   "success": false
 }
 >>>
-stderr_bytes: 178
+stderr_bytes: 176
 stderr:
 <<<
 PATCH http://golden.test/v1/paykeys/550e8400-e29b-41d4-a716-446655440000/review
   Body:
 {
-    "status": "verified"
+    "status": "active"
   }
   Authorization: ****_key
 

@@ -196,8 +196,8 @@ func (b *surfaceFlagBinding) value() (surfaceFlagValue, error) {
 func validateSurfaceEnum(cmd *cobra.Command, definition surface.Flag, values []string) error {
 	allowedValues := definition.Enum
 	if flag := cmd.Flags().Lookup(definition.Name); flag != nil {
-		if values, exists := flag.Annotations["straddle:enum"]; exists {
-			allowedValues = values
+		if annotated, exists := flag.Annotations["straddle:enum"]; exists && len(annotated) > 0 {
+			allowedValues = annotated
 		}
 	}
 	if len(allowedValues) == 0 {

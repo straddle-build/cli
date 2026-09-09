@@ -5,6 +5,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -352,4 +354,103 @@ func isolateSurfaceConfig(t *testing.T, baseURL string) {
 	t.Setenv("STRADDLE_BASE_URL", baseURL)
 	t.Setenv("STRADDLE_VERIFY", "")
 	t.Setenv("STRADDLE_VERIFY_LIVE_HTTP", "")
+}
+
+func TestValidateSurfaceEnum(t *testing.T) {
+	definitionEnum := []string{"active", "rejected"}
+	cases := []struct {
+		name          string
+		annotationSet bool
+		annotation    []string
+		values        []string
+		definition    []string
+		wantErr       string
+	}{
+		{
+			name:       "no annotation uses definition enum invalid rejected",
+			values:     []string{"invalid_garbage"},
+			definition: definitionEnum,
+			wantErr:    `invalid value "invalid_garbage" for --status (allowed: active, rejected)`,
+		},
+		{
+			name:       "no annotation uses definition enum valid accepted",
+			values:     []string{"active"},
+			definition: definitionEnum,
+		},
+		{
+			name:          "non-empty annotation overrides definition invalid rejected",
+			annotationSet: true,
+			annotation:    []string{"on", "off"},
+			values:        []string{"maybe"},
+			definition:    definitionEnum,
+			wantErr:       `invalid value "maybe" for --status (allowed: on, off)`,
+		},
+		{
+			name:          "non-empty annotation overrides definition valid accepted",
+			annotationSet: true,
+			annotation:    []string{"on", "off"},
+			values:        []string{"off"},
+			definition:    definitionEnum,
+		},
+		{
+			name:          "empty annotation falls back to definition enum invalid rejected",
+			annotationSet: true,
+			annotation:    nil,
+			values:        []string{"invalid_garbage"},
+			definition:    definitionEnum,
+			wantErr:       `invalid value "invalid_garbage" for --status (allowed: active, rejected)`,
+		},
+		{
+			name:       "empty definition and no annotation skips validation",
+			values:     []string{"anything_goes"},
+			definition: nil,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			definition := surface.Flag{Name: "status", Kind: surface.KindString, Enum: tc.definition}
+			cmd := &cobra.Command{Use: "test"}
+			cmd.Flags().String("status", "", "")
+			if tc.annotationSet {
+				flag := cmd.Flags().Lookup("status")
+				if flag.Annotations == nil {
+					flag.Annotations = map[string][]string{}
+				}
+				flag.Annotations["straddle:enum"] = tc.annotation
+			}
+			err := validateSurfaceEnum(cmd, definition, tc.values)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err == nil || err.Error() != tc.wantErr {
+				t.Fatalf("error = %v, want %q", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+var testOverlayEnumSeq atomic.Int64
+
+func TestOverlayEnumSetWithoutEnumPanics(t *testing.T) {
+	endpoint := fmt.Sprintf("test.enum-panic.%d", testOverlayEnumSeq.Add(1))
+	registerCommandOverlay(endpoint, commandOverlay{
+		flags: []flagOverlay{
+			{name: "status", usage: "Status", enumSet: true},
+		},
+	})
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("status", "", "Status")
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected panic when enumSet is set without enum values")
+		}
+		if msg := fmt.Sprint(r); !strings.Contains(msg, "enumSet") || !strings.Contains(msg, "enum") {
+			t.Fatalf("unexpected panic message: %v", r)
+		}
+	}()
+	applyOverlay(endpoint, cmd)
 }

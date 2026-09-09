@@ -73,7 +73,7 @@ func init() {
 		long:    "",
 		example: "  straddle paykeys review update 550e8400-e29b-41d4-a716-446655440000 --status active",
 		flags: []flagOverlay{
-			{name: "status", usage: "Status", enumSet: true},
+			{name: "status", usage: "Status (one of: active, rejected)", enumSet: true, enum: []string{"active", "rejected"}},
 			{name: "stdin", usage: "Read request body as JSON from stdin"},
 		},
 		resource: "review",

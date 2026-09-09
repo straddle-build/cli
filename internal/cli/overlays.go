@@ -54,6 +54,9 @@ func registerCommandOverlay(endpoint string, overlay commandOverlay) {
 				flag.DefValue = change.defaultVal
 			}
 			if change.enumSet {
+				if len(change.enum) == 0 {
+					panic(fmt.Sprintf("endpoint overlay %q sets enumSet for --%s without enum values", endpoint, change.name))
+				}
 				if flag.Annotations == nil {
 					flag.Annotations = map[string][]string{}
 				}
