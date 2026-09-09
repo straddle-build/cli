@@ -34,7 +34,9 @@ func newWorkflowArchiveCmd(flags *rootFlags) *cobra.Command {
 local SQLite database. Supports incremental sync (only new data since last run)
 and full resync. After archiving, use 'search' for instant full-text search.
 Resource failures retain successfully archived data and the summary, but return
-a nonzero exit status. Access warnings remain nonfatal.`,
+a nonzero exit status. Access warnings remain nonfatal. In JSON and agent output,
+resources_synced counts completed resources while total_items includes items
+stored before a resource failed.`,
 		Example: `  # Archive all resources
   straddle workflow archive
 
