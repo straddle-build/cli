@@ -64,7 +64,7 @@ func CheckSpecAgainstRepo(specPath, repo string) (CheckResult, error) {
 	}
 	result.StaleGenerated = append(result.StaleGenerated, generated.Generated...)
 	result.StaleGenerated = append(result.StaleGenerated, generated.Deleted...)
-	sort.Strings(result.StaleGenerated)
+	result.StaleGenerated = uniqueSortedStrings(result.StaleGenerated)
 	result.OK = result.OK && len(result.StaleGenerated) == 0
 	return result, nil
 }

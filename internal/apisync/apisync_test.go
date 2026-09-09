@@ -245,6 +245,145 @@ func TestCheckSpecAgainstRepoReportsStaleGeneratedSurface(t *testing.T) {
 	}
 }
 
+func TestCheckSpecAgainstRepoDedupesStaleGeneratedOnEndpointCollision(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	cliDir := filepath.Join(repo, "internal", "cli")
+	if err := os.MkdirAll(cliDir, 0o755); err != nil {
+		t.Fatalf("create cli directory: %v", err)
+	}
+
+	// v1: CreateThing is supported (JSON body) and owns internal/cli/things_create.go.
+	v1Spec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/things": {
+				"post": {
+					"tags": ["things"],
+					"operationId": "CreateThing",
+					"summary": "Create a thing",
+					"requestBody": {
+						"required": true,
+						"content": {
+							"application/json": {
+								"schema": {"$ref": "#/components/schemas/CreateThing"}
+							}
+						}
+					}
+				}
+			}
+		},
+		"components": {
+			"schemas": {
+				"CreateThing": {
+					"type": "object",
+					"properties": {"name": {"type": "string"}},
+					"required": ["name"]
+				}
+			}
+		}
+	}`)
+	if _, err := apisync.GenerateAll(v1Spec, repo, false); err != nil {
+		t.Fatalf("GenerateAll v1: %v", err)
+	}
+	collisionPath := filepath.Join(cliDir, "things_create.go")
+	if _, err := os.Stat(collisionPath); err != nil {
+		t.Fatalf("v1 did not materialize %s: %v", collisionPath, err)
+	}
+
+	// v2: CreateThing drops application/json (now unsupported) while a new
+	// supported CreateThings operation derives to the same endpoint/filename.
+	v2Spec := writeSpec(t, `{
+		"openapi": "3.1.0",
+		"paths": {
+			"/v1/things": {
+				"post": {
+					"tags": ["things"],
+					"operationId": "CreateThing",
+					"summary": "Create a thing",
+					"requestBody": {
+						"required": true,
+						"content": {
+							"multipart/form-data": {"schema": {"type": "object"}}
+						}
+					}
+				}
+			},
+			"/v1/things/bulk": {
+				"post": {
+					"tags": ["things"],
+					"operationId": "CreateThings",
+					"summary": "Create things in bulk",
+					"requestBody": {
+						"required": true,
+						"content": {
+							"application/json": {
+								"schema": {"$ref": "#/components/schemas/CreateThings"}
+							}
+						}
+					}
+				}
+			}
+		},
+		"components": {
+			"schemas": {
+				"CreateThings": {
+					"type": "object",
+					"properties": {"name": {"type": "string"}},
+					"required": ["name"]
+				}
+			}
+		}
+	}`)
+
+	// Precondition: both operations collapse to the same endpoint (things.create),
+	// so GenerateAll would otherwise record things_create.go in both Deleted and Generated.
+	v2Ops, err := apisync.LoadSpec(v2Spec)
+	if err != nil {
+		t.Fatalf("LoadSpec v2: %v", err)
+	}
+	endpoints := map[string]string{}
+	for _, op := range v2Ops {
+		endpoints[op.OperationID] = op.Endpoint
+	}
+	if endpoints["CreateThing"] != "things.create" || endpoints["CreateThings"] != "things.create" {
+		t.Fatalf("expected both operations to derive to things.create, got %#v", endpoints)
+	}
+
+	// Hand-authored annotation for the supported CreateThings operation keeps the
+	// collision isolated from coverage gaps (Missing must stay empty).
+	annotation := `package cli
+
+var thingsBulkAnnotation = map[string]string{
+	"straddle:endpoint": "things.create",
+	"straddle:operation-id": "CreateThings",
+	"straddle:method": "POST",
+	"straddle:path": "/v1/things/bulk",
+}
+`
+	if err := os.WriteFile(filepath.Join(cliDir, "things_bulk.go"), []byte(annotation), 0o600); err != nil {
+		t.Fatalf("write annotation: %v", err)
+	}
+
+	result, err := apisync.CheckSpecAgainstRepo(v2Spec, repo)
+	if err != nil {
+		t.Fatalf("CheckSpecAgainstRepo: %v", err)
+	}
+	if len(result.Missing) != 0 {
+		t.Fatalf("Missing = %#v, want empty so the collision is isolated to StaleGenerated", result.Missing)
+	}
+	if len(result.StaleGenerated) != 1 {
+		t.Fatalf("StaleGenerated = %#v, want exactly one %s (deduplicated)", result.StaleGenerated, collisionPath)
+	}
+	if result.StaleGenerated[0] != collisionPath {
+		t.Fatalf("StaleGenerated[0] = %q, want %q", result.StaleGenerated[0], collisionPath)
+	}
+	if !result.HasBlockingIssues() {
+		t.Fatalf("HasBlockingIssues = false, want stale generated file to block")
+	}
+}
+
 func TestAPISyncWorkflowAlwaysProposesNewPublishedContracts(t *testing.T) {
 	t.Parallel()
 
