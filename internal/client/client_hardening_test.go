@@ -87,39 +87,52 @@ func TestClient_CheckRedirectCredentialPolicy(t *testing.T) {
 	}
 }
 
-// TestClient_APIErrorRedactsReflectedBearerToken exercises the real HTTP error
+// TestClient_APIErrorRedactsReflectedCredentials exercises the real HTTP error
 // path: a hostile or misconfigured server that reflects a credential in a 4xx
-// body must not leak that token through APIError.Error().
-func TestClient_APIErrorRedactsReflectedBearerToken(t *testing.T) {
+// body must not leak that credential through APIError.Error().
+func TestClient_APIErrorRedactsReflectedCredentials(t *testing.T) {
 	t.Parallel()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(`{"msg":"echo Authorization: Bearer abc123"}`))
-	}))
-	defer server.Close()
+	tests := []struct {
+		name       string
+		credential string
+		body       string
+	}{
+		{"bearer token", "abc123", `{"msg":"echo Authorization: Bearer abc123"}`},
+		{"percent-encoded base64 query key", "fixture%2Bpart%2Fwith%3Dpadding", `{"msg":"echo ?key=fixture%2Bpart%2Fwith%3Dpadding"}`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer server.Close()
 
-	client := New(&config.Config{
-		BaseURL:       server.URL,
-		AuthHeaderVal: "Bearer abc123",
-	}, time.Second, 0)
-	client.NoCache = true
+			client := New(&config.Config{
+				BaseURL:       server.URL,
+				AuthHeaderVal: "Bearer abc123",
+			}, time.Second, 0)
+			client.NoCache = true
 
-	_, err := client.Get("/leak", nil)
-	if err == nil {
-		t.Fatal("Get() error = nil, want APIError")
-	}
-	var apiErr *APIError
-	if !errors.As(err, &apiErr) {
-		t.Fatalf("Get() error type = %T, want *APIError", err)
-	}
-	msg := err.Error()
-	if strings.Contains(msg, "abc123") {
-		t.Fatalf("API error leaked bearer token: %q", msg)
-	}
-	if !strings.Contains(msg, "[REDACTED]") {
-		t.Fatalf("API error = %q, want redaction marker", msg)
+			_, err := client.Get("/leak", nil)
+			if err == nil {
+				t.Fatal("Get() error = nil, want APIError")
+			}
+			var apiErr *APIError
+			if !errors.As(err, &apiErr) {
+				t.Fatalf("Get() error type = %T, want *APIError", err)
+			}
+			msg := err.Error()
+			if strings.Contains(msg, tc.credential) {
+				t.Fatalf("API error leaked credential: %q", msg)
+			}
+			if !strings.Contains(msg, "[REDACTED]") {
+				t.Fatalf("API error = %q, want redaction marker", msg)
+			}
+			t.Logf("user-visible API error: %s", msg)
+		})
 	}
 }
 

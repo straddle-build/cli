@@ -46,3 +46,23 @@ func TestRedactCredentials(t *testing.T) {
 		})
 	}
 }
+
+func TestRedactCredentialsBase64StandardValues(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"bearer token", "Bearer fixture+part/with=padding", "[REDACTED]"},
+		{"key query parameter", `{"detail":"?key=fixture+part/with=padding"}`, `{"detail":"?[REDACTED]"}`},
+		{"percent-encoded key query parameter", `{"detail":"?key=fixture%2Bpart%2Fwith%3Dpadding"}`, `{"detail":"?[REDACTED]"}`},
+		{"sanitized error body", `{"error":"Bearer fixture+part/with=padding"}`, `{"error":"[REDACTED]"}`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := RedactCredentials(tc.in); got != tc.want {
+				t.Fatalf("RedactCredentials(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
