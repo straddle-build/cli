@@ -46,6 +46,10 @@ Although sync orchestration spans more than one file, the overall pattern is str
 
 If the store is empty, commands like search or reconciliation will not be useful until sync runs.
 
+Successful API reads in the default data-source mode also update the local store. The write-through path stores list results and individual resources returned inside the API's `data` envelope, making them available for later offline lookup and search without another sync.
+
+The write-through path never stores unmasked or revealed responses because those responses contain sensitive data. A local write failure does not fail the API request.
+
 ## Where to start in code
 
 - `internal/store/store.go`

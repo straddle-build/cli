@@ -196,9 +196,11 @@ var listEnvelopeMetadataKeys = map[string]bool{
 	"next": true, "prev": true, "previous": true, "first": true, "last": true,
 }
 
-// writeThroughCache upserts live API results into the local SQLite store so
-// FTS search covers everything the user has looked up — not just explicit syncs.
-// Best-effort: failures are silently ignored (the live result already succeeded).
+// writeThroughCache upserts nonsensitive live API results into the local SQLite
+// store so full-text search includes resources returned by API reads, not just
+// explicit syncs. Unmasked and revealed responses are excluded because they contain
+// sensitive data. The function ignores local write failures because the live API
+// request already succeeded.
 func writeThroughCache(ctx context.Context, resourceType string, data json.RawMessage) {
 	if resourceType == "unmask" || resourceType == "unmasked" || resourceType == "reveal" {
 		return
