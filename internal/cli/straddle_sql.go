@@ -39,8 +39,8 @@ func stripLeadingSQLNoiseCLI(query string) string {
 	}
 }
 
-// validateReadOnlySQL allows only SELECT / WITH queries, enforcing the
-// CLI's read-only SQL boundary.
+// validateReadOnlySQL allows exactly one SELECT statement, optionally with a
+// leading WITH clause, enforcing the CLI's read-only SQL boundary.
 func validateReadOnlySQL(query string) error {
 	if count := countSQLStatements(query); count != 1 {
 		return fmt.Errorf("only one read-only SQL statement is allowed")
@@ -219,12 +219,14 @@ func newSQLCmd(flags *rootFlags) *cobra.Command {
 		Use:         "sql [query]",
 		Short:       "Run read-only SQL against the local synced SQLite store",
 		Annotations: map[string]string{"mcp:read-only": "true"},
-		Long: "Run an ad-hoc read-only SQL query (SELECT or WITH ... SELECT) against the\n" +
-			"local SQLite store populated by sync. Tables match resource names:\n" +
+		Long: "Run exactly one read-only SQL statement (SELECT or WITH ... SELECT) against\n" +
+			"the local SQLite store populated by sync. Tables match resource names:\n" +
 			"payments, customers, paykeys, funding_events, accounts, organizations,\n" +
 			"representatives, linked_bank_accounts. The JSON resource body is in the\n" +
-			"`data` column (use json_extract(data, '$.field')). Read-only: only\n" +
-			"SELECT/WITH are accepted.",
+			"`data` column (use json_extract(data, '$.field')). A WITH clause must end\n" +
+			"in SELECT. Additional statements and all mutations are rejected before\n" +
+			"SQLite executes them; semicolons in literals, quoted identifiers, and\n" +
+			"comments remain part of the statement.",
 		Example: "  straddle sql \"SELECT json_extract(data,'\\$.status') AS status, COUNT(*) n FROM payments GROUP BY status\" --json\n" +
 			"  straddle sql \"SELECT id, json_extract(data,'\\$.amount') AS amount FROM payments ORDER BY amount DESC LIMIT 10\"",
 		RunE: func(cmd *cobra.Command, args []string) error {
