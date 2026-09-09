@@ -215,5 +215,50 @@ func (c *Config) save() error {
 	if err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
 	}
-	return os.WriteFile(c.Path, data, 0o600)
+	return writeConfigAtomically(c.Path, data)
+}
+
+func writeConfigAtomically(path string, data []byte) error {
+	targetPath := path
+	info, err := os.Lstat(path)
+	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+		targetPath, err = filepath.EvalSymlinks(path)
+		if err != nil {
+			return fmt.Errorf("resolving config symlink: %w", err)
+		}
+	} else if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("inspecting config path: %w", err)
+	}
+
+	temp, err := os.CreateTemp(filepath.Dir(targetPath), "."+filepath.Base(targetPath)+".tmp-*")
+	if err != nil {
+		return fmt.Errorf("creating temporary config: %w", err)
+	}
+	tempPath := temp.Name()
+	cleanup := func(cause error) error {
+		if removeErr := os.Remove(tempPath); removeErr != nil && !os.IsNotExist(removeErr) {
+			return fmt.Errorf("%w (removing temporary config: %w)", cause, removeErr)
+		}
+		return cause
+	}
+
+	if err := temp.Chmod(0o600); err != nil {
+		_ = temp.Close()
+		return cleanup(fmt.Errorf("restricting temporary config permissions: %w", err))
+	}
+	if _, err := temp.Write(data); err != nil {
+		_ = temp.Close()
+		return cleanup(fmt.Errorf("writing temporary config: %w", err))
+	}
+	if err := temp.Sync(); err != nil {
+		_ = temp.Close()
+		return cleanup(fmt.Errorf("syncing temporary config: %w", err))
+	}
+	if err := temp.Close(); err != nil {
+		return cleanup(fmt.Errorf("closing temporary config: %w", err))
+	}
+	if err := os.Rename(tempPath, targetPath); err != nil {
+		return cleanup(fmt.Errorf("replacing config: %w", err))
+	}
+	return nil
 }
