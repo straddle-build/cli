@@ -196,10 +196,28 @@ var listEnvelopeMetadataKeys = map[string]bool{
 	"next": true, "prev": true, "previous": true, "first": true, "last": true,
 }
 
-// writeThroughCache upserts live API results into the local SQLite store so
-// FTS search covers everything the user has looked up — not just explicit syncs.
-// Best-effort: failures are silently ignored (the live result already succeeded).
+// writeThroughCache upserts nonsensitive live API results into the local SQLite
+// store so full-text search includes resources returned by API reads, not just
+// explicit syncs. Unmasked and revealed responses are excluded because they contain
+// sensitive data. The function ignores local write failures because the live API
+// request already succeeded.
+func isObjectResponseEnvelope(envelope map[string]json.RawMessage) bool {
+	if _, ok := envelope["meta"]; !ok {
+		return false
+	}
+	responseType, ok := envelope["response_type"]
+	if !ok || string(responseType) == "null" {
+		return false
+	}
+	var object map[string]json.RawMessage
+	return json.Unmarshal(envelope["data"], &object) == nil && object != nil
+}
+
 func writeThroughCache(ctx context.Context, resourceType string, data json.RawMessage) {
+	if resourceType == "unmask" || resourceType == "unmasked" || resourceType == "reveal" {
+		return
+	}
+
 	db, err := store.OpenWithContext(ctx, defaultDBPath("straddle"))
 	if err != nil {
 		return
@@ -236,6 +254,13 @@ func writeThroughCache(ctx context.Context, resourceType string, data json.RawMe
 			// field alongside real data (e.g. {"id":"order","items":[],
 			// "status":"pending"}) must still cache as a single row.
 			if items == nil && len(envelope) > 0 {
+				// Detail responses use the same meta/data envelope as lists, but
+				// carry one object under data. Persist the resource object so its
+				// identifier can be indexed for offline lookup.
+				if isObjectResponseEnvelope(envelope) {
+					_, _, _ = db.UpsertBatch(resourceType, []json.RawMessage{envelope["data"]})
+					return
+				}
 				looksLikeListEnvelope := false
 				hasListWrapperArray := false
 				for _, key := range []string{"results", "data", "items"} {
