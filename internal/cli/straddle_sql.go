@@ -19,8 +19,12 @@ import (
 // parses as the first keyword.
 func stripLeadingSQLNoiseCLI(query string) string {
 	for {
+		before := query
 		query = strings.TrimPrefix(query, "\ufeff")
 		query = strings.TrimLeft(query, " \t\n\f\r;")
+		if query != before {
+			continue
+		}
 		switch {
 		case strings.HasPrefix(query, "--"):
 			if idx := strings.IndexByte(query, '\n'); idx >= 0 {

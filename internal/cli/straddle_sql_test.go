@@ -128,6 +128,8 @@ func TestSQLCommandReadsSelectAndCTE(t *testing.T) {
 		"SELECT 1 AS value;\f",
 		"\ufeffSELECT 1 AS value",
 		"SELECT 1 AS value;\ufeff",
+		"\f\ufeffSELECT 1 AS value",
+		"\ufeff\fSELECT 1 AS value",
 	} {
 		t.Run(query, func(t *testing.T) {
 			root := RootCmd()
