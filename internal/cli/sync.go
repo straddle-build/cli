@@ -251,8 +251,22 @@ Resource scoping:
 				}()
 			}
 
-			// Enqueue all resources
+			// Dependent resources (e.g. capability_requests) are owned by
+			// syncDependentResources, which fans them out per parent ID. The
+			// flat pool resolves names via syncResourcePath, which has no
+			// entry for dependents, so enqueueing them here would surface a
+			// spurious "unknown sync resource" error alongside the real
+			// dependent pass. Skip them here and let the dependent runner
+			// be the sole handler — naming a dependent by name (or its
+			// parent table) in --resources still drives the dependent pass.
+			depNames := make(map[string]bool, len(dependentResourceDefs()))
+			for _, dep := range dependentResourceDefs() {
+				depNames[dep.Name] = true
+			}
 			for _, resource := range resources {
+				if depNames[resource] {
+					continue
+				}
 				work <- resource
 			}
 			close(work)
