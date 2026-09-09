@@ -115,7 +115,12 @@ func TestSQLCommandReadsSelectAndCTE(t *testing.T) {
 		t.Fatalf("open seed store: %v", err)
 	}
 	seed.Close()
-	for _, query := range []string{"SELECT 'literal;value' AS value", "WITH rows AS (SELECT 1 AS value) SELECT value FROM rows"} {
+	for _, query := range []string{
+		"SELECT 'literal;value' AS value",
+		"WITH rows AS (SELECT 1 AS value) SELECT value FROM rows",
+		"\fSELECT 1 AS value",
+		"SELECT 1 AS value;\f",
+	} {
 		t.Run(query, func(t *testing.T) {
 			root := RootCmd()
 			var stdout bytes.Buffer

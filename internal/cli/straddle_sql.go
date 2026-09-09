@@ -19,7 +19,7 @@ import (
 // parses as the first keyword.
 func stripLeadingSQLNoiseCLI(query string) string {
 	for {
-		query = strings.TrimLeft(query, " \t\r\n;")
+		query = strings.TrimLeft(query, " \t\n\f\r;")
 		switch {
 		case strings.HasPrefix(query, "--"):
 			if idx := strings.IndexByte(query, '\n'); idx >= 0 {
@@ -61,7 +61,7 @@ func readOnlySQLVerb(query string) string {
 	depth := 0
 	for len(rest) > 0 {
 		switch rest[0] {
-		case ' ', '\t', '\r', '\n', ',', ';':
+		case ' ', '\t', '\n', '\f', '\r', ',', ';':
 			rest = rest[1:]
 		case '(':
 			depth++
@@ -108,7 +108,7 @@ func readOnlySQLVerb(query string) string {
 }
 
 func nextSQLWord(query string) (string, string) {
-	query = strings.TrimLeft(query, " \t\r\n")
+	query = strings.TrimLeft(query, " \t\n\f\r")
 	i := 0
 	for i < len(query) && ((query[i] >= 'a' && query[i] <= 'z') || (query[i] >= 'A' && query[i] <= 'Z') || (query[i] >= '0' && query[i] <= '9') || query[i] == '_' || query[i] == '$') {
 		i++
@@ -148,7 +148,7 @@ func countSQLStatements(query string) int {
 	hasToken := false
 	for i := 0; i < len(query); {
 		switch query[i] {
-		case ' ', '\t', '\r', '\n', ';':
+		case ' ', '\t', '\n', '\f', '\r', ';':
 			if query[i] == ';' && hasToken {
 				count++
 				hasToken = false
