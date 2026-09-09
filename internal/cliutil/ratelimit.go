@@ -26,8 +26,9 @@ type AdaptiveLimiter struct {
 	lastRequest time.Time // zero-value: first Wait() returns immediately
 }
 
-// NewAdaptiveLimiter returns a limiter starting at ratePerSec, or nil when
-// rate-limiting should be disabled. Methods on the nil limiter no-op.
+// NewAdaptiveLimiter returns a limiter starting at ratePerSec. Nonpositive
+// values return nil for compatibility and disable limiting. Methods on the
+// nil limiter no-op.
 func NewAdaptiveLimiter(ratePerSec float64) *AdaptiveLimiter {
 	if ratePerSec <= 0 {
 		return nil
