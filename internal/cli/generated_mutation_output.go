@@ -16,7 +16,7 @@ func printGeneratedMutationOutput(cmd *cobra.Command, flags *rootFlags, method, 
 	if resource == "" {
 		resource = generatedMutationLabel(endpoint)
 	}
-	partialFailure := generatedMutationPartialFailure(flags, status, data)
+	partialFailure := generatedMutationPartialFailure(flags, status, data, resource)
 	if wantsHumanTable(cmd.OutOrStdout(), flags) {
 		var items []map[string]any
 		if json.Unmarshal(data, &items) != nil || len(items) == 0 {
@@ -54,11 +54,19 @@ func shouldPrintMutationEnvelope(cmd *cobra.Command, flags *rootFlags) bool {
 	return flags.asJSON || (!isTerminal(cmd.OutOrStdout()) && !flags.csv && !flags.quiet && !flags.plain)
 }
 
-func generatedMutationPartialFailure(flags *rootFlags, status int, data json.RawMessage) *partialFailureReport {
+func generatedMutationPartialFailure(flags *rootFlags, status int, data json.RawMessage, resource string) *partialFailureReport {
 	if flags.dryRun || status < 200 || status >= 300 {
 		return nil
 	}
-	return detectPartialFailure(data)
+	pf := detectPartialFailure(data)
+	if pf == nil {
+		return nil
+	}
+	fmt.Fprintf(os.Stderr, "warning: partial failure detected in %s response: %s\n", resource, pf.Message)
+	if len(pf.ResourceNames) > 0 {
+		fmt.Fprintf(os.Stderr, "         succeeded: %d operation(s)\n", len(pf.ResourceNames))
+	}
+	return pf
 }
 
 func generatedMutationPartialFailureErr(flags *rootFlags, resource string, partialFailure *partialFailureReport) error {
@@ -78,7 +86,7 @@ func printGeneratedMutationEnvelope(cmd *cobra.Command, flags *rootFlags, method
 		"resource": resource,
 		"path":     path,
 		"status":   status,
-		"success":  status >= 200 && status < 300 && (partialFailure == nil || flags.allowPartialFailure),
+		"success":  status >= 200 && status < 300 && partialFailure == nil,
 	}
 	if partialFailure != nil {
 		envelope["partial_failure"] = partialFailure
