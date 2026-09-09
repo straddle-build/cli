@@ -2,9 +2,7 @@
 package apisync
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -325,16 +323,4 @@ func rawOperationMap(operations []Operation) map[string]Operation {
 		mapped[operation.Key] = operation
 	}
 	return mapped
-}
-
-func ReadDrift(path string) (DriftResult, error) {
-	var result DriftResult
-	data, err := os.ReadFile(path) // #nosec G304 -- drift paths are explicit local CLI/workflow inputs.
-	if err != nil {
-		return result, fmt.Errorf("reading drift %s: %w", path, err)
-	}
-	if err := json.Unmarshal(data, &result); err != nil {
-		return result, fmt.Errorf("parsing drift %s: %w", path, err)
-	}
-	return result, nil
 }
