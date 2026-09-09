@@ -41,14 +41,14 @@ func init() {
 		short:    "Retrieves and analyzes the results of a customer's identity validation and fraud score. This endpoint provides a...",
 		long:     "",
 		example:  "  straddle customers review get-customer 550e8400-e29b-41d4-a716-446655440000",
-		aliases:  []string{"get-customer", "get"},
+		aliases:  []string{"get"},
 		resource: "review",
 	})
 	registerCommandOverlay("customers.get-unmasked-customer", commandOverlay{
 		short:    "Retrieves the unmasked details, including PII, of an existing customer. Supply the unique customer ID that was...",
 		long:     "",
 		example:  "  straddle customers unmasked get-customer 550e8400-e29b-41d4-a716-446655440000",
-		aliases:  []string{"get-customer", "get"},
+		aliases:  []string{"get"},
 		resource: "unmasked",
 	})
 	registerCommandOverlay("customers.list", commandOverlay{
@@ -77,7 +77,7 @@ func init() {
 		short:   "Updates the status of a customer's identity decision. This endpoint allows you to modify the outcome of a customer...",
 		long:    "",
 		example: "  straddle customers review update-customer 550e8400-e29b-41d4-a716-446655440000 --status verified",
-		aliases: []string{"update-customer", "update"},
+		aliases: []string{"update"},
 		flags: []flagOverlay{
 			{name: "stdin", usage: "Read request body as JSON from stdin"},
 		},
