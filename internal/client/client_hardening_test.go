@@ -195,3 +195,14 @@ func TestClient_GETCacheKeyIncludesConfigHeaders(t *testing.T) {
 		t.Fatalf("requests = %d, want 2 distinct cache entries", requests)
 	}
 }
+
+func TestClient_GETCacheKeyIncludesAllTemplateVars(t *testing.T) {
+	cfg := &config.Config{BaseURL: "https://{tenant}.example.com/{region}", TemplateVars: map[string]string{"tenant": "one", "region": "us"}}
+	c := New(cfg, time.Second, 0)
+	first := c.cacheKey("/resource", nil, nil)
+	cfg.TemplateVars["tenant"] = "two"
+	second := c.cacheKey("/resource", nil, nil)
+	if first == second {
+		t.Fatal("cache key did not change when arbitrary template variable changed")
+	}
+}

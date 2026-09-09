@@ -227,10 +227,13 @@ func (c *Client) cacheKey(path string, params map[string]string, headers map[str
 	// flipping a value back to unset misses the warm cache and surfaces
 	// the actionable error from buildURL instead of returning stale data.
 	if c.Config != nil {
-		for _, name := range []string{
-			"environment",
-		} {
-			key += "|" + name + "=" + c.Config.TemplateVars[name]
+		varNames := make([]string, 0, len(c.Config.TemplateVars))
+		for name := range c.Config.TemplateVars {
+			varNames = append(varNames, name)
+		}
+		sort.Strings(varNames)
+		for _, name := range varNames {
+			key += "|template_var:" + name + "=" + c.Config.TemplateVars[name]
 		}
 	}
 	key += normalizedHeaderKey("request_headers", headers)
