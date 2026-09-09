@@ -4,6 +4,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -89,5 +90,66 @@ func TestWorkflowArchiveReportsResourceFailures(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestWorkflowArchivePreservesPartialCountAfterMalformedLaterPage(t *testing.T) {
+	isolateAPIConfig(t)
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("STRADDLE_API_KEY", "test_key")
+	firstPage := make([]map[string]string, 100)
+	for i := range firstPage {
+		firstPage[i] = map[string]string{"id": fmt.Sprintf("account-%d", i)}
+	}
+	firstPageBody, marshalErr := json.Marshal(map[string]any{"data": firstPage, "next_cursor": "next"})
+	if marshalErr != nil {
+		t.Fatal(marshalErr)
+	}
+	accountRequests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if strings.HasSuffix(r.URL.Path, "/accounts") {
+			accountRequests++
+			if accountRequests == 1 {
+				_, _ = w.Write(firstPageBody)
+				return
+			}
+			_, _ = w.Write([]byte(`{"unexpected":"shape"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`[{"id":"kept"}]`))
+	}))
+	defer server.Close()
+	t.Setenv("STRADDLE_BASE_URL", server.URL)
+
+	dbPath := filepath.Join(t.TempDir(), "archive.db")
+	stdout, stderr, err, _ := capturedRun(t, []string{"workflow", "archive", "--db", dbPath, "--json"})
+	if err == nil {
+		t.Fatal("archive error=nil, want malformed later page failure")
+	}
+	if !strings.Contains(stderr, "accounts: error:") {
+		t.Errorf("resource error missing from stderr: %s", stderr)
+	}
+	var result struct {
+		ResourcesSynced int `json:"resources_synced"`
+		TotalItems      int `json:"total_items"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &result); err != nil {
+		t.Fatalf("stdout must remain one JSON document: %v; %s", err, stdout)
+	}
+	if result.ResourcesSynced != 7 || result.TotalItems != 107 {
+		t.Errorf("summary=%+v, want 7 completed resources and 107 stored items", result)
+	}
+	db, openErr := store.Open(dbPath)
+	if openErr != nil {
+		t.Fatal(openErr)
+	}
+	defer db.Close()
+	items, listErr := db.List("accounts", 200)
+	if listErr != nil {
+		t.Fatal(listErr)
+	}
+	if len(items) != 100 {
+		t.Errorf("preserved accounts=%d, want 100", len(items))
 	}
 }
