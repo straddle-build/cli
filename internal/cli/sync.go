@@ -581,7 +581,7 @@ func syncResource(c interface {
 				if !humanFriendly {
 					fmt.Fprintln(os.Stdout, syncErrorJSON(resource, "", err))
 				}
-				return syncResult{Resource: resource, Err: err, Duration: time.Since(started)}
+				return syncResult{Resource: resource, Count: totalCount, Err: err, Duration: time.Since(started)}
 			}
 			totalCount++
 			break
