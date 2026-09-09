@@ -45,11 +45,94 @@ func validateReadOnlySQL(query string) error {
 	if count := countSQLStatements(query); count != 1 {
 		return fmt.Errorf("only one read-only SQL statement is allowed")
 	}
-	upper := strings.ToUpper(stripLeadingSQLNoiseCLI(query))
-	if !strings.HasPrefix(upper, "SELECT") && !strings.HasPrefix(upper, "WITH") {
+	if readOnlySQLVerb(query) != "SELECT" {
 		return fmt.Errorf("only read-only SELECT/WITH queries are allowed")
 	}
 	return nil
+}
+
+func readOnlySQLVerb(query string) string {
+	query = stripLeadingSQLNoiseCLI(query)
+	word, rest := nextSQLWord(query)
+	if word != "WITH" {
+		return word
+	}
+
+	depth := 0
+	for len(rest) > 0 {
+		switch rest[0] {
+		case ' ', '\t', '\r', '\n', ',', ';':
+			rest = rest[1:]
+		case '(':
+			depth++
+			rest = rest[1:]
+		case ')':
+			depth--
+			rest = rest[1:]
+		case '-', '/':
+			if strings.HasPrefix(rest, "--") {
+				if idx := strings.IndexByte(rest, '\n'); idx >= 0 {
+					rest = rest[idx+1:]
+				} else {
+					return ""
+				}
+				continue
+			}
+			if strings.HasPrefix(rest, "/*") {
+				if idx := strings.Index(rest[2:], "*/"); idx >= 0 {
+					rest = rest[2+idx+2:]
+				} else {
+					return ""
+				}
+				continue
+			}
+			rest = rest[1:]
+		case '\'', '"', '`':
+			rest = skipSQLQuoted(rest, rest[0])
+		case '[':
+			rest = skipSQLQuoted(rest, ']')
+		default:
+			var next string
+			word, next = nextSQLWord(rest)
+			if next == rest {
+				rest = rest[1:]
+				continue
+			}
+			rest = next
+			if depth == 0 && (word == "SELECT" || word == "INSERT" || word == "UPDATE" || word == "DELETE" || word == "REPLACE") {
+				return word
+			}
+		}
+	}
+	return ""
+}
+
+func nextSQLWord(query string) (string, string) {
+	query = strings.TrimLeft(query, " \t\r\n")
+	i := 0
+	for i < len(query) && ((query[i] >= 'a' && query[i] <= 'z') || (query[i] >= 'A' && query[i] <= 'Z') || query[i] == '_') {
+		i++
+	}
+	if i == 0 {
+		return "", query
+	}
+	return strings.ToUpper(query[:i]), query[i:]
+}
+
+func skipSQLQuoted(query string, quote byte) string {
+	query = query[1:]
+	for len(query) > 0 {
+		if query[0] == quote {
+			query = query[1:]
+			if len(query) > 0 && query[0] == quote {
+				query = query[1:]
+				continue
+			}
+			return query
+		}
+		query = query[1:]
+	}
+	return query
 }
 
 func countSQLStatements(query string) int {

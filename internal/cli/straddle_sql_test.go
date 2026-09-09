@@ -2,7 +2,10 @@
 
 package cli
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestValidateReadOnlySQL(t *testing.T) {
 	tests := []struct {
@@ -12,6 +15,7 @@ func TestValidateReadOnlySQL(t *testing.T) {
 	}{
 		{name: "select", query: "SELECT 1"},
 		{name: "with select", query: "WITH rows AS (SELECT 1) SELECT * FROM rows"},
+		{name: "recursive with select", query: "WITH RECURSIVE rows(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM rows WHERE n < 2) SELECT * FROM rows"},
 		{name: "semicolon in string", query: "SELECT 'note; urgent'"},
 		{name: "semicolon in json path string", query: "SELECT json_extract(data, '$.note; urgent') FROM resources"},
 		{name: "semicolon in line comment", query: "SELECT 1 -- ignored; semicolon\n"},
@@ -33,6 +37,24 @@ func TestValidateReadOnlySQL(t *testing.T) {
 			}
 			if !tc.wantErr && err != nil {
 				t.Fatalf("validateReadOnlySQL(%q) = %v, want nil", tc.query, err)
+			}
+		})
+	}
+}
+
+func TestSQLCommandRejectsCTEWrappedMutationsBeforeOpeningDatabase(t *testing.T) {
+	tests := []string{
+		"WITH doomed AS (SELECT 1) DELETE FROM resources",
+		"WITH replacement AS (SELECT 1) INSERT INTO resources (id) SELECT 1 FROM replacement",
+		"WITH replacement AS (SELECT 1) UPDATE resources SET data = '{}'",
+	}
+	for _, query := range tests {
+		t.Run(strings.Fields(query)[5], func(t *testing.T) {
+			cmd := newSQLCmd(&rootFlags{})
+			cmd.SetArgs([]string{query, "--db", t.TempDir() + "/missing.db"})
+			err := cmd.Execute()
+			if err == nil || !strings.Contains(err.Error(), "only read-only SELECT/WITH queries are allowed") {
+				t.Fatalf("sql command error = %v, want read-only validation error", err)
 			}
 		})
 	}
