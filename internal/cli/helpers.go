@@ -577,15 +577,28 @@ func paginateValues(params url.Values, fetchAll bool, cursorParam, nextCursorPat
 		}
 	}
 
+	numbered := cursorParam == "page_number" && nextCursorPath == "" && hasMoreField == ""
 	if !fetchAll {
 		data, err := fetch(clean)
 		if err != nil {
 			return nil, err
 		}
-		emitTruncationWarning(data, nextCursorPath, hasMoreField)
+		if numbered {
+			emitNumberedTruncationWarning(data, clean)
+		} else {
+			emitTruncationWarning(data, nextCursorPath, hasMoreField)
+		}
 		return data, nil
 	}
 
+	var pager *numberedPager
+	if numbered {
+		var err error
+		pager, err = newNumberedPager(clean)
+		if err != nil {
+			return nil, err
+		}
+	}
 	allItems := make([]json.RawMessage, 0)
 	page := 0
 	for {
@@ -601,6 +614,17 @@ func paginateValues(params url.Values, fetchAll bool, cursorParam, nextCursorPat
 			return nil, err
 		}
 
+		if pager != nil {
+			items, more, err := pager.advance(data)
+			if err != nil {
+				return nil, err
+			}
+			allItems = append(allItems, items...)
+			if more {
+				continue
+			}
+			break
+		}
 		var items []json.RawMessage
 		if json.Unmarshal(data, &items) == nil {
 			allItems = append(allItems, items...)
