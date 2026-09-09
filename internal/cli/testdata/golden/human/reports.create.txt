@@ -2,31 +2,17 @@
 exit_code: 0
 error_class: none
 error: <nil>
-stdout_bytes: 206
+stdout_bytes: 40
 stdout:
 <<<
-{
-  "data": [
-    {
-      "status": "verified",
-      "total": 2
-    },
-    {
-      "status": "review",
-      "total": 1
-    }
-  ],
-  "meta": {
-    "page": 1,
-    "page_size": 2,
-    "total_count": 2
-  }
-}
+STATUS    TOTAL
+verified  2
+review    1
 >>>
 stderr_bytes: 17
 stderr:
 <<<
-1 results (live)
+2 results (live)
 >>>
 
 === http-422 ===

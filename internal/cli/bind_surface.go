@@ -286,9 +286,6 @@ func executeSurface(cmd *cobra.Command, flags *rootFlags, s surface.Surface, req
 		if err != nil {
 			return classifyAPIError(err, flags)
 		}
-		if cmd.Annotations["straddle:unwrap-response"] == "true" {
-			data = extractResponseData(data)
-		}
 		return printSurfaceReadOutput(cmd, flags, data, provenance)
 	}
 
@@ -303,10 +300,19 @@ func executeSurface(cmd *cobra.Command, flags *rootFlags, s surface.Surface, req
 }
 
 func printSurfaceReadOutput(cmd *cobra.Command, flags *rootFlags, data json.RawMessage, provenance DataProvenance) error {
+	// Unwrap the Straddle response envelope for HUMAN display only when the
+	// command opts in via straddle:unwrap-response. Machine output (JSON/csv/
+	// plain/quiet/select) keeps the full envelope (see `data` below) so meta
+	// (api_request_id, pagination) stays accessible to consumers — see
+	// unwrapSingleKeyArray's multi-key pass-through policy.
+	humanData := data
+	if cmd.Annotations["straddle:unwrap-response"] == "true" {
+		humanData = extractResponseData(data)
+	}
 	if wantsHumanTable(cmd.OutOrStdout(), flags) {
 		var items []json.RawMessage
-		if json.Unmarshal(data, &items) != nil {
-			items = []json.RawMessage{data}
+		if json.Unmarshal(humanData, &items) != nil {
+			items = []json.RawMessage{humanData}
 		}
 		printProvenance(cmd, len(items), provenance)
 	}
@@ -325,7 +331,7 @@ func printSurfaceReadOutput(cmd *cobra.Command, flags *rootFlags, data json.RawM
 	}
 	if wantsHumanTable(cmd.OutOrStdout(), flags) {
 		var items []map[string]any
-		if json.Unmarshal(data, &items) == nil && len(items) > 0 {
+		if json.Unmarshal(humanData, &items) == nil && len(items) > 0 {
 			if err := printAutoTable(cmd.OutOrStdout(), items); err != nil {
 				return err
 			}
@@ -335,5 +341,12 @@ func printSurfaceReadOutput(cmd *cobra.Command, flags *rootFlags, data json.RawM
 			return nil
 		}
 	}
-	return printOutputWithFlags(cmd.OutOrStdout(), data, flags)
+	// Human-terminal fall-through (table declined, e.g. a single-object
+	// response) renders the unwrapped payload so the inner resource is shown;
+	// machine fall-through (csv/plain/quiet/select) keeps the full envelope.
+	displayData := data
+	if wantsHumanTable(cmd.OutOrStdout(), flags) {
+		displayData = humanData
+	}
+	return printOutputWithFlags(cmd.OutOrStdout(), displayData, flags)
 }

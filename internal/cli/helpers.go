@@ -925,32 +925,34 @@ func printOutputWithFlags(w io.Writer, data json.RawMessage, flags *rootFlags) e
 	return finishHumanOrOutput(w, data, flags)
 }
 
-// extractResponseData unwraps common API response envelopes for display.
-// Many APIs return {"status":"success","data":[...]} instead of a bare array.
-// This extracts the inner data for output helpers (filterFields, compactFields,
-// printAutoTable) that expect arrays or flat objects.
+// extractResponseData unwraps a Straddle response envelope for display. The
+// Straddle success envelope is {meta[, response_type], data}; per spec.yaml
+// every documented *Response schema carries both meta and data (and usually
+// response_type), and no Straddle resource object defines a top-level "data"
+// field of its own. The envelope is therefore recognized by meta+data
+// co-presence, which also avoids the Stripe-style false positive
+// {"data":[...],"has_more":true} (no "meta") where "data" is the resource.
 //
-// Only unwraps when a "status" field is present and indicates success — this
-// avoids false positives on APIs where "data" is a regular field (e.g., Stripe
-// returns {"data":[...],"has_more":true} where "data" is the list, not an
-// envelope wrapper).
+// Webhook event payloads (spec.yaml inline) do carry top-level "data" but
+// lack "meta" and are inbound delivery bodies that never reach this helper's
+// call sites, so the meta gate stays safe there too.
+//
+// This helper is for HUMAN display only: callers must keep machine output
+// (--json/--agent/--plain/--csv/--quiet/--select) on the original envelope so
+// meta (api_request_id, pagination) stays accessible — see
+// unwrapSingleKeyArray's multi-key pass-through policy.
 func extractResponseData(data json.RawMessage) json.RawMessage {
 	var envelope struct {
-		Status string          `json:"status"`
-		Data   json.RawMessage `json:"data"`
+		Meta json.RawMessage `json:"meta"`
+		Data json.RawMessage `json:"data"`
 	}
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return data
 	}
-	if envelope.Data == nil || envelope.Status == "" {
-		return data // No status field = not an envelope, might be regular "data" field
-	}
-	switch envelope.Status {
-	case "success", "ok", "OK", "Success":
+	if envelope.Meta != nil && envelope.Data != nil {
 		return envelope.Data
-	default:
-		return data
 	}
+	return data
 }
 
 // compactVerboseListFields are prose-shaped fields stripped from list-item
@@ -1355,13 +1357,11 @@ func prioritizeFields(item map[string]any, includeComplex bool) []string {
 	numTiers := 5
 
 	type scored struct {
-		name  string
-		tier  int
-		index int
+		name string
+		tier int
 	}
 
 	var all []scored
-	idx := 0
 	for k, v := range item {
 		if !includeComplex {
 			switch v.(type) {
@@ -1404,15 +1404,19 @@ func prioritizeFields(item map[string]any, includeComplex bool) []string {
 		if _, ok := v.(bool); ok && tier >= numTiers {
 			tier = numTiers + 1
 		}
-		all = append(all, scored{name: k, tier: tier, index: idx})
-		idx++
+		all = append(all, scored{name: k, tier: tier})
 	}
 
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].tier != all[j].tier {
 			return all[i].tier < all[j].tier
 		}
-		return all[i].index < all[j].index
+		// Deterministic alphabetical tiebreak within a tier. The previous
+		// index-based tiebreak was derived from map-iteration order, which is
+		// randomized per execution and produced flaky table output for any
+		// response whose fields share a priority tier (e.g. payment_date and
+		// status both resolve to tier 2).
+		return all[i].name < all[j].name
 	})
 
 	headers := make([]string, len(all))
