@@ -35,13 +35,13 @@ func TestWriteThroughCacheSkipsSensitiveObjectEnvelope(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	payload := json.RawMessage(`{"meta":{},"response_type":"customer","data":{"id":"secret-123","ssn":"masked"}}`)
-	writeThroughCache(context.Background(), "unmasked", payload)
+	writeThroughCache(context.Background(), "unmask", payload)
 	db, err := store.OpenWithContext(context.Background(), filepath.Join(home, ".local", "share", "straddle", "data.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	if _, err := db.Get("unmasked", "secret-123"); err == nil {
+	if _, err := db.Get("unmask", "secret-123"); err == nil {
 		t.Fatal("sensitive detail unexpectedly cached")
 	}
 }
