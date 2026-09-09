@@ -3,8 +3,10 @@
 package store
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"path/filepath"
 	"sync"
@@ -2985,5 +2987,26 @@ func TestMigrate_AddsColumnsOnUpgrade_SyncState(t *testing.T) {
 		if !hasColumn[want] {
 			t.Fatalf("%s column missing from sync_state after migrate", want)
 		}
+	}
+}
+
+func TestSearchTypedRestrictsResourceType(t *testing.T) {
+	db, err := OpenWithContext(context.Background(), filepath.Join(t.TempDir(), "data.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if err := db.Upsert("charges", "charge-1", json.RawMessage(`{"id":"charge-1","name":"shared search term"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Upsert("payouts", "payout-1", json.RawMessage(`{"id":"payout-1","name":"shared search term"}`)); err != nil {
+		t.Fatal(err)
+	}
+	got, err := db.SearchTyped("charges", "shared", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || !bytes.Contains(got[0], []byte(`"charge-1"`)) {
+		t.Fatalf("got %s, want charge only", got)
 	}
 }

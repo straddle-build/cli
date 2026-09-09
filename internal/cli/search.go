@@ -116,8 +116,7 @@ In local mode: searches locally synced data only.`,
 				}
 				results = append(results, partial...)
 			default:
-				// Unrecognized type — fall back to generic search
-				results, err = db.Search(query, limit)
+				results, err = db.SearchTyped(strings.TrimSpace(strings.ToLower(resourceType)), query, limit)
 			}
 			if err != nil {
 				return fmt.Errorf("search failed: %w", err)
