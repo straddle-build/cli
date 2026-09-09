@@ -525,3 +525,32 @@ func surfaceReasonContains(reasons []string, want string) bool {
 	}
 	return false
 }
+
+func TestDeriveSurfacesAcceptsParameterizedJSONBody(t *testing.T) {
+	path := writeSurfaceSpec(t, `
+openapi: 3.1.0
+paths:
+  /v1/widgets:
+    post:
+      operationId: createWidget
+      tags: [widgets]
+      requestBody:
+        required: true
+        content:
+          application/json; charset=utf-8:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+`)
+	surfaces, unsupported, err := DeriveSurfaces(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := requireSingleSupportedSurface(t, surfaces, unsupported)
+	if !got.HasBody || !got.BodyRequired {
+		t.Fatalf("body = (%t, %t), want required body", got.HasBody, got.BodyRequired)
+	}
+	requireFlag(t, got, surface.Flag{Name: "name", In: surface.InBody, Key: "/name", Kind: surface.KindString})
+}
