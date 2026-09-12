@@ -263,11 +263,15 @@ func daysUntil(ts string, now time.Time) (int, bool) {
 	return int(math.Floor(parsed.Sub(now).Hours() / 24)), true
 }
 
-// straddleWantsJSON decides between machine output (JSON/compact/CSV/--select/agent/
-// piped) and a human table. Mirrors the generated commands' output gating so
-// novel commands behave identically under --agent and in pipes.
+// straddleWantsJSON decides between machine output (JSON/compact/CSV/--select/
+// piped) and a human table. Mirrors the generated commands' wantsHumanTable gate
+// so novel analytics commands behave identically under machine-format flags and
+// in pipes. --agent is a defaults-setter (PreRunE injects --json/--compact when
+// not explicitly overridden), not a direct gate term here — matching
+// wantsHumanTable, which also lacks a flags.agent belt: a bare --agent with its
+// --json/--compact defaults disabled falls through to a human table on a terminal.
 func straddleWantsJSON(cmd *cobra.Command, flags *rootFlags) bool {
-	if flags.asJSON || flags.compact || flags.agent || flags.csv || flags.quiet || flags.plain || flags.selectFields != "" {
+	if flags.asJSON || flags.compact || flags.csv || flags.quiet || flags.plain || flags.selectFields != "" {
 		return true
 	}
 	return !isTerminal(cmd.OutOrStdout()) && !humanFriendly
