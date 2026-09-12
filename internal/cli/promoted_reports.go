@@ -70,6 +70,11 @@ func newReportsPromotedCmd(flags *rootFlags) *cobra.Command {
 				} else if flags.compact {
 					filtered = compactFields(filtered)
 				}
+				if handled, err := emitDeliverNDJSON(cmd.OutOrStdout(), filtered, flags); err != nil {
+					return err
+				} else if handled {
+					return nil
+				}
 				wrapped, wrapErr := wrapWithProvenance(filtered, prov)
 				if wrapErr != nil {
 					return wrapErr

@@ -167,6 +167,11 @@ func outputSearchResults(cmd *cobra.Command, flags *rootFlags, results []json.Ra
 		if err != nil {
 			return err
 		}
+		if handled, err := emitDeliverNDJSON(cmd.OutOrStdout(), data, flags); err != nil {
+			return err
+		} else if handled {
+			return nil
+		}
 		wrapped, err := wrapWithProvenance(data, prov)
 		if err != nil {
 			return err

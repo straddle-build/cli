@@ -197,6 +197,11 @@ func printAPIPassthroughEnvelope(cmd *cobra.Command, flags *rootFlags, method, p
 	} else if flags.compact {
 		filtered = compactFields(filtered)
 	}
+	if handled, err := emitDeliverNDJSON(cmd.OutOrStdout(), filtered, flags); err != nil {
+		return err
+	} else if handled {
+		return nil
+	}
 	if len(filtered) > 0 {
 		var parsed any
 		if err := json.Unmarshal(filtered, &parsed); err == nil {

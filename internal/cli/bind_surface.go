@@ -326,6 +326,11 @@ func printSurfaceReadOutput(cmd *cobra.Command, flags *rootFlags, data json.RawM
 		} else if flags.compact {
 			filtered = compactFields(filtered)
 		}
+		if handled, err := emitDeliverNDJSON(cmd.OutOrStdout(), filtered, flags); err != nil {
+			return err
+		} else if handled {
+			return nil
+		}
 		wrapped, err := wrapWithProvenance(filtered, provenance)
 		if err != nil {
 			return err

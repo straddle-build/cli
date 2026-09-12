@@ -922,7 +922,69 @@ func printOutputWithFlags(w io.Writer, data json.RawMessage, flags *rootFlags) e
 	if flags.csv {
 		return printCSV(w, data)
 	}
+	// --compact + --deliver: serialize list results as real NDJSON so the
+	// captured deliver buffer holds records matching the
+	// application/x-ndjson framing that deliveryContentType advertises for
+	// newline-delimited bodies. Single objects and empty arrays keep the
+	// standard JSON path (printNDJSON returns handled=false there), so
+	// their Content-Type stays application/json. A non-stdout deliver sink
+	// is signalled by deliverBuf being wired (root.go installs an
+	// io.MultiWriter once a file/webhook sink is parsed), so this
+	// conversion only runs when output is routed to a --deliver sink —
+	// never for plain --compact written to a terminal or a shell redirect
+	// that bypasses --deliver.
+	if handled, err := emitDeliverNDJSON(w, data, flags); err != nil {
+		return err
+	} else if handled {
+		return nil
+	}
 	return finishHumanOrOutput(w, data, flags)
+}
+
+// emitDeliverNDJSON serializes field-projected list results as real NDJSON
+// when --compact and a non-stdout --deliver sink are both active. It unwraps
+// canonical single-key collection envelopes ({"results":[...]}, {"data":[...]},
+// etc.) before emitting, so list responses that arrive wrapped still produce
+// one JSON record per line with no enclosing array. Returns handled=false
+// (writing nothing) when the compact+deliver gate is off or the data is not a
+// non-empty array, so every caller can fall through to its normal JSON
+// envelope path for single-object/empty/non-compact output.
+//
+// This is the body-side counterpart to the application/x-ndjson Content-Type:
+// delivered lists become true NDJSON instead of a single multi-line JSON
+// document. Each record is re-marshaled compact (json.Marshal escapes
+// in-string newlines) so a record never spans more than one physical line,
+// keeping the output spec-compliant (one complete JSON value per line).
+func emitDeliverNDJSON(w io.Writer, filtered json.RawMessage, flags *rootFlags) (bool, error) {
+	if !flags.compact || flags.deliverBuf == nil {
+		return false, nil
+	}
+	return printNDJSON(w, unwrapSingleKeyArray(filtered))
+}
+
+// printNDJSON serializes a JSON array as newline-delimited JSON: one
+// compact JSON value per line, each newline-terminated, with no enclosing
+// array. It returns handled=false (and writes nothing) when data is not a
+// non-empty JSON array, so callers fall back to the standard JSON path for
+// single objects and empty arrays.
+func printNDJSON(w io.Writer, data json.RawMessage) (bool, error) {
+	var items []json.RawMessage
+	if err := json.Unmarshal(data, &items); err != nil || len(items) == 0 {
+		return false, nil
+	}
+	for _, item := range items {
+		line, err := json.Marshal(item)
+		if err != nil {
+			return false, err
+		}
+		if _, err := w.Write(line); err != nil {
+			return false, err
+		}
+		if _, err := w.Write([]byte{'\n'}); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 // extractResponseData unwraps a Straddle response envelope for display. The
