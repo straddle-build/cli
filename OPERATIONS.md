@@ -21,7 +21,7 @@ Local development commands, release process, and operational pointers for the St
 
 Agent mode: `--agent` = `--json --compact --no-input --no-color --yes`. Human color/rich output is opt-in via `--human-friendly`.
 
-The contract mock check runs the registered `customers create --stdin --no-cache` command against Scalar using the request example owned by the customer schema in `spec.yaml`. The test accepts either OpenAPI's singular `example` or plural `examples` representation.
+The contract mock check runs the registered `customers create --stdin --no-cache` command against Scalar using the `application/json` request example in `spec.yaml`. It prefers a media-type `example`, then the alphabetically first named media-type example, resolving local `#/components/examples/` references. When the media type has no example, it falls back to the referenced component schema's singular `example` or first plural `examples` value.
 
 ## CI
 
