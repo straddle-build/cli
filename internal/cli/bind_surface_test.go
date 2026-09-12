@@ -288,6 +288,113 @@ func TestBindSurfaceCapturesRequests(t *testing.T) {
 	}
 }
 
+func TestBindSurfaceRequiredWithDefault(t *testing.T) {
+	surfaceWithRequiredDefault := surface.Surface{
+		Endpoint:    "widgets.update",
+		OperationID: "updateWidget",
+		Method:      http.MethodPut,
+		Path:        "/v1/widgets/{id}",
+		PathParams:  []string{"id"},
+		HasBody:     true,
+		Flags: []surface.Flag{
+			{Name: "name", In: surface.InBody, Key: "/name", Kind: surface.KindString, Required: true},
+			{Name: "status", In: surface.InBody, Key: "/status", Kind: surface.KindString, Required: true, Default: "verified", Enum: []string{"pending", "review", "verified"}},
+		},
+	}
+
+	run := func(t *testing.T, args []string, stdin string) (string, string, *capturedSurfaceRequest, error) {
+		t.Helper()
+		captured := make(chan capturedSurfaceRequest, 1)
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			got := capturedSurfaceRequest{method: r.Method, path: r.URL.Path}
+			body, readErr := io.ReadAll(r.Body)
+			if readErr == nil && len(body) > 0 {
+				_ = json.Unmarshal(body, &got.body)
+			}
+			got.err = readErr
+			captured <- got
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"id":"widget-1"}`))
+		}))
+		defer server.Close()
+		isolateSurfaceConfig(t, server.URL)
+		stdout, stderr, err := runSurfaceCommand(t, surfaceWithRequiredDefault, args, stdin)
+		var req *capturedSurfaceRequest
+		select {
+		case got := <-captured:
+			req = &got
+		default:
+		}
+		return stdout, stderr, req, err
+	}
+
+	t.Run("omitted status errors and sends nothing", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--name", "example"}, "")
+		if err == nil || !strings.Contains(err.Error(), `required flag "status" not set`) {
+			t.Fatalf("error = %v, want %q", err, `required flag "status" not set`)
+		}
+		if req != nil {
+			t.Fatalf("omitted --status reached the API; body=%#v", req.body)
+		}
+	})
+
+	t.Run("explicit non-default value is sent", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--name", "example", "--status", "review"}, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if req == nil {
+			t.Fatal("expected a request to reach the server")
+		}
+		if req.body["status"] != "review" {
+			t.Fatalf("status = %#v, want \"review\"", req.body["status"])
+		}
+	})
+
+	t.Run("explicit default value is sent", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--name", "example", "--status", "verified"}, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if req == nil || req.body["status"] != "verified" {
+			t.Fatalf("status = %#v, want \"verified\"", req.body)
+		}
+	})
+
+	t.Run("invalid enum still rejected when supplied", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--name", "example", "--status", "bogus"}, "")
+		if err == nil || !strings.Contains(err.Error(), `invalid value "bogus" for --status`) {
+			t.Fatalf("error = %v, want enum violation", err)
+		}
+		if req != nil {
+			t.Fatalf("invalid enum reached the API; body=%#v", req.body)
+		}
+	})
+
+	t.Run("dry run skips the required guard and sends nothing", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--name", "example", "--dry-run"}, "")
+		if err != nil {
+			t.Fatalf("dry-run with omitted --status returned error: %v", err)
+		}
+		if req != nil {
+			t.Fatalf("dry-run reached the API; body=%#v", req.body)
+		}
+	})
+
+	t.Run("stdin body overrides the required+default flag without error", func(t *testing.T) {
+		_, _, req, err := run(t, []string{"widget-1", "--stdin"}, `{"status":"review"}`)
+		if err != nil {
+			t.Fatalf("stdin with explicit body status returned error: %v", err)
+		}
+		if req == nil {
+			t.Fatal("expected a request to reach the server")
+		}
+		if req.body["status"] != "review" {
+			t.Fatalf("status = %#v, want \"review\" from stdin", req.body["status"])
+		}
+	})
+}
+
 func testSurface(method string, requiredPaykey bool) surface.Surface {
 	return surface.Surface{
 		Endpoint:    "widgets.update",
