@@ -92,6 +92,9 @@ func runAPIPassthrough(cmd *cobra.Command, flags *rootFlags, method string, args
 
 	if shouldPrintAPIPassthroughEnvelope(cmd, flags) {
 		if flags.quiet {
+			if partialFailure != nil && !flags.allowPartialFailure {
+				return partialFailureErr(fmt.Errorf("partial failure in raw API response: %s", partialFailure.Message))
+			}
 			return nil
 		}
 		if err := printAPIPassthroughEnvelope(cmd, flags, method, path, status, data, partialFailure); err != nil {
