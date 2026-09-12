@@ -36,7 +36,8 @@ func contractSpecPath() string {
 type contractDocument struct {
 	Paths      map[string]map[string]contractOperation `json:"paths"`
 	Components struct {
-		Schemas map[string]contractSchema `json:"schemas"`
+		Schemas  map[string]contractSchema  `json:"schemas"`
+		Examples map[string]contractExample `json:"examples"`
 	} `json:"components"`
 }
 
@@ -49,7 +50,9 @@ type contractRequestBody struct {
 }
 
 type contractMediaType struct {
-	Schema contractSchemaReference `json:"schema"`
+	Schema   contractSchemaReference    `json:"schema"`
+	Example  json.RawMessage            `json:"example"`
+	Examples map[string]contractExample `json:"examples"`
 }
 
 type contractSchemaReference struct {
@@ -57,8 +60,13 @@ type contractSchemaReference struct {
 }
 
 type contractSchema struct {
-	Example  any   `json:"example"`
-	Examples []any `json:"examples"`
+	Example  json.RawMessage   `json:"example"`
+	Examples []json.RawMessage `json:"examples"`
+}
+
+type contractExample struct {
+	Ref   string          `json:"$ref"`
+	Value json.RawMessage `json:"value"`
 }
 
 type recordedContractResponse struct {
@@ -139,6 +147,32 @@ func TestContractMockServer(t *testing.T) {
 	}
 }
 
+func TestContractRequestExampleUsesNamedMediaExample(t *testing.T) {
+	fixture := `{
+		"paths": {"/v1/customers": {"post": {"requestBody": {"content": {"application/json": {
+			"schema": {"$ref": "#/components/schemas/Customer"},
+			"examples": {"individual": {"$ref": "#/components/examples/Individual"}}
+		}}}}}},
+		"components": {
+			"schemas": {"Customer": {"example": {"name": "schema fallback"}}},
+			"examples": {"Individual": {"value": {"name": "Alex Example"}}}
+		}
+	}`
+	path := filepath.Join(t.TempDir(), "contract.json")
+	if err := os.WriteFile(path, []byte(fixture), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("STRADDLE_CONTRACT_SPEC", path)
+	body := contractRequestExample(t, http.MethodPost, "/v1/customers")
+	var got map[string]string
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["name"] != "Alex Example" {
+		t.Fatalf("request example = %s, want the named media example", body)
+	}
+}
+
 func requireContractMock(t *testing.T) {
 	t.Helper()
 	if os.Getenv("STRADDLE_CONTRACT_MOCK") != "1" {
@@ -170,6 +204,34 @@ func contractRequestExample(t *testing.T, method, path string) []byte {
 	if !ok {
 		t.Fatalf("%s %s has no application/json request body", method, path)
 	}
+	if len(mediaType.Example) > 0 {
+		return mediaType.Example
+	}
+	if len(mediaType.Examples) > 0 {
+		var name string
+		chosen := false
+		for candidate := range mediaType.Examples {
+			if !chosen || candidate < name {
+				name, chosen = candidate, true
+			}
+		}
+		example := mediaType.Examples[name]
+		if example.Ref != "" {
+			refName, ok := strings.CutPrefix(example.Ref, "#/components/examples/")
+			if !ok {
+				t.Fatalf("%s %s example %q has unsupported reference %q", method, path, name, example.Ref)
+			}
+			refName = strings.ReplaceAll(strings.ReplaceAll(refName, "~1", "/"), "~0", "~")
+			example, ok = document.Components.Examples[refName]
+			if !ok {
+				t.Fatalf("%s %s references missing example %q", method, path, refName)
+			}
+		}
+		if len(example.Value) == 0 {
+			t.Fatalf("%s %s example %q has no value", method, path, name)
+		}
+		return example.Value
+	}
 
 	const schemaRefPrefix = "#/components/schemas/"
 	schemaName, ok := strings.CutPrefix(mediaType.Schema.Ref, schemaRefPrefix)
@@ -181,20 +243,15 @@ func contractRequestExample(t *testing.T, method, path string) []byte {
 		t.Fatalf("%s %s references missing schema %q", method, path, schemaName)
 	}
 
-	var example any
 	switch {
-	case schema.Example != nil:
-		example = schema.Example
+	case len(schema.Example) > 0:
+		return schema.Example
 	case len(schema.Examples) > 0:
-		example = schema.Examples[0]
+		return schema.Examples[0]
 	default:
 		t.Fatalf("%s %s schema %q has no request example", method, path, schemaName)
+		return nil
 	}
-	body, err := json.Marshal(example)
-	if err != nil {
-		t.Fatalf("marshal %s example: %v", schemaName, err)
-	}
-	return body
 }
 
 func formatContractProblem(body []byte) string {
