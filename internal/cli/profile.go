@@ -341,7 +341,12 @@ func newProfileDeleteCmd(flags *rootFlags) *cobra.Command {
 			if _, ok := s.Profiles[name]; !ok {
 				return fmt.Errorf("profile %q not found", name)
 			}
-			if !flags.yes {
+			// Confirm that --yes (or --agent, which sets --yes as a documented
+			// default) originated from this invocation. Checking flag.Changed
+			// rather than flags.yes defends against any overlay path that writes
+			// the value via flag.Value.Set (which leaves Changed false) - the
+			// exact mechanism that let a profile's yes=true bypass this gate.
+			if !cmd.Flags().Changed("yes") && !cmd.Flags().Changed("agent") {
 				fmt.Fprintf(cmd.ErrOrStderr(), "refusing to delete %q without --yes\n", name)
 				return fmt.Errorf("confirmation required: pass --yes")
 			}
